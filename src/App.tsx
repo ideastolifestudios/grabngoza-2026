@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, Component } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -20,7 +20,6 @@ import {
   ChevronLeft,
   ChevronDown,
   Heart,
-  Ruler,
   Plus,
   Minus,
   Trash2,
@@ -46,35 +45,89 @@ import {
   Upload,
   Filter,
   ExternalLink,
-  Globe
+  Globe,
+  Ruler
 } from 'lucide-react';
 import { TESTIMONIALS, PARTNERS } from './constants';
 import { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod } from './types';
-import { auth, db } from './firebase';
+import { 
+  productService, 
+  orderService, 
+  authService, 
+  supportService 
+} from './services/api';
+import { emailService } from './services/emailService';
+import { auth, googleProvider, facebookProvider } from './firebase';
 import { 
   onAuthStateChanged, 
-  signOut, 
   signInWithPopup, 
-  GoogleAuthProvider,
-  FacebookAuthProvider,
+  signOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile
 } from 'firebase/auth';
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  updateDoc, 
-  deleteDoc, 
-  onSnapshot, 
-  query, 
-  where, 
-  orderBy,
-  getDoc
-} from 'firebase/firestore';
 
 // --- Constants & Utils ---
+
+class ErrorBoundary extends Component<any, any> {
+  constructor(props: any) {
+    super(props);
+    (this as any).state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error, errorInfo: null };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('Uncaught error:', error, errorInfo);
+    let displayError = error.message;
+    try {
+      const parsed = JSON.parse(error.message);
+      if (parsed.error) {
+        displayError = `Firestore Error: ${parsed.error} (${parsed.operationType} on ${parsed.path})`;
+      }
+    } catch (e) {}
+    (this as any).setState({ error, errorInfo: displayError });
+  }
+
+  handleReset = () => {
+    (this as any).setState({ hasError: false, error: null, errorInfo: null });
+    window.location.reload();
+  };
+
+  render() {
+    if ((this as any).state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-white p-6 text-black">
+          <div className="max-w-md w-full text-center space-y-6">
+            <div className="flex justify-center">
+              <div className="p-4 bg-red-50 rounded-full">
+                <AlertCircle className="text-red-600" size={48} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl font-display font-bold uppercase tracking-tighter">Something went wrong</h1>
+              <p className="text-gray-500 text-sm">
+                {(this as any).state.errorInfo || (this as any).state.error?.message || 'An unexpected error occurred.'}
+              </p>
+            </div>
+            <div className="pt-4">
+              <button
+                onClick={this.handleReset}
+                className="inline-flex items-center gap-2 px-8 py-3 bg-black text-white text-xs font-black uppercase tracking-widest hover:bg-black/80 transition-all active:scale-95"
+              >
+                <RefreshCw size={16} />
+                Reload Application
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return (this as any).props.children;
+  }
+}
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -108,96 +161,6 @@ const Highlight = ({ text, query }: { text: string; query: string }) => {
     </span>
   );
 };
-
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId: string | undefined;
-    email: string | null | undefined;
-    emailVerified: boolean | undefined;
-    isAnonymous: boolean | undefined;
-    tenantId: string | null | undefined;
-    providerInfo: {
-      providerId: string;
-      displayName: string | null;
-      email: string | null;
-      photoUrl: string | null;
-    }[];
-  }
-}
-
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
-        providerId: provider.providerId,
-        displayName: provider.displayName,
-        email: provider.email,
-        photoUrl: provider.photoURL
-      })) || []
-    },
-    operationType,
-    path
-  }
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}
-
-class ErrorBoundary extends React.Component<any, any> {
-  state = { hasError: false, error: null };
-
-  static getDerivedStateFromError(error: any) {
-    return { hasError: true, error };
-  }
-
-  render() {
-    if (this.state.hasError) {
-      let errorMessage = "Something went wrong.";
-      try {
-        const parsed = JSON.parse(this.state.error.message);
-        if (parsed.error) errorMessage = parsed.error;
-      } catch (e) {
-        errorMessage = this.state.error.message || errorMessage;
-      }
-
-      return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
-          <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl text-center">
-            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <AlertCircle size={32} />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 font-display uppercase tracking-tight">Application Error</h2>
-            <p className="text-gray-600 mb-8 text-sm leading-relaxed">{errorMessage}</p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full py-4 bg-black text-white font-bold uppercase tracking-widest text-xs hover:bg-gray-900 transition-colors"
-            >
-              Reload Application
-            </button>
-          </div>
-        </div>
-      );
-    }
-    return (this as any).props.children;
-  }
-}
 
 const formatPrice = (amount: number) => {
   return new Intl.NumberFormat('en-ZA', {
@@ -1445,17 +1408,18 @@ const Footer = () => {
     e.preventDefault();
     if (email) {
       try {
-        const response = await fetch('/api/newsletter/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
+        await supportService.subscribeNewsletter(email);
         
-        if (response.ok) {
-          setSubscribed(true);
-          setEmail('');
-          setTimeout(() => setSubscribed(false), 5000);
+        // Send Newsletter Confirmation Email
+        try {
+          await emailService.sendNewsletterConfirmation(email);
+        } catch (emailErr) {
+          console.error("Failed to send newsletter email:", emailErr);
         }
+
+        setSubscribed(true);
+        setEmail('');
+        setTimeout(() => setSubscribed(false), 5000);
       } catch (err) {
         console.error('Newsletter error:', err);
       }
@@ -1776,22 +1740,13 @@ const SelfServiceReturnsPage = () => {
     setError('');
 
     try {
-      const response = await fetch(`/api/orders/lookup?orderId=${orderId}&email=${email}`);
+      const foundOrder = await orderService.lookupOrder(orderId, email);
       
-      let data;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        data = await response.json();
-      } else {
-        const text = await response.text();
-        throw new Error(text || `Server error: ${response.status}`);
-      }
-
-      if (data.success) {
-        setOrder(data.order);
+      if (foundOrder) {
+        setOrder(foundOrder);
         setStep('select');
       } else {
-        setError(data.error || 'Order not found or not eligible for return');
+        setError('Order not found or email mismatch. Please check your details.');
       }
     } catch (err: any) {
       console.error('Order lookup error:', err);
@@ -1841,32 +1796,24 @@ const SelfServiceReturnsPage = () => {
     });
 
     try {
-      const response = await fetch('/api/returns/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: order?.id,
-          email: order?.email,
-          items,
-          notes
-        }),
-      });
-
-      let data;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        data = await response.json();
-      } else {
-        const text = await response.text();
-        throw new Error(text || `Server error: ${response.status}`);
+      const returnData = {
+        orderId: order?.id,
+        email: order?.email,
+        items,
+        notes
+      };
+      
+      const res = await supportService.submitReturn(returnData);
+      
+      // Send Return Request Notification Email
+      try {
+        await emailService.sendReturnRequestNotification(returnData);
+      } catch (emailErr) {
+        console.error("Failed to send return request email:", emailErr);
       }
 
-      if (data.success) {
-        setReturnId(data.returnId);
-        setStep('success');
-      } else {
-        setError(data.error || 'Failed to submit return request');
-      }
+      setReturnId(res.id);
+      setStep('success');
     } catch (err: any) {
       console.error('Return submission error:', err);
       setError(err.message || 'Failed to submit return request. Please try again.');
@@ -2159,27 +2106,17 @@ const HelpDeskPage = () => {
     setErrorMessage('');
 
     try {
-      const response = await fetch('/api/helpdesk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      let data;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        data = await response.json();
-      } else {
-        const text = await response.text();
-        throw new Error(text || `Server error: ${response.status}`);
+      await supportService.submitHelpDesk(formData);
+      
+      // Send Help Desk Notification Email
+      try {
+        await emailService.sendHelpDeskNotification(formData);
+      } catch (emailErr) {
+        console.error("Failed to send help desk email:", emailErr);
       }
 
-      if (data.success) {
-        setStatus('success');
-        setFormData({ name: '', email: '', subject: '', message: '' });
-      } else {
-        throw new Error(data.error || 'Failed to send message');
-      }
+      setStatus('success');
+      setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (err: any) {
       console.error('HelpDesk error:', err);
       setStatus('error');
@@ -2669,7 +2606,7 @@ const LegalPage = () => {
             <li>Data is used to process orders, communicate with you, and improve our service.</li>
             <li>We do not sell or share your information with third parties.</li>
             <li>Our website may use cookies for a better browsing experience.</li>
-            <li>All payment info processed via iKhokha or EFT remains confidential and secure.</li>
+            <li>All payment info processed via Yoco or EFT remains confidential and secure.</li>
             <li>You may request access to your data or request deletion at any time.</li>
           </ul>
         </section>
@@ -2680,7 +2617,7 @@ const LegalPage = () => {
             <li>Orders are placed via WhatsApp and confirmed with proof of payment.</li>
             <li>Items are sold on a first-pay, first-serve basis.</li>
             <li>Prices are final unless a discount or promo is explicitly offered.</li>
-            <li>We accept EFT, iKhokha card payments, or cash (on collection only).</li>
+            <li>We accept EFT, Yoco card payments, or cash (on collection only).</li>
             <li>Orders are dispatched only after payment reflects.</li>
             <li>Delivery timelines are estimates and may vary.</li>
             <li>Grab & Go is not responsible for courier delays or incorrect info submitted by the buyer.</li>
@@ -2823,6 +2760,9 @@ const AuthModal = ({
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
 
+  const [resetSent, setResetSent] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -2833,26 +2773,42 @@ const AuthModal = ({
         if (name) {
           await updateProfile(userCredential.user, { displayName: name });
         }
+        // Send Welcome Email
+        try {
+          await emailService.sendWelcomeEmail(email, name || 'Valued Customer');
+        } catch (emailErr) {
+          console.error("Failed to send welcome email:", emailErr);
+        }
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
       onSuccess();
       onClose();
     } catch (err: any) {
-      console.error("Email auth failed:", err);
-      if (err.code === 'auth/operation-not-allowed') {
-        setError('Email/Password login is disabled. Please enable it in the Firebase Console (Authentication > Sign-in method).');
-      } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setError('Invalid email or password. If you had an account on the old version of the app, you may need to Sign Up again for this new version.');
-      } else if (err.code === 'auth/too-many-requests') {
-        setError('Too many failed attempts. This account has been temporarily disabled. Please try again later or reset your password.');
-      } else if (err.code === 'auth/email-already-in-use') {
-        setError('An account with this email already exists.');
-      } else if (err.code === 'auth/weak-password') {
-        setError('Password should be at least 6 characters.');
-      } else {
-        setError(err.message || 'Authentication failed');
-      }
+      console.error("Auth failed:", err);
+      setError(err.message || 'Authentication failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      setError("Please enter your email address first.");
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      await emailService.sendPasswordResetEmail(email);
+      setResetSent(true);
+      setTimeout(() => {
+        setResetSent(false);
+        setShowForgotPassword(false);
+      }, 5000);
+    } catch (err: any) {
+      setError(err.message || "Failed to send reset email.");
     } finally {
       setLoading(false);
     }
@@ -2861,22 +2817,14 @@ const AuthModal = ({
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError('');
-    const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      await signInWithPopup(auth, googleProvider);
       onSuccess();
       onClose();
     } catch (err: any) {
       console.error("Google login failed:", err);
-      if (err.code === 'auth/popup-closed-by-user') {
-        // User closed the popup, don't show an error
-        return;
-      }
-      if (err.code === 'auth/operation-not-allowed') {
-        setError('Google login is disabled. Please enable it in the Firebase Console.');
-      } else {
-        setError(err.message || 'Login failed');
-      }
+      if (err.code === 'auth/popup-closed-by-user') return;
+      setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -2885,19 +2833,14 @@ const AuthModal = ({
   const handleFacebookLogin = async () => {
     setLoading(true);
     setError('');
-    const provider = new FacebookAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      await signInWithPopup(auth, facebookProvider);
       onSuccess();
       onClose();
     } catch (err: any) {
       console.error("Facebook login failed:", err);
       if (err.code === 'auth/popup-closed-by-user') return;
-      if (err.code === 'auth/operation-not-allowed') {
-        setError('Facebook login is disabled. Please enable it in the Firebase Console.');
-      } else {
-        setError(err.message || 'Login failed');
-      }
+      setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -2926,102 +2869,156 @@ const AuthModal = ({
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-30">Studio Access</p>
               </div>
 
-              <div className="space-y-2">
-                <h2 className="text-xl font-display font-bold uppercase tracking-tighter">
-                  {mode === 'login' ? 'Welcome Back' : 'Create Account'}
-                </h2>
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  {mode === 'login' 
-                    ? 'Sign in to track your orders and manage your studio profile.' 
-                    : 'Join the studio to save your details and track your orders.'}
-                </p>
-              </div>
+              {showForgotPassword ? (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <h2 className="text-xl font-display font-bold uppercase tracking-tighter">Reset Password</h2>
+                    <p className="text-xs text-gray-500 leading-relaxed">Enter your email and we'll send you a link to reset your password.</p>
+                  </div>
 
-              {error && (
-                <div className="p-3 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 text-left">
-                  <AlertCircle size={14} className="flex-shrink-0" />
-                  <span>{error}</span>
+                  {resetSent ? (
+                    <div className="p-4 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 text-left">
+                      <CheckCircle2 size={14} className="flex-shrink-0" />
+                      <span>Reset link sent! Check your inbox.</span>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleForgotPassword} className="space-y-4">
+                      <input 
+                        type="email"
+                        placeholder="Email Address"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
+                      />
+                      <button 
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-4 bg-black text-white font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-gray-900 transition-all disabled:opacity-50"
+                      >
+                        {loading ? <Loader2 className="animate-spin" size={16} /> : 'Send Reset Link'}
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setShowForgotPassword(false)}
+                        className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
+                      >
+                        Back to Login
+                      </button>
+                    </form>
+                  )}
                 </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <h2 className="text-xl font-display font-bold uppercase tracking-tighter">
+                      {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+                    </h2>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      {mode === 'login' 
+                        ? 'Sign in to track your orders and manage your studio profile.' 
+                        : 'Join the studio to save your details and track your orders.'}
+                    </p>
+                  </div>
+
+                  {error && (
+                    <div className="p-3 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 text-left">
+                      <AlertCircle size={14} className="flex-shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleEmailAuth} className="space-y-3">
+                    {mode === 'signup' && (
+                      <input 
+                        type="text"
+                        placeholder="Full Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
+                      />
+                    )}
+                    <input 
+                      type="email"
+                      placeholder="Email Address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
+                    />
+                    <input 
+                      type="password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
+                    />
+                    {mode === 'login' && (
+                      <div className="text-right">
+                        <button 
+                          type="button"
+                          onClick={() => setShowForgotPassword(true)}
+                          className="text-[9px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
+                        >
+                          Forgot Password?
+                        </button>
+                      </div>
+                    )}
+                    <button 
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-4 bg-black text-white font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-gray-900 transition-all disabled:opacity-50"
+                    >
+                      {loading ? <Loader2 className="animate-spin" size={16} /> : (mode === 'login' ? 'Sign In' : 'Create Account')}
+                    </button>
+                  </form>
+
+                  <div className="relative py-2">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-100"></div>
+                    </div>
+                    <div className="relative flex justify-center text-[8px] uppercase tracking-[0.2em] font-bold">
+                      <span className="bg-white px-2 text-gray-300">Or continue with</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button 
+                      onClick={handleGoogleLogin}
+                      disabled={loading}
+                      title="Google"
+                      className="flex items-center justify-center py-3 border border-gray-100 hover:bg-gray-50 transition-all rounded-sm"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                      </svg>
+                    </button>
+
+                    <button 
+                      onClick={handleFacebookLogin}
+                      disabled={loading}
+                      title="Facebook"
+                      className="flex items-center justify-center py-3 border border-gray-100 hover:bg-gray-50 transition-all rounded-sm"
+                    >
+                      <Facebook size={16} className="text-[#1877F2]" />
+                    </button>
+                  </div>
+
+                  <div className="pt-2">
+                    <button 
+                      onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+                      className="text-[10px] font-bold uppercase tracking-widest text-black hover:opacity-70 transition-opacity"
+                    >
+                      {mode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+                    </button>
+                  </div>
+                </>
               )}
-
-              <form onSubmit={handleEmailAuth} className="space-y-3">
-                {mode === 'signup' && (
-                  <input 
-                    type="text"
-                    placeholder="Full Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
-                  />
-                )}
-                <input 
-                  type="email"
-                  placeholder="Email Address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
-                />
-                <input 
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
-                />
-                <button 
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-4 bg-black text-white font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-gray-900 transition-all disabled:opacity-50"
-                >
-                  {loading ? <Loader2 className="animate-spin" size={16} /> : (mode === 'login' ? 'Sign In' : 'Create Account')}
-                </button>
-              </form>
-
-              <div className="relative py-2">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-100"></div>
-                </div>
-                <div className="relative flex justify-center text-[8px] uppercase tracking-[0.2em] font-bold">
-                  <span className="bg-white px-2 text-gray-300">Or continue with</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <button 
-                  onClick={handleGoogleLogin}
-                  disabled={loading}
-                  title="Google"
-                  className="flex items-center justify-center py-3 border border-gray-100 hover:bg-gray-50 transition-all rounded-sm"
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                </button>
-
-                <button 
-                  onClick={handleFacebookLogin}
-                  disabled={loading}
-                  title="Facebook"
-                  className="flex items-center justify-center py-3 border border-gray-100 hover:bg-gray-50 transition-all rounded-sm"
-                >
-                  <Facebook size={16} className="text-[#1877F2]" />
-                </button>
-              </div>
-
-              <div className="pt-2">
-                <button 
-                  onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-                  className="text-[10px] font-bold uppercase tracking-widest text-black hover:opacity-70 transition-opacity"
-                >
-                  {mode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
-                </button>
-              </div>
 
               <p className="text-[8px] text-gray-400 uppercase tracking-widest">
                 By continuing, you agree to our <Link to="/legal" className="text-black underline">Terms</Link>
@@ -3313,9 +3310,10 @@ const ProductManagementDrawer = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredProducts = useMemo(() => {
+    if (!Array.isArray(products)) return [];
     return products.filter(p => 
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.brand?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [products, searchQuery]);
@@ -3977,7 +3975,7 @@ const HybridCheckoutModal = ({
   const [isPaying, setIsPaying] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [demoMessage, setDemoMessage] = useState<string | null>(null);
-  const [paymentGateway, setPaymentGateway] = useState<'ikhokha' | 'yoco'>('ikhokha');
+  const [paymentGateway, setPaymentGateway] = useState<'yoco'>('yoco');
 
   const shippingCost = useMemo(() => {
     if (deliveryMethod === 'pickup') return 0;
@@ -4014,9 +4012,8 @@ const HybridCheckoutModal = ({
 
     try {
       // Save pending order details
-      const pendingOrder: Order = {
-        id: Math.random().toString(36).substr(2, 9).toUpperCase(),
-        userId: user?.id,
+      const orderData: any = {
+        userId: user?.id || null,
         email,
         firstName,
         lastName,
@@ -4030,81 +4027,28 @@ const HybridCheckoutModal = ({
         shippingCost,
         items: cartItems,
         total: finalTotal,
-        date: new Date().toISOString(),
-        status: 'pending',
         paymentGateway
       };
-      localStorage.setItem('grab_and_go_pending_order', JSON.stringify(pendingOrder));
 
-      const endpoint = paymentGateway === 'ikhokha' ? '/api/checkout/ikhokha' : '/api/create-yoco-payment';
-      const body = paymentGateway === 'ikhokha' ? {
-        amount: finalTotal,
-        externalId: pendingOrder.id,
-        customerName: `${firstName} ${lastName}`,
-        customerEmail: email,
-        returnUrl: `${window.location.origin}/order-success?id=${pendingOrder.id}`,
-        cancelUrl: `${window.location.origin}/checkout`,
-        order: pendingOrder
-      } : {
-        amount: finalTotal,
-        currency: 'ZAR',
-        metadata: { orderId: pendingOrder.id },
-        order: pendingOrder
-      };
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await response.text();
-        console.error("Non-JSON response received:", text);
-        throw new Error(`Server error: Received ${response.status} ${response.statusText}. Please check server logs.`);
+      // In this frontend-only demo, we simulate the payment success by saving directly to Firestore
+      console.log("[DEMO] Saving order to Firestore...");
+      const savedOrder = await orderService.createOrder(orderData);
+      
+      // Send Order Confirmation Email
+      try {
+        await emailService.sendOrderConfirmation({
+          ...orderData,
+          id: savedOrder.id
+        });
+      } catch (emailErr) {
+        console.error("Failed to send order confirmation email:", emailErr);
       }
 
-      const data = await response.json();
-
-      if (data.success) {
-        if (data.demo) {
-          // In demo mode, we just simulate success
-          console.log("[DEMO] Simulating payment success...");
-          
-          // Trigger the same success logic as real payment
-          const pendingStr = localStorage.getItem('grab_and_go_pending_order');
-          if (pendingStr) {
-            const pending = JSON.parse(pendingStr);
-            try {
-              const emailRes = await fetch('/api/send-order-confirmation', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: pending.email, order: pending }),
-              });
-              const emailData = await emailRes.json();
-              
-              if (emailData.demo) {
-                setDemoMessage("Order Simulated! NOTE: Real emails and WhatsApp alerts are DISABLED because API keys are not configured in Secrets. Check the Server Logs to see the content.");
-              } else {
-                setDemoMessage("Order Simulated! Confirmation email and WhatsApp alert have been sent.");
-              }
-              onPaymentStatusChange('success');
-            } catch (err) {
-              console.error("Failed to send confirmation email:", err);
-              setDemoMessage("Order Simulated! (But email notification failed - check console)");
-              onPaymentStatusChange('success');
-            }
-          }
-        } else {
-          // Real redirect
-          window.location.href = data.checkoutUrl || data.redirectUrl;
-        }
-      } else {
-        throw new Error(data.details || data.error || 'Payment failed to initialize');
-      }
+      setDemoMessage("Order Successfully Placed! (Demo Mode: Payment simulated and order saved to Firestore)");
+      onPaymentStatusChange('success');
+      
     } catch (err: any) {
-      setPaymentError(err.message || 'Payment initialization failed');
+      setPaymentError(err.message || 'Failed to place order');
     } finally {
       setIsPaying(false);
     }
@@ -4458,27 +4402,15 @@ const HybridCheckoutModal = ({
                   <section>
                     <h3 className="text-lg md:text-xl font-bold tracking-tight mb-4">Payment Method</h3>
                     <div className="space-y-3">
-                      <button 
-                        onClick={() => setPaymentGateway('ikhokha')}
-                        className={`w-full p-4 border rounded-md flex items-center justify-between transition-all ${paymentGateway === 'ikhokha' ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-black'}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-6 bg-black rounded flex items-center justify-center text-[8px] text-white font-bold">iK PAY</div>
-                          <span className="text-sm font-medium">iKhokha iK Pay</span>
-                        </div>
-                        {paymentGateway === 'ikhokha' && <CheckCircle2 size={16} />}
-                      </button>
-
-                      <button 
-                        onClick={() => setPaymentGateway('yoco')}
-                        className={`w-full p-4 border rounded-md flex items-center justify-between transition-all ${paymentGateway === 'yoco' ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-black'}`}
+                      <div 
+                        className="w-full p-4 border border-black bg-gray-50 rounded-md flex items-center justify-between transition-all"
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-6 bg-blue-600 rounded flex items-center justify-center text-[8px] text-white font-bold uppercase">Yoco</div>
                           <span className="text-sm font-medium">Yoco Secure Checkout</span>
                         </div>
-                        {paymentGateway === 'yoco' && <CheckCircle2 size={16} />}
-                      </button>
+                        <CheckCircle2 size={16} />
+                      </div>
                     </div>
                     
                     <p className="text-[10px] text-gray-400 mt-4 text-center uppercase tracking-widest">All transactions are secure and encrypted.</p>
@@ -4502,7 +4434,7 @@ const HybridCheckoutModal = ({
                         </>
                       ) : (
                         <>
-                          Pay R{finalTotal} with {paymentGateway === 'ikhokha' ? 'iKhokha' : 'Yoco'} <ArrowRight size={20} />
+                          Pay R{finalTotal} with Yoco <ArrowRight size={20} />
                         </>
                       )}
                     </button>
@@ -4609,32 +4541,14 @@ const EmailProductModal = ({
     setStatus('sending');
     setErrorDetails(null);
     try {
-      const response = await fetch('/api/send-product-details', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, product }),
-      });
+      await emailService.sendProductDetails(email, product);
 
-      let data;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        data = await response.json();
-      } else {
-        const text = await response.text();
-        throw new Error(`Server returned non-JSON response: ${text.slice(0, 100)}`);
-      }
-
-      if (response.ok) {
-        setStatus('success');
-        setTimeout(() => {
-          onClose();
-          setStatus('idle');
-          setEmail('');
-        }, 2000);
-      } else {
-        setStatus('error');
-        setErrorDetails(data.details || data.error || 'Failed to send');
-      }
+      setStatus('success');
+      setTimeout(() => {
+        onClose();
+        setStatus('idle');
+        setEmail('');
+      }, 2000);
     } catch (err: any) {
       setStatus('error');
       setErrorDetails(err.message || 'Network error');
@@ -4806,8 +4720,8 @@ const HomePage = ({
           ref={productScrollRef}
           className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 md:gap-8 pb-12 -mx-6 px-6 md:mx-0 md:px-0 scroll-smooth"
         >
-          {filteredAndSortedProducts.map(product => (
-            <div key={product.id} className="min-w-[45vw] md:min-w-[30vw] lg:min-w-[22vw] snap-center">
+          {filteredAndSortedProducts.map((product, idx) => (
+            <div key={product.id || `featured-${idx}`} className="min-w-[45vw] md:min-w-[30vw] lg:min-w-[22vw] snap-center">
               <ProductCard 
                 product={product} 
                 onAddToCart={addToCart} 
@@ -4850,9 +4764,9 @@ const HomePage = ({
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-          {filteredAndSortedProducts.map(product => (
+          {filteredAndSortedProducts.map((product, idx) => (
             <ProductCard 
-              key={`grid-${product.id}`}
+              key={product.id ? `grid-${product.id}` : `grid-fallback-${idx}`}
               product={product} 
               onAddToCart={addToCart} 
               onEmailDetails={onEmailDetails}
@@ -4917,84 +4831,75 @@ function AppContent() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'cancelled' | 'processing' | null>(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const productScrollRef = useRef<HTMLDivElement>(null);
 
-  // --- Firebase Auth Listener ---
+  // --- Auth Check ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Fetch user profile from Firestore
         try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          const isAdminEmail = firebaseUser.email === 'cbrprints22@gmail.com';
-          
-          if (userDoc.exists()) {
-            const userData = userDoc.data() as User;
-            // If it's the admin email but role is not admin, update it
-            if (isAdminEmail && userData.role !== 'admin') {
-              const updatedUser = { ...userData, role: 'admin' as const };
-              await setDoc(doc(db, 'users', firebaseUser.uid), updatedUser, { merge: true });
-              setUser(updatedUser);
-            } else {
-              setUser(userData);
-            }
-          } else {
-            // Create user profile if it doesn't exist
-            const newUser: User = {
-              id: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              firstName: firebaseUser.displayName?.split(' ')[0] || 'User',
-              lastName: firebaseUser.displayName?.split(' ')[1] || '',
-              role: isAdminEmail ? 'admin' : 'user'
-            };
-            await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
-            setUser(newUser);
-          }
-        } catch (error) {
+          const userData = await authService.getCurrentUser();
+          setUser(userData);
+        } catch (error: any) {
           console.error("Error fetching user profile:", error);
+          
+          let errorMessage = "Profile fetch failed";
+          try {
+            const parsed = JSON.parse(error.message);
+            if (parsed.error) errorMessage = parsed.error;
+          } catch (e) {}
+
+          // Fallback if profile fetch fails
+          const nameParts = firebaseUser.displayName?.split(' ') || ['User'];
+          setUser({
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            firstName: nameParts[0] || 'User',
+            lastName: nameParts.slice(1).join(' ') || 'Customer',
+            role: firebaseUser.email === 'cbrprints22@gmail.com' ? 'admin' : 'user'
+          });
         }
       } else {
         setUser(null);
       }
       setIsAuthReady(true);
     });
+
     return () => unsubscribe();
   }, []);
 
-  // --- Firestore Products Listener ---
+  // --- Data Fetching ---
   useEffect(() => {
-    const q = query(collection(db, 'products'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const productsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-      setProducts(productsData);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'products');
-    });
-    return () => unsubscribe();
+    const fetchProducts = async () => {
+      try {
+        const data = await productService.getProducts();
+        setProducts(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        setProducts([]);
+      }
+    };
+    fetchProducts();
   }, []);
 
-  // --- Firestore Orders Listener ---
   useEffect(() => {
-    if (!isAuthReady) return;
-    
-    let q;
-    if (user?.role === 'admin') {
-      q = query(collection(db, 'orders'), orderBy('date', 'desc'));
-    } else if (user) {
-      q = query(collection(db, 'orders'), where('userId', '==', user.id), orderBy('date', 'desc'));
-    } else {
+    if (!isAuthReady || !user) {
       setOrders([]);
       return;
     }
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
-      setOrders(ordersData);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'orders');
-    });
-    return () => unsubscribe();
+    
+    const fetchOrders = async () => {
+      try {
+        const data = await orderService.getOrders();
+        setOrders(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        setOrders([]);
+      }
+    };
+    fetchOrders();
   }, [user, isAuthReady]);
 
   const scrollProducts = (direction: 'left' | 'right') => {
@@ -5009,34 +4914,59 @@ function AppContent() {
   const handleSaveProduct = async (productData: Partial<Product>) => {
     if (user?.role !== 'admin') return;
     try {
-      if (productData.id) {
-        const { id, ...data } = productData;
-        await updateDoc(doc(db, 'products', id), data);
-      } else {
-        const newDocRef = doc(collection(db, 'products'));
-        await setDoc(newDocRef, { ...productData, id: newDocRef.id });
-      }
+      const saved = await productService.saveProduct(productData);
+      setProducts(prev => {
+        const exists = prev.find(p => p.id === saved.id);
+        if (exists) {
+          return prev.map(p => p.id === saved.id ? saved : p);
+        }
+        return [...prev, saved];
+      });
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, 'products');
+      console.error("Error saving product:", err);
     }
   };
 
   const handleDeleteProduct = async (id: string) => {
     if (user?.role !== 'admin') return;
     try {
-      await deleteDoc(doc(db, 'products', id));
+      await productService.deleteProduct(id);
+      setProducts(prev => prev.filter(p => p.id !== id));
     } catch (err) {
-      handleFirestoreError(err, OperationType.DELETE, `products/${id}`);
+      console.error("Error deleting product:", err);
     }
   };
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = async () => {
     setIsAuthOpen(false);
+    setIsProfileLoading(true);
+    try {
+      const userData = await authService.getCurrentUser();
+      setUser(userData);
+    } catch (err: any) {
+      console.error("Failed to fetch user after login:", err);
+      
+      let message = "Failed to load user profile.";
+      try {
+        const parsed = JSON.parse(err.message);
+        if (parsed.error) {
+          message = `Profile Error: ${parsed.error}. Please try logging in again.`;
+        }
+      } catch (e) {
+        message = err.message || message;
+      }
+      
+      setUser(null);
+      alert(message);
+    } finally {
+      setIsProfileLoading(false);
+    }
   };
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      setUser(null);
       setIsMenuOpen(false);
     } catch (err) {
       console.error("Logout failed:", err);
@@ -5046,19 +4976,14 @@ function AppContent() {
   const handleUpdateOrder = async (orderId: string, updates: Partial<Order>) => {
     if (user?.role !== 'admin') return;
     try {
-      await updateDoc(doc(db, 'orders', orderId), updates);
+      const updated = await orderService.updateOrder(orderId, updates);
+      setOrders(prev => prev.map(o => o.id === orderId ? updated : o));
     } catch (err) {
-      handleFirestoreError(err, OperationType.UPDATE, `orders/${orderId}`);
+      console.error("Error updating order:", err);
     }
   };
 
   useEffect(() => {
-    // API Health Check
-    fetch('/api/health')
-      .then(res => res.json())
-      .then(data => console.log("[API] Health check successful:", data))
-      .catch(err => console.error("[API] Health check failed:", err));
-
     const params = new URLSearchParams(window.location.search);
     const status = params.get('status');
     const orderId = params.get('id');
@@ -5066,25 +4991,8 @@ function AppContent() {
     if (status === 'success' || (orderId && window.location.pathname === '/order-success')) {
       setPaymentStatus('success');
       setIsCheckoutOpen(true);
-      
-      // Handle order confirmation
-      const pendingStr = localStorage.getItem('grab_and_go_pending_order');
-      if (pendingStr) {
-        const pending = JSON.parse(pendingStr);
-        
-        // 1. Save to history (Email was already sent by the server during payment creation)
-        const confirmedOrder = { ...pending, status: 'confirmed' };
-        setOrders(prev => {
-          const newOrders = [confirmedOrder, ...prev];
-          localStorage.setItem('grab_and_go_orders', JSON.stringify(newOrders));
-          return newOrders;
-        });
-
-        // 3. Clear cart and pending
-        setCart([]);
-        localStorage.removeItem('grab_and_go_cart');
-        localStorage.removeItem('grab_and_go_pending_order');
-      }
+      setCart([]);
+      localStorage.removeItem('grab_and_go_cart');
     } else if (status === 'cancelled') {
       setPaymentStatus('cancelled');
       setIsCheckoutOpen(true);

@@ -86,7 +86,7 @@ export interface Order {
   trackingUrl?: string;
   labelUrl?: string;
   shippingCost: number;
-  paymentGateway?: 'ikhokha' | 'yoco';
+  paymentGateway?: 'yoco';
 }
 
 export interface User {

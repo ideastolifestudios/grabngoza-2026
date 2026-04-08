@@ -31,7 +31,20 @@
           }
         }
       },
-      "required": ["name", "price", "category", "image", "description"]
+      "required": ["id", "name", "price", "image", "category", "description"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user of the application",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] }
+      },
+      "required": ["id", "email", "firstName", "lastName", "role"]
     },
     "Order": {
       "title": "Order",
@@ -40,51 +53,55 @@
       "properties": {
         "id": { "type": "string" },
         "userId": { "type": "string" },
-        "email": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
         "items": { "type": "array" },
         "total": { "type": "number" },
-        "status": { "type": "string", "enum": ["pending", "preparing", "ready", "completed", "cancelled"] },
-        "date": { "type": "string" },
-        "deliveryMethod": { "type": "string", "enum": ["ship", "pickup"] },
+        "status": { "type": "string", "enum": ["pending", "preparing", "ready", "completed", "cancelled", "returned"] },
+        "date": { "type": "string", "format": "date-time" },
+        "deliveryMethod": { "type": "string", "enum": ["standard", "pickup", "international"] },
         "address": { "type": "string" },
         "city": { "type": "string" },
         "province": { "type": "string" },
         "postalCode": { "type": "string" },
+        "country": { "type": "string" },
         "phone": { "type": "string" },
-        "trackingNumber": { "type": "string" },
-        "trackingUrl": { "type": "string" },
-        "labelUrl": { "type": "string" }
+        "shippingCost": { "type": "number" }
       },
-      "required": ["email", "firstName", "lastName", "items", "total", "status", "date", "deliveryMethod"]
+      "required": ["id", "email", "firstName", "lastName", "items", "total", "status", "date", "deliveryMethod"]
     },
-    "User": {
-      "title": "User",
-      "description": "A user profile",
+    "ReturnRequest": {
+      "title": "ReturnRequest",
+      "description": "A request to return items from an order",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "email": { "type": "string" },
-        "firstName": { "type": "string" },
-        "lastName": { "type": "string" },
-        "role": { "type": "string", "enum": ["user", "admin"] }
+        "orderId": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "items": { "type": "array" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "completed"] },
+        "date": { "type": "string", "format": "date-time" }
       },
-      "required": ["email", "firstName", "lastName", "role"]
+      "required": ["id", "orderId", "email", "items", "status", "date"]
     }
   },
   "firestore": {
-    "products": {
+    "/products/{productId}": {
       "schema": "Product",
       "description": "Collection of products"
     },
-    "orders": {
-      "schema": "Order",
-      "description": "Collection of orders"
-    },
-    "users": {
+    "/users/{userId}": {
       "schema": "User",
-      "description": "Collection of user profiles"
+      "description": "User profiles"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer orders"
+    },
+    "/returnRequests/{requestId}": {
+      "schema": "ReturnRequest",
+      "description": "Return requests"
     }
   }
 }

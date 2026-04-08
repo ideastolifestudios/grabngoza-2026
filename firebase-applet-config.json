@@ -1,10 +1,10 @@
 {
-  "projectId": "remixed-project-id",
-  "appId": "remixed-app-id",
-  "apiKey": "remixed-api-key",
-  "authDomain": "remixed-auth-domain",
-  "firestoreDatabaseId": "remixed-firestore-database-id",
-  "storageBucket": "remixed-storage-bucket",
-  "messagingSenderId": "remixed-messaging-sender-id",
-  "measurementId": "remixed-measurement-id"
+  "projectId": "grab-go-za",
+  "appId": "1:111606509611:web:ec702c03f5779a88b47a6e",
+  "apiKey": "AIzaSyCcQWjvjcwO5S-KQoTP-6sRIOJkHCKBj1I",
+  "authDomain": "grab-go-za.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "grab-go-za.firebasestorage.app",
+  "messagingSenderId": "111606509611",
+  "measurementId": ""
 }
