@@ -6089,8 +6089,24 @@ function AppContent() {
     if (status === 'success' || (orderId && window.location.pathname === '/order-success')) {
       setPaymentStatus('success');
       setIsCheckoutOpen(true);
-      setCart([]);
-      localStorage.removeItem('grab_and_go_cart');
+      
+      // Get pending order and process it
+      const pendingStr = localStorage.getItem('grab_and_go_pending_order');
+      if (pendingStr) {
+        const pending = JSON.parse(pendingStr);
+        
+        // Send confirmation email
+        fetch('/api/order-success', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order: pending }),
+        }).catch(err => console.error('Failed to send confirmation:', err));
+        
+        // Clear cart and pending order
+        setCart([]);
+        localStorage.removeItem('grab_and_go_cart');
+        localStorage.removeItem('grab_and_go_pending_order');
+      }
     } else if (status === 'cancelled') {
       setPaymentStatus('cancelled');
       setIsCheckoutOpen(true);
