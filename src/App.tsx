@@ -4798,32 +4798,34 @@ const HybridCheckoutModal = ({
         paymentGateway
       };
 
-      // In this frontend-only demo, we simulate the payment success by saving directly to Firestore
-      console.log("[DEMO] Saving order to Firestore...");
-      
-      // Set to processing state for better UX
-      onPaymentStatusChange('processing');
-      
-      const savedOrder = await orderService.createOrder(orderData);
-      
-      // Send Order Confirmation Email
-      try {
-        await emailService.sendOrderConfirmation({
-          ...orderData,
-          id: savedOrder.id,
-          status: 'pending',
-          date: new Date().toISOString()
-        });
-      } catch (emailErr) {
-        console.error("Failed to send order confirmation email:", emailErr);
-      }
+      // Save pending order to localStorage before redirecting to Yoco
+      const pendingOrder = {
+        ...orderData,
+        id: Math.random().toString(36).substr(2, 9).toUpperCase(),
+        status: 'pending',
+        date: new Date().toISOString()
+      };
+      localStorage.setItem('grab_and_go_pending_order', JSON.stringify(pendingOrder));
 
-      setDemoMessage("Order Successfully Placed! (Demo Mode: Payment simulated and order saved to Firestore)");
-      
-      // Small delay to show processing state
-      setTimeout(() => {
-        onPaymentStatusChange('success');
-      }, 1500);
+      // Call Yoco payment API
+      const response = await fetch('/api/create-yoco-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: finalTotal,
+          currency: 'ZAR',
+          metadata: { orderId: pendingOrder.id },
+          order: pendingOrder
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+      } else {
+        throw new Error(data.error || 'Payment failed to initialize');
+      }
       
     } catch (err: any) {
       onPaymentStatusChange(null);
