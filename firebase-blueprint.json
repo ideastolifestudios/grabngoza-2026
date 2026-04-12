@@ -11,8 +11,11 @@
         "originalPrice": { "type": "number" },
         "image": { "type": "string" },
         "images": { "type": "array", "items": { "type": "string" } },
-        "category": { "type": "string" },
+        "categories": { "type": "array", "items": { "type": "string" } },
+        "brandId": { "type": "string" },
         "brand": { "type": "string" },
+        "brandBanner": { "type": "string" },
+        "brandDescription": { "type": "string" },
         "soldBy": { "type": "string" },
         "soldByLogo": { "type": "string" },
         "isDrop": { "type": "boolean" },
@@ -31,7 +34,7 @@
           }
         }
       },
-      "required": ["id", "name", "price", "image", "category", "description"]
+      "required": ["id", "name", "price", "image", "categories", "description"]
     },
     "User": {
       "title": "User",
@@ -42,7 +45,8 @@
         "email": { "type": "string", "format": "email" },
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
-        "role": { "type": "string", "enum": ["user", "admin"] }
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "wishlist": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["id", "email", "firstName", "lastName", "role"]
     },
@@ -71,19 +75,32 @@
       },
       "required": ["id", "email", "firstName", "lastName", "items", "total", "status", "date", "deliveryMethod"]
     },
-    "ReturnRequest": {
-      "title": "ReturnRequest",
-      "description": "A request to return items from an order",
+    "Category": {
+      "title": "Category",
+      "description": "A product category",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "orderId": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "items": { "type": "array" },
-        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "completed"] },
-        "date": { "type": "string", "format": "date-time" }
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "image": { "type": "string" },
+        "parentId": { "type": "string" }
       },
-      "required": ["id", "orderId", "email", "items", "status", "date"]
+      "required": ["id", "name"]
+    },
+    "Brand": {
+      "title": "Brand",
+      "description": "A product brand",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "banner": { "type": "string" },
+        "logo": { "type": "string" },
+        "soldBy": { "type": "string" }
+      },
+      "required": ["id", "name"]
     }
   },
   "firestore": {
@@ -99,9 +116,13 @@
       "schema": "Order",
       "description": "Customer orders"
     },
-    "/returnRequests/{requestId}": {
-      "schema": "ReturnRequest",
-      "description": "Return requests"
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Product categories"
+    },
+    "/brands/{brandId}": {
+      "schema": "Brand",
+      "description": "Product brands"
     }
   }
 }

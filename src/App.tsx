@@ -46,15 +46,24 @@ import {
   Filter,
   ExternalLink,
   Globe,
-  Ruler
+  Ruler,
+  ShieldCheck,
+  Shirt,
+  Watch,
+  Footprints,
+  Grid,
+  Sparkles,
+  Tag
 } from 'lucide-react';
 import { TESTIMONIALS, PARTNERS } from './constants';
-import { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod } from './types';
+import { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod, Category, Brand } from './types';
 import { 
   productService, 
   orderService, 
   authService, 
-  supportService 
+  supportService,
+  categoryService,
+  brandService
 } from './services/api';
 import { emailService } from './services/emailService';
 import { auth, googleProvider, facebookProvider } from './firebase';
@@ -353,7 +362,7 @@ const Header = ({
     return products
       .filter(p => 
         p.name.toLowerCase().includes(localSearch.toLowerCase()) ||
-        p.category.toLowerCase().includes(localSearch.toLowerCase()) ||
+        (p.categories || []).some(c => c.toLowerCase().includes(localSearch.toLowerCase())) ||
         p.brand?.toLowerCase().includes(localSearch.toLowerCase())
       )
       .slice(0, 5);
@@ -440,7 +449,7 @@ const Header = ({
                             <Highlight text={product.name} query={localSearch} />
                           </div>
                           <div className="text-[8px] font-bold uppercase tracking-widest text-gray-400">
-                            {product.category}
+                            {(product.categories || []).join(', ')}
                           </div>
                         </div>
                         <div className="text-[10px] font-black text-black">
@@ -602,6 +611,7 @@ const Sidebar = ({
   onClose, 
   onOpenOrders, 
   onOpenAuth, 
+  onOpenWishlist,
   onLogout, 
   onOpenCart,
   onOpenProducts,
@@ -612,6 +622,7 @@ const Sidebar = ({
   onClose: () => void, 
   onOpenOrders: () => void, 
   onOpenAuth: () => void, 
+  onOpenWishlist: () => void,
   onLogout: () => void, 
   onOpenCart: () => void,
   onOpenProducts: () => void,
@@ -714,7 +725,20 @@ const Sidebar = ({
                   onClick={() => { onClose(); onOpenOrders(); }}
                   className="text-sm font-bold uppercase tracking-widest text-left text-white/60 hover:text-white transition-colors"
                 >
+                  My Orders
+                </button>
+                <Link 
+                  to="/track-order"
+                  onClick={onClose}
+                  className="text-sm font-bold uppercase tracking-widest text-left text-white/60 hover:text-white transition-colors"
+                >
                   Track Order
+                </Link>
+                <button 
+                  onClick={() => { onClose(); onOpenWishlist(); }}
+                  className="text-sm font-bold uppercase tracking-widest text-left text-white/60 hover:text-white transition-colors"
+                >
+                  My Wishlist
                 </button>
                 {user ? (
                   <button 
@@ -736,8 +760,6 @@ const Sidebar = ({
               {/* Info Links */}
               <div className="flex flex-col gap-3 pt-8 border-t border-white/10">
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-2">Information</p>
-                <Link to="/helpdesk" onClick={onClose} className="text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">Help Desk</Link>
-                <Link to="/returns" onClick={onClose} className="text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">Returns</Link>
                 <Link to="/faq" onClick={onClose} className="text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">FAQ</Link>
                 <Link to="/story" onClick={onClose} className="text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">Our Story</Link>
                 <Link to="/shipping" onClick={onClose} className="text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">Shipping</Link>
@@ -748,7 +770,6 @@ const Sidebar = ({
             <div className="mt-auto pt-8 border-t border-white/10 flex justify-between items-center">
               <div className="flex gap-6 text-white/40">
                 <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Instagram size={20} /></a>
-                <a href="https://wa.me/27691630778" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><MessageSquare size={20} /></a>
                 <a href="https://github.com/ideastolifestudios/Grab-Go-ZA" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Globe size={20} /></a>
               </div>
               <p className="text-[8px] font-mono uppercase tracking-widest opacity-20">Grab & Go Studio © 2026</p>
@@ -802,13 +823,24 @@ const Hero = () => (
 );
 
 
+const PAYMENT_LOGOS = {
+  visa: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882816/3840px-Visa_Inc._logo__282005_E2_80_932014_29.svg_l80vse.png",
+  mastercard: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882837/mastercard_r4oo9o.svg",
+  applepay: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882908/Apple_Pay_logo_mrpbqh.svg",
+  googlepay: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882943/HArtbyi53u0jnqhnnxkQnMx9dHOERNcprZyKnInd2nrfM7Wd9ivMNTiz7IJP6-mSpwk_iiugzg.png",
+  yoco: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882870/yoco_ekl84d.svg"
+};
+
 const ProductDetailContent = ({ 
   product, 
   allProducts,
   onAddToCart,
   onBuyNow,
   onEmailDetails,
-  searchQuery = ''
+  searchQuery = '',
+  wishlist,
+  onToggleWishlist,
+  isCartLoading = false
 }: { 
   product: Product | null; 
   allProducts: Product[];
@@ -816,6 +848,9 @@ const ProductDetailContent = ({
   onBuyNow: (p: Product, variants?: Record<string, string>) => void;
   onEmailDetails: (p: Product) => void;
   searchQuery?: string;
+  wishlist: string[];
+  onToggleWishlist: (productId: string) => void;
+  isCartLoading?: boolean;
 }) => {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [activeImage, setActiveImage] = useState(0);
@@ -860,7 +895,7 @@ const ProductDetailContent = ({
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
   
   const relatedProducts = allProducts
-    .filter(p => p.id !== product.id && (p.category === product.category || p.isDrop))
+    .filter(p => p.id !== product.id && ((p.categories || []).some(c => (product.categories || []).includes(c)) || p.isDrop))
     .slice(0, 12);
 
   const toggleAccordion = (id: string) => {
@@ -905,11 +940,23 @@ const ProductDetailContent = ({
             {/* Breadcrumbs (Mobile) */}
             <div className="md:hidden flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-widest overflow-x-auto whitespace-nowrap">
               <Link to="/">Studio</Link> <ChevronRight size={8} /> 
-              <span>{product.category}</span> <ChevronRight size={8} /> 
+              <span>{(product.categories || []).join(', ')}</span> <ChevronRight size={8} /> 
               <span className="text-black">{product.name}</span>
             </div>
 
             <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden group">
+              {/* Wishlist Button */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (product) onToggleWishlist(product.id);
+                }}
+                className={`absolute top-6 right-6 z-30 w-12 h-12 flex items-center justify-center rounded-full shadow-xl transition-all duration-300 ${wishlist.includes(product?.id || '') ? 'bg-red-500 text-white' : 'bg-white text-black hover:bg-red-50 text-red-500'}`}
+                title={wishlist.includes(product?.id || '') ? "Remove from Wishlist" : "Add to Wishlist"}
+              >
+                <Heart size={20} fill={wishlist.includes(product?.id || '') ? "currentColor" : "none"} />
+              </button>
+
               <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full">
                 {allImages.map((img, idx) => (
                   <div key={idx} className="min-w-full h-full snap-center">
@@ -965,7 +1012,7 @@ const ProductDetailContent = ({
             {/* Breadcrumbs (Desktop) */}
             <div className="hidden md:flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-widest mb-8">
               <Link to="/">Studio</Link> <ChevronRight size={8} /> 
-              <span>{product.category}</span> <ChevronRight size={8} /> 
+              <span>{(product.categories || []).join(', ')}</span> <ChevronRight size={8} /> 
               <span className="text-black">{product.name}</span>
             </div>
 
@@ -1055,16 +1102,6 @@ const ProductDetailContent = ({
               >
                 Buy it now
               </button>
-              <button 
-                onClick={() => {
-                  const msg = encodeURIComponent(`Hi, I'm interested in the ${product.name} (R${product.price}). Can I get more details?`);
-                  window.open(`https://wa.me/${process.env.WHATSAPP_NUMBER || '27000000000'}?text=${msg}`, '_blank');
-                }}
-                className="w-full h-12 md:h-14 bg-[#25D366] text-white font-bold uppercase text-[10px] tracking-[0.3em] hover:opacity-90 transition-all flex items-center justify-center gap-3"
-              >
-                <MessageSquare size={16} />
-                WhatsApp Inquiry
-              </button>
             </div>
 
             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest opacity-40 mb-10">
@@ -1073,11 +1110,12 @@ const ProductDetailContent = ({
             </div>
 
             {/* Payment Icons */}
-            <div className="flex flex-wrap gap-3 mb-12 opacity-60">
-              <div className="px-3 py-1 border border-gray-200 rounded text-[8px] font-black uppercase tracking-widest">Visa</div>
-              <div className="px-3 py-1 border border-gray-200 rounded text-[8px] font-black uppercase tracking-widest">Mastercard</div>
-              <div className="px-3 py-1 border border-gray-200 rounded text-[8px] font-black uppercase tracking-widest">Apple Pay</div>
-              <div className="px-3 py-1 border border-gray-200 rounded text-[8px] font-black uppercase tracking-widest">Google Pay</div>
+            <div className="flex flex-wrap items-center gap-4 mb-12">
+              <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-6 object-contain" referrerPolicy="no-referrer" />
+              <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-8 object-contain" referrerPolicy="no-referrer" />
+              <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-8 object-contain" referrerPolicy="no-referrer" />
+              <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-8 object-contain" referrerPolicy="no-referrer" />
+              <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-6 object-contain" referrerPolicy="no-referrer" />
             </div>
 
             {/* Accordions */}
@@ -1110,9 +1148,6 @@ const ProductDetailContent = ({
                     <span className="font-bold text-xs uppercase tracking-widest">{product.soldBy || 'Studio'}</span>
                   )}
                 </div>
-                <button className="h-12 sm:h-10 px-6 border border-[#4B48FF] text-[#4B48FF] text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-[#4B48FF] hover:text-white transition-all flex items-center justify-center gap-2">
-                  <MapPin size={14} /> Check in-store availability
-                </button>
               </div>
             </div>
           </div>
@@ -1150,6 +1185,9 @@ const ProductDetailContent = ({
                   onEmailDetails={onEmailDetails}
                   onBuyNow={() => {}}
                   searchQuery={searchQuery}
+                  isWishlisted={wishlist.includes(p.id)}
+                  onToggleWishlist={onToggleWishlist}
+                  isLoading={isCartLoading}
                 />
               </div>
             ))}
@@ -1160,9 +1198,27 @@ const ProductDetailContent = ({
   );
 };
 
-const ProductCard = ({ product, onAddToCart, onEmailDetails, onBuyNow, searchQuery = '' }: { product: Product, onAddToCart: (p: Product, variants?: Record<string, string>) => void, onEmailDetails: (p: Product) => void, onBuyNow: (p: Product, variants?: Record<string, string>) => void, searchQuery?: string, key?: string }) => {
+const ProductCard = ({ 
+  product, 
+  onAddToCart, 
+  onEmailDetails, 
+  onBuyNow, 
+  searchQuery = '',
+  isWishlisted,
+  onToggleWishlist,
+  isLoading = false
+}: { 
+  product: Product, 
+  onAddToCart: (p: Product, variants?: Record<string, string>) => void, 
+  onEmailDetails: (p: Product) => void, 
+  onBuyNow: (p: Product, variants?: Record<string, string>) => void, 
+  searchQuery?: string, 
+  isWishlisted: boolean,
+  onToggleWishlist: (productId: string) => void,
+  key?: string,
+  isLoading?: boolean
+}) => {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
-  const [isLiked, setIsLiked] = useState(false);
   const allImages = useMemo(() => [product.image, ...(product.images || [])], [product.image, product.images]);
   const navigate = useNavigate();
 
@@ -1188,6 +1244,11 @@ const ProductCard = ({ product, onAddToCart, onEmailDetails, onBuyNow, searchQue
       className="group cursor-pointer relative bg-white border border-gray-50 md:border-transparent rounded-xl md:rounded-none overflow-hidden md:overflow-visible"
     >
       <div className="aspect-[3/4] overflow-hidden bg-gray-50 mb-3 relative shadow-sm group-hover:shadow-xl transition-all duration-500">
+        {isLoading && (
+          <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-40 flex items-center justify-center">
+            <Loader2 className="animate-spin text-black" size={24} />
+          </div>
+        )}
         {/* Action Icons - Visible on mobile, hover on desktop */}
         <div className="absolute left-3 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-30 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 md:translate-x-[-10px] md:group-hover:translate-x-0">
           <button 
@@ -1213,23 +1274,12 @@ const ProductCard = ({ product, onAddToCart, onEmailDetails, onBuyNow, searchQue
           <button 
             onClick={(e) => {
               e.stopPropagation();
-              const msg = encodeURIComponent(`Hi, I'm interested in the ${product.name} (R${product.price}). Can I get more details?`);
-              window.open(`https://wa.me/${process.env.WHATSAPP_NUMBER || '27000000000'}?text=${msg}`, '_blank');
+              onToggleWishlist(product.id);
             }}
-            className="w-10 h-10 md:w-8 md:h-8 bg-white text-black flex items-center justify-center rounded-full shadow-lg hover:bg-[#25D366] hover:text-white transition-all duration-300"
-            title="WhatsApp Inquiry"
+            className={`w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-full shadow-lg transition-all duration-300 ${isWishlisted ? 'bg-red-500 text-white' : 'bg-white text-black hover:bg-red-50 text-red-500'}`}
+            title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
           >
-            <MessageSquare size={16} className="md:w-3.5 md:h-3.5" />
-          </button>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsLiked(!isLiked);
-            }}
-            className={`w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-full shadow-lg transition-all duration-300 ${isLiked ? 'bg-red-500 text-white' : 'bg-white text-black hover:bg-red-50 text-red-500'}`}
-            title="Like"
-          >
-            <Heart size={16} className="md:w-3.5 md:h-3.5" fill={isLiked ? "currentColor" : "none"} />
+            <Heart size={16} className="md:w-3.5 md:h-3.5" fill={isWishlisted ? "currentColor" : "none"} />
           </button>
         </div>
 
@@ -1291,7 +1341,7 @@ const ProductCard = ({ product, onAddToCart, onEmailDetails, onBuyNow, searchQue
           </h3>
           <span className="text-[9px] md:text-[10px] font-semibold text-black">{formatPrice(product.price)}</span>
         </div>
-        <p className="text-[7px] md:text-[8px] font-semibold uppercase tracking-wider opacity-20 text-black">{product.category}</p>
+        <p className="text-[7px] md:text-[8px] font-semibold uppercase tracking-wider opacity-20 text-black">{(product.categories || []).join(', ')}</p>
         
         {/* Mobile Add to Cart Button */}
         <button 
@@ -1335,7 +1385,7 @@ const SocialProof = () => (
         {TESTIMONIALS.map((t) => (
           <div key={t.id} className="p-6 md:p-8 bg-gray-50 border border-gray-50 relative overflow-hidden group rounded-xl">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-              {t.type === 'whatsapp' ? <MessageSquare size={32} className="text-black" /> : <Instagram size={32} className="text-black" />}
+              <Instagram size={32} className="text-black" />
             </div>
             <div className="flex items-center gap-2 mb-3 md:mb-4">
               <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-black text-white flex items-center justify-center font-semibold text-[10px]">
@@ -1488,15 +1538,6 @@ const Footer = () => {
           >
             <Facebook size={16} />
           </motion.a>
-          <motion.a 
-            whileHover={{ scale: 1.1 }}
-            href="https://wa.me/27691630778" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-black opacity-30 hover:opacity-100 transition-opacity"
-          >
-            <Phone size={16} />
-          </motion.a>
         </div>
       </div>
       
@@ -1513,7 +1554,9 @@ const Footer = () => {
         <div className="space-y-3 md:space-y-4">
           <h4 className="text-[9px] font-semibold uppercase tracking-wider opacity-20 text-black">Support</h4>
           <ul className="space-y-1 md:space-y-2 text-[9px] font-semibold uppercase tracking-wider text-black">
-            <li onClick={() => window.dispatchEvent(new CustomEvent('open-orders'))} className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">Track Order</li>
+            <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
+              <Link to="/track-order">Track Order</Link>
+            </li>
             <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
               <Link to="/shipping">Shipping</Link>
             </li>
@@ -1521,16 +1564,10 @@ const Footer = () => {
               <Link to="/helpdesk">Help Desk</Link>
             </li>
             <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
-              <Link to="/returns">Self-Service Returns</Link>
-            </li>
-            <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
               <Link to="/faq">FAQ</Link>
             </li>
             <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
               <Link to="/refunds">Returns</Link>
-            </li>
-            <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
-              <a href="https://wa.me/27691630778" target="_blank" rel="noopener noreferrer">WhatsApp</a>
             </li>
           </ul>
         </div>
@@ -1555,14 +1592,16 @@ const Footer = () => {
       </div>
     </div>
     
-    <div className="max-w-7xl mx-auto mt-12 md:mt-20 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 border-t border-gray-50 pt-6 md:pt-8">
-      <p className="text-[7px] font-semibold uppercase tracking-widest opacity-20 text-black">© 2026 Grab & Go Studio</p>
-      <div className="flex gap-4 md:gap-6 opacity-10 text-black">
-        <CreditCard size={14} />
-        <Truck size={14} />
-        <Zap size={14} />
+      <div className="max-w-7xl mx-auto mt-12 md:mt-20 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8 border-t border-gray-50 pt-6 md:pt-8">
+        <p className="text-[7px] font-semibold uppercase tracking-widest opacity-20 text-black">© 2026 Grab & Go Studio</p>
+        <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6 transition-all duration-500">
+          <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-5 object-contain" referrerPolicy="no-referrer" />
+          <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-7 object-contain" referrerPolicy="no-referrer" />
+          <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-7 object-contain" referrerPolicy="no-referrer" />
+          <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-7 object-contain" referrerPolicy="no-referrer" />
+          <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-5 object-contain" referrerPolicy="no-referrer" />
+        </div>
       </div>
-    </div>
   </footer>
   );
 };
@@ -1570,15 +1609,7 @@ const Footer = () => {
 // Recipe 1: Technical Dashboard / Data Grid
 // Mood: Professional, precise, information-dense.
 const SystemHealthDashboard = () => {
-  const systems = [
-    {
-      name: 'WhatsApp Business API',
-      status: 'error',
-      message: 'Session Expired (16-Mar-26)',
-      icon: MessageSquare,
-      action: 'https://developers.facebook.com/apps/',
-      actionLabel: 'Update Token'
-    },
+  const systems: { name: string; status: string; message: string; icon: any; action?: string; actionLabel?: string }[] = [
     {
       name: 'SMTP Email Service',
       status: 'healthy',
@@ -1661,25 +1692,6 @@ const SystemHealthDashboard = () => {
         </div>
 
         <div className="mt-12 grid md:grid-cols-2 gap-8">
-          <div className="border border-[#141414] p-6">
-            <h3 className="font-serif italic text-xl mb-4">Critical Alert: WhatsApp API</h3>
-            <p className="text-sm leading-relaxed mb-4">
-              The Meta Cloud API access token has expired. This prevents the system from sending order confirmations and status updates via WhatsApp.
-            </p>
-            <div className="bg-red-500/10 border border-red-500 p-4 rounded">
-              <h4 className="font-bold text-xs uppercase tracking-widest mb-2 text-red-700 flex items-center gap-2">
-                <AlertCircle size={14} /> Resolution Steps
-              </h4>
-              <ol className="text-xs space-y-2 text-red-900 list-decimal list-inside">
-                <li>Log in to the Meta for Developers portal.</li>
-                <li>Navigate to your App &gt; WhatsApp &gt; Configuration.</li>
-                <li>Generate a new Permanent Access Token.</li>
-                <li>Update the <code className="bg-red-500/20 px-1">WHATSAPP_ACCESS_TOKEN</code> in your environment variables.</li>
-                <li>Restart the server to apply changes.</li>
-              </ol>
-            </div>
-          </div>
-
           <div className="border border-[#141414] p-6 flex flex-col justify-center items-center text-center">
             <Activity size={48} className="mb-4 opacity-20" />
             <h3 className="font-serif italic text-xl mb-2">Auto-Recovery</h3>
@@ -1695,395 +1707,7 @@ const SystemHealthDashboard = () => {
 };
 
 const SystemAlertBanner = ({ user }: { user: User | null }) => {
-  if (user?.role !== 'admin') return null;
-
-  return (
-    <motion.div 
-      initial={{ height: 0, opacity: 0 }}
-      animate={{ height: 'auto', opacity: 1 }}
-      className="bg-red-600 text-white py-2 px-4 text-center relative z-[60]"
-    >
-      <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
-        <AlertTriangle size={14} className="animate-pulse" />
-        <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-          Critical System Alert: WhatsApp Session Expired. Notifications Offline.
-        </span>
-        <Link 
-          to="/admin/system" 
-          className="text-[10px] font-black uppercase tracking-[0.2em] underline ml-2 hover:opacity-80 transition-opacity"
-        >
-          View Diagnostics
-        </Link>
-      </div>
-    </motion.div>
-  );
-};
-
-const SelfServiceReturnsPage = () => {
-  const [step, setStep] = useState<'lookup' | 'select' | 'confirm' | 'success'>('lookup');
-  const [orderId, setOrderId] = useState('');
-  const [email, setEmail] = useState('');
-  const [order, setOrder] = useState<Order | null>(null);
-  const [selectedItems, setSelectedItems] = useState<Record<string, { quantity: number, reason: string }>>({});
-  const [notes, setNotes] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [returnId, setReturnId] = useState('');
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  const handleLookup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const foundOrder = await orderService.lookupOrder(orderId, email);
-      
-      if (foundOrder) {
-        setOrder(foundOrder);
-        setStep('select');
-      } else {
-        setError('Order not found or email mismatch. Please check your details.');
-      }
-    } catch (err: any) {
-      console.error('Order lookup error:', err);
-      setError(err.message || 'Failed to lookup order. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleItem = (productId: string) => {
-    if (selectedItems[productId]) {
-      const newItems = { ...selectedItems };
-      delete newItems[productId];
-      setSelectedItems(newItems);
-    } else {
-      const item = order?.items.find(i => i.id === productId);
-      if (item) {
-        setSelectedItems({
-          ...selectedItems,
-          [productId]: { quantity: 1, reason: 'Size too small' }
-        });
-      }
-    }
-  };
-
-  const updateItem = (productId: string, field: 'quantity' | 'reason', value: any) => {
-    setSelectedItems({
-      ...selectedItems,
-      [productId]: { ...selectedItems[productId], [field]: value }
-    });
-  };
-
-  const handleSubmitReturn = async () => {
-    setLoading(true);
-    setError('');
-
-    const items = Object.entries(selectedItems).map(([productId, data]) => {
-      const orderItem = order?.items.find(i => i.id === productId);
-      const itemData = data as { quantity: number, reason: string };
-      return {
-        productId,
-        name: orderItem?.name,
-        quantity: itemData.quantity,
-        reason: itemData.reason,
-        selectedVariants: orderItem?.selectedVariants
-      };
-    });
-
-    try {
-      const returnData = {
-        orderId: order?.id,
-        email: order?.email,
-        items,
-        notes
-      };
-      
-      const res = await supportService.submitReturn(returnData);
-      
-      // Send Return Request Notification Email
-      try {
-        await emailService.sendReturnRequestNotification(returnData);
-      } catch (emailErr) {
-        console.error("Failed to send return request email:", emailErr);
-      }
-
-      setReturnId(res.id);
-      setStep('success');
-    } catch (err: any) {
-      console.error('Return submission error:', err);
-      setError(err.message || 'Failed to submit return request. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const returnReasons = [
-    "Size too small",
-    "Size too large",
-    "Changed my mind",
-    "Defective/Damaged",
-    "Incorrect item received",
-    "Not as described"
-  ];
-
-  return (
-    <div className="min-h-screen pt-32 pb-20 px-6 bg-white">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-tighter mb-4">Returns</h1>
-          <p className="text-sm text-gray-500 uppercase tracking-widest">Self-Service Return System</p>
-        </div>
-
-        {step === 'lookup' && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gray-50 p-8 rounded-2xl border border-gray-100 max-w-md mx-auto"
-          >
-            <h2 className="text-xl font-bold uppercase tracking-tight mb-6 text-center">Find Your Order</h2>
-            <form onSubmit={handleLookup} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Order ID</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. ORD-123456"
-                  required
-                  value={orderId}
-                  onChange={(e) => setOrderId(e.target.value)}
-                  className="w-full bg-white border border-gray-200 rounded-md px-4 py-3 text-xs focus:ring-1 focus:ring-black outline-none transition-all"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Email Address</label>
-                <input 
-                  type="email" 
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white border border-gray-200 rounded-md px-4 py-3 text-xs focus:ring-1 focus:ring-black outline-none transition-all"
-                />
-              </div>
-
-              {error && (
-                <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest text-center">{error}</p>
-              )}
-
-              <button 
-                type="submit"
-                disabled={loading}
-                className="w-full py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {loading ? <Loader2 size={14} className="animate-spin" /> : "Find Order"}
-              </button>
-            </form>
-            <p className="mt-6 text-[10px] text-gray-400 text-center uppercase tracking-widest leading-relaxed">
-              Returns are accepted within 14 days of delivery for unworn items in original packaging.
-            </p>
-          </motion.div>
-        )}
-
-        {step === 'select' && order && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-8"
-          >
-            <div className="flex justify-between items-end border-b border-gray-100 pb-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Order {order.id}</p>
-                <h2 className="text-xl font-bold uppercase tracking-tight">Select Items to Return</h2>
-              </div>
-              <button 
-                onClick={() => setStep('lookup')}
-                className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
-              >
-                Change Order
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {order.items.map((item) => (
-                <div 
-                  key={item.id}
-                  className={`p-6 border rounded-2xl transition-all ${selectedItems[item.id] ? 'border-black bg-gray-50' : 'border-gray-100 hover:border-gray-200'}`}
-                >
-                  <div className="flex gap-6">
-                    <div className="w-20 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                      <img src={item.image || undefined} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    </div>
-                    <div className="flex-1 space-y-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-sm font-bold uppercase tracking-tight">{item.name}</h3>
-                          {item.selectedVariants && (
-                            <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">
-                              {Object.entries(item.selectedVariants).map(([k, v]) => `${k}: ${v}`).join(' | ')}
-                            </p>
-                          )}
-                        </div>
-                        <button 
-                          onClick={() => toggleItem(item.id)}
-                          className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all ${selectedItems[item.id] ? 'bg-black border-black text-white' : 'border-gray-200 text-transparent'}`}
-                        >
-                          <Check size={14} />
-                        </button>
-                      </div>
-
-                      {selectedItems[item.id] && (
-                        <motion.div 
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200"
-                        >
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Quantity</label>
-                            <select 
-                              value={selectedItems[item.id].quantity}
-                              onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value))}
-                              className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-[10px] font-bold uppercase tracking-widest outline-none"
-                            >
-                              {[...Array(item.quantity)].map((_, i) => (
-                                <option key={i+1} value={i+1}>{i+1}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Reason</label>
-                            <select 
-                              value={selectedItems[item.id].reason}
-                              onChange={(e) => updateItem(item.id, 'reason', e.target.value)}
-                              className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 text-[10px] font-bold uppercase tracking-widest outline-none"
-                            >
-                              {returnReasons.map(reason => (
-                                <option key={reason} value={reason}>{reason}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </motion.div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-4 pt-8 border-t border-gray-100">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Additional Notes (Optional)</label>
-                <textarea 
-                  rows={3}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Tell us more about the reason for your return..."
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-black outline-none transition-all resize-none"
-                />
-              </div>
-
-              <button 
-                onClick={() => setStep('confirm')}
-                disabled={Object.keys(selectedItems).length === 0}
-                className="w-full py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                Review Return Request
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {step === 'confirm' && order && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-gray-50 p-8 rounded-2xl border border-gray-100 space-y-8"
-          >
-            <div className="text-center">
-              <h2 className="text-xl font-bold uppercase tracking-tight mb-2">Confirm Return</h2>
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest">Please review your return details</p>
-            </div>
-
-            <div className="space-y-4">
-              {Object.entries(selectedItems).map(([productId, data]) => {
-                const item = order.items.find(i => i.id === productId);
-                const itemData = data as { quantity: number, reason: string };
-                return (
-                  <div key={productId} className="flex justify-between items-center py-3 border-b border-gray-200 last:border-0">
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-tight">{item?.name}</p>
-                      <p className="text-[10px] text-gray-400 uppercase tracking-widest">{itemData.reason}</p>
-                    </div>
-                    <p className="text-xs font-mono">QTY: {itemData.quantity}</p>
-                  </div>
-                );
-              })}
-            </div>
-
-            {notes && (
-              <div className="p-4 bg-white rounded-lg border border-gray-200">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Notes</p>
-                <p className="text-xs text-gray-600 italic">"{notes}"</p>
-              </div>
-            )}
-
-            <div className="space-y-3 pt-4">
-              {error && (
-                <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest text-center">{error}</p>
-              )}
-              <button 
-                onClick={handleSubmitReturn}
-                disabled={loading}
-                className="w-full py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {loading ? <Loader2 size={14} className="animate-spin" /> : "Submit Return Request"}
-              </button>
-              <button 
-                onClick={() => setStep('select')}
-                disabled={loading}
-                className="w-full py-4 bg-transparent text-black text-[10px] font-black uppercase tracking-[0.2em] hover:bg-gray-100 transition-colors disabled:opacity-50"
-              >
-                Back to Selection
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {step === 'success' && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center space-y-8 py-12"
-          >
-            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 size={40} />
-            </div>
-            <div>
-              <h2 className="text-3xl font-bold uppercase tracking-tighter mb-2">Request Submitted</h2>
-              <p className="text-sm text-gray-500 uppercase tracking-widest">Return ID: {returnId}</p>
-            </div>
-            <div className="max-w-md mx-auto bg-gray-50 p-8 rounded-2xl border border-gray-100 text-left space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-widest">What's Next?</h3>
-              <ol className="space-y-4 text-xs text-gray-500 list-decimal pl-4">
-                <li>Our team will review your request within 24-48 hours.</li>
-                <li>Once approved, you'll receive a return shipping label via email.</li>
-                <li>Pack your items securely and drop them off at the nearest courier point.</li>
-                <li>Refunds are processed within 5-7 business days of receiving the items.</li>
-              </ol>
-            </div>
-            <Link 
-              to="/"
-              className="inline-block py-4 px-12 bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] hover:opacity-90 transition-opacity"
-            >
-              Back to Shop
-            </Link>
-          </motion.div>
-        )}
-      </div>
-    </div>
-  );
+  return null;
 };
 
 const HelpDeskPage = () => {
@@ -2226,14 +1850,7 @@ const HelpDeskPage = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <a href="https://wa.me/27691630778" target="_blank" rel="noopener noreferrer" className="p-6 border border-gray-100 rounded-2xl flex flex-col items-center text-center hover:bg-gray-50 transition-colors group">
-                <div className="w-10 h-10 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <MessageSquare size={20} />
-                </div>
-                <h3 className="text-[10px] font-bold uppercase tracking-widest mb-1">WhatsApp</h3>
-                <p className="text-[8px] text-gray-400 uppercase tracking-wider">Instant Support</p>
-              </a>
+            <div className="grid grid-cols-1 gap-4">
               <div className="p-6 border border-gray-100 rounded-2xl flex flex-col items-center text-center hover:bg-gray-50 transition-colors group">
                 <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Mail size={20} />
@@ -2255,11 +1872,11 @@ const HelpDeskPage = () => {
                 },
                 {
                   q: "What is your return policy?",
-                  a: "We accept returns within 14 days of delivery. Exchanges are accepted within 30 days. Items must be in original condition."
+                  a: "We accept returns within 14 days of delivery. Exchanges are accepted within 30 days. Items must be in original condition. Please contact our Help Desk to initiate a return."
                 },
                 {
                   q: "How can I track my order?",
-                  a: "Once shipped, you'll receive a tracking number via email and WhatsApp. You can also track it in your account dashboard."
+                  a: "Once shipped, you'll receive a tracking number via email. You can also track it in your account dashboard."
                 },
                 {
                   q: "Do you ship internationally?",
@@ -2347,7 +1964,7 @@ const FAQPage = () => {
       items: [
         {
           q: "What is the return policy?",
-          a: "• Refunds: Must be requested within 14 days of delivery.\n• Exchanges: Must be requested within 30 days of purchase or delivery."
+          a: "• Refunds: Must be requested within 14 days of delivery.\n• Exchanges: Must be requested within 30 days of purchase or delivery.\n\nTo initiate a return, please contact our support team via the Help Desk."
         },
         {
           q: "Are there any return fees?",
@@ -2403,7 +2020,7 @@ const FAQPage = () => {
         <footer className="pt-8 border-t border-gray-50 text-center">
           <p className="text-sm text-gray-500">
             Still have questions? Contact us on 
-            <a href="https://wa.me/27691630778" target="_blank" rel="noopener noreferrer" className="underline font-semibold ml-1">WhatsApp</a>.
+            <Link to="/helpdesk" className="underline font-semibold ml-1">Help Desk</Link>.
           </p>
         </footer>
       </motion.div>
@@ -2452,31 +2069,29 @@ const ShippingPolicyPage = () => {
             <li><span className="font-semibold">Nationwide Delivery:</span> We deliver to your doorstep anywhere in South Africa using our trusted courier partners.</li>
             <li><span className="font-semibold">Studio/In-Store Pickup:</span> We offer pickup from our Co.Space location or designated studio spots.</li>
             <li><span className="font-semibold">Readiness:</span> Collection orders are generally ready within 1 to 2 business days. You will receive an automated notification as soon as your order is ready for "grab".</li>
-            <li><span className="font-semibold">Availability:</span> The pickup option is automatically made available during your checkout if the specific location has stock of the product you are viewing.</li>
           </ul>
         </section>
-
         <section className="space-y-4">
           <h2 className="text-lg font-semibold uppercase tracking-tight border-b border-gray-100 pb-2">3. Real-Time Tracking & Trust</h2>
           <p className="text-sm leading-relaxed text-gray-500">Building trust through transparency is core to our mission.</p>
           <ul className="space-y-2 text-sm text-gray-500 list-disc pl-5">
-            <li><span className="font-semibold">Hybrid Updates:</span> Once your order is processed through our Website + WhatsApp hybrid checkout, you will receive instant branded confirmations.</li>
-            <li><span className="font-semibold">Stay Informed:</span> You will receive continuous tracking updates via WhatsApp, SMS, or Email. These updates, powered by Zoho automation, allow you to track your order every step of the way.</li>
+            <li><span className="font-semibold">Hybrid Updates:</span> Once your order is processed through our secure checkout, you will receive instant branded confirmations.</li>
+            <li><span className="font-semibold">Stay Informed:</span> You will receive continuous tracking updates via SMS or Email. These updates allow you to track your order every step of the way.</li>
           </ul>
         </section>
 
         <section className="space-y-4">
           <h2 className="text-lg font-semibold uppercase tracking-tight border-b border-gray-100 pb-2">4. Returns & Exchanges</h2>
           <ul className="space-y-2 text-sm text-gray-500 list-disc pl-5">
-            <li><span className="font-semibold">Flexibility:</span> You can choose to return your online orders either in-store or online.</li>
+            <li><span className="font-semibold">Process:</span> To initiate a return or exchange, please contact our support team via the Help Desk.</li>
             <li><span className="font-semibold">Support:</span> We uphold the Consumer Goods and Services Code to ensure a "premium experience" that feels secure and stylish.</li>
           </ul>
         </section>
 
         <footer className="pt-8 border-t border-gray-50 text-center">
           <p className="text-sm text-gray-500">
-            For any further assistance, please contact our support team through our integrated 
-            <a href="https://wa.me/27691630778" target="_blank" rel="noopener noreferrer" className="underline font-semibold ml-1">WhatsApp channel</a>.
+            For any further assistance, please contact our support team through our 
+            <Link to="/helpdesk" className="underline font-semibold ml-1">Help Desk</Link>.
           </p>
         </footer>
       </motion.div>
@@ -2550,17 +2165,17 @@ const RefundPolicyPage = () => {
           <h2 className="text-lg font-semibold uppercase tracking-tight border-b border-gray-100 pb-2">5. The Return Process</h2>
           <p className="text-sm leading-relaxed text-gray-500">To keep our workflow "fast" and aligned with our Hybrid Checkout model, please follow these steps:</p>
           <ol className="space-y-2 text-sm text-gray-500 list-decimal pl-5">
-            <li><span className="font-semibold">Log in to your account:</span> Enter your email on our site to receive a six-digit verification code.</li>
-            <li><span className="font-semibold">Select your order:</span> Choose the specific order and items you wish to return.</li>
-            <li><span className="font-semibold">Submit Request:</span> Select a reason for the return and submit. Once approved, you will receive an email with shipping instructions.</li>
-            <li><span className="font-semibold">Finalisation:</span> After the product is returned and inspected, we will reach out via our "WhatsApp/Zoho" automation flow to finalise your refund or exchange.</li>
+            <li><span className="font-semibold">Contact Support:</span> Reach out to our support team via the Help Desk with your Order ID and the items you wish to return.</li>
+            <li><span className="font-semibold">Review:</span> Our team will review your request within 24-48 hours.</li>
+            <li><span className="font-semibold">Shipping:</span> Once approved, you will receive instructions on how to return the items to our studio.</li>
+            <li><span className="font-semibold">Finalisation:</span> After the product is returned and inspected, we will reach out via email to finalise your refund or exchange.</li>
           </ol>
         </section>
 
         <footer className="pt-8 border-t border-gray-50 text-center">
           <p className="text-sm text-gray-500">
-            For any further assistance, please contact our support team through our integrated 
-            <a href="https://wa.me/27691630778" target="_blank" rel="noopener noreferrer" className="underline font-semibold ml-1">WhatsApp channel</a>.
+            For any further assistance, please contact our support team through our 
+            <Link to="/helpdesk" className="underline font-semibold ml-1">Help Desk</Link>.
           </p>
         </footer>
       </motion.div>
@@ -2614,7 +2229,7 @@ const LegalPage = () => {
         <section className="space-y-4">
           <h2 className="text-lg font-semibold uppercase tracking-tight border-b border-gray-100 pb-2">3. Online Shopping Terms & Conditions</h2>
           <ul className="space-y-2 text-sm text-gray-500 list-disc pl-5">
-            <li>Orders are placed via WhatsApp and confirmed with proof of payment.</li>
+            <li>Orders are placed via our online store and confirmed upon payment.</li>
             <li>Items are sold on a first-pay, first-serve basis.</li>
             <li>Prices are final unless a discount or promo is explicitly offered.</li>
             <li>We accept EFT, Yoco card payments, or cash (on collection only).</li>
@@ -2641,8 +2256,8 @@ const LegalPage = () => {
             <li>Grab & Go operates primarily in English.</li>
             <li>Where possible, assistance may be given in IsiZulu or Sesotho based on available team members.</li>
             <li>All legal, invoice, and formal documentation is issued in English.</li>
-            <li>Customers can request basic assistance in other languages via WhatsApp.</li>
-            <li>For any further clarification, contact us on WhatsApp or via email.</li>
+            <li>Customers can request basic assistance in other languages via our Help Desk.</li>
+            <li>For any further clarification, contact us via email or our Help Desk.</li>
           </ul>
         </section>
 
@@ -2715,6 +2330,161 @@ const OurStoryPage = () => {
           </div>
         </div>
       </motion.div>
+    </div>
+  );
+};
+
+const OrderTrackingPage = () => {
+  const [orderId, setOrderId] = useState('');
+  const [email, setEmail] = useState('');
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  const handleTrack = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setOrder(null);
+
+    try {
+      const result = await orderService.lookupOrder(orderId, email);
+      if (result) {
+        setOrder(result);
+      } else {
+        setError("Order not found. Please check your Order ID and Email address.");
+      }
+    } catch (err) {
+      setError("An error occurred while tracking your order. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white pt-32 pb-20 px-6">
+      <div className="max-w-xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-4 text-black">Track Your Order</h1>
+          <p className="text-[10px] text-gray-400 uppercase tracking-widest">Enter your details below to see your order status</p>
+        </div>
+
+        <form onSubmit={handleTrack} className="space-y-6 mb-12">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-2 text-black">Order ID</label>
+              <input 
+                type="text" 
+                placeholder="e.g. #ABC12345" 
+                value={orderId}
+                onChange={(e) => setOrderId(e.target.value)}
+                required
+                className="w-full border border-gray-100 rounded-sm px-4 py-3 text-sm focus:border-black outline-none transition-all uppercase tracking-widest font-bold text-black"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-2 text-black">Email Address</label>
+              <input 
+                type="email" 
+                placeholder="The email used at checkout" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full border border-gray-100 rounded-sm px-4 py-3 text-sm focus:border-black outline-none transition-all uppercase tracking-widest font-bold text-black"
+              />
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="animate-spin" size={16} /> : 'Track Order'}
+          </button>
+        </form>
+
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="p-4 bg-red-50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 mb-8"
+            >
+              <AlertCircle size={16} />
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {order && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="border border-gray-100 p-8 space-y-8 text-black"
+          >
+            <div className="flex justify-between items-start border-b border-gray-100 pb-6">
+              <div>
+                <h2 className="text-xl font-bold uppercase tracking-tighter">Order #{order.id.slice(0, 8).toUpperCase()}</h2>
+                <p className="text-[10px] opacity-30 uppercase tracking-widest mt-1">Placed on {new Date(order.date).toLocaleDateString()}</p>
+              </div>
+              <div className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest ${
+                order.status === 'pending' ? 'bg-yellow-50 text-yellow-600' :
+                order.status === 'preparing' ? 'bg-blue-50 text-blue-600' :
+                order.status === 'ready' ? 'bg-emerald-50 text-emerald-600' :
+                order.status === 'completed' ? 'bg-gray-50 text-gray-400' :
+                'bg-red-50 text-red-600'
+              }`}>
+                {order.status}
+              </div>
+            </div>
+
+            {order.trackingNumber && (
+              <div className="bg-emerald-50 p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Truck className="text-emerald-600" size={20} />
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Tracking Number</p>
+                    <p className="text-xs font-mono font-bold">{order.trackingNumber}</p>
+                  </div>
+                </div>
+                {order.trackingUrl && (
+                  <a 
+                    href={order.trackingUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-[10px] font-black uppercase tracking-widest underline hover:text-emerald-700"
+                  >
+                    Track Package
+                  </a>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-black uppercase tracking-widest opacity-30">Order Items</h3>
+              <div className="space-y-3">
+                {order.items.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-xs">
+                    <span className="font-bold uppercase tracking-tight">{item.quantity}x {item.name}</span>
+                    <span className="font-mono opacity-60">{formatPrice(item.price * item.quantity)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-gray-100 flex justify-between items-center">
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Total Paid</span>
+              <span className="text-lg font-bold">{formatPrice(order.total)}</span>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </div>
   );
 };
@@ -3052,39 +2822,6 @@ const OrdersDrawer = ({
   onUpdateOrder?: (id: string, updates: Partial<Order>) => void
 }) => {
   const [trackingInputs, setTrackingInputs] = useState<Record<string, { number: string, url: string }>>({});
-  const [testingWhatsApp, setTestingWhatsApp] = useState<string | null>(null);
-
-  const handleTestWhatsApp = async (order: Order) => {
-    if (!order.phone) {
-      alert("No phone number associated with this order.");
-      return;
-    }
-    
-    setTestingWhatsApp(order.id);
-    try {
-      const msg = `Hi ${order.firstName}, this is a test message from Grab & Go for order #${order.id.slice(0, 8).toUpperCase()}. Tracking: ${order.trackingNumber || 'Pending'}`;
-      const res = await fetch('/api/test/whatsapp', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('grab_and_go_token')}`
-        },
-        body: JSON.stringify({ phone: order.phone, message: msg })
-      });
-      
-      const data = await res.json();
-      if (res.ok && data.success) {
-        alert(`Test WhatsApp sent successfully! ${data.demo ? '(Demo Mode)' : ''}`);
-      } else {
-        alert(`Failed to send test WhatsApp: ${data.error || data.details || 'Unknown error'}`);
-      }
-    } catch (err) {
-      console.error("WhatsApp test error:", err);
-      alert("An error occurred while sending the test message.");
-    } finally {
-      setTestingWhatsApp(null);
-    }
-  };
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
@@ -3222,16 +2959,6 @@ const OrdersDrawer = ({
                           </button>
                         )}
 
-                        {user.role === 'admin' && (
-                          <button 
-                            onClick={() => handleTestWhatsApp(order)}
-                            disabled={testingWhatsApp === order.id}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all disabled:opacity-50"
-                          >
-                            {testingWhatsApp === order.id ? <Loader2 className="animate-spin" size={12} /> : <MessageSquare size={12} />}
-                            Send Test WhatsApp
-                          </button>
-                        )}
                       </div>
                     )}
 
@@ -3287,36 +3014,710 @@ const OrdersDrawer = ({
   );
 };
 
+const WishlistDrawer = ({ 
+  isOpen, 
+  onClose, 
+  wishlist,
+  products,
+  onToggleWishlist,
+  onAddToCart,
+  user
+}: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  wishlist: string[],
+  products: Product[],
+  onToggleWishlist: (productId: string) => void,
+  onAddToCart: (p: Product) => void,
+  user: User | null
+}) => {
+  const wishlistProducts = products.filter(p => wishlist.includes(p.id));
+  const navigate = useNavigate();
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[60]"
+          />
+          <motion.div 
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed top-0 right-0 bottom-0 w-full md:max-w-md bg-white border-l border-gray-100 z-[70] p-6 flex flex-col"
+          >
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex flex-col gap-1">
+                <Logo className="h-8" dark />
+                <span className="text-[10px] font-mono opacity-30 uppercase tracking-widest text-black">
+                  My Wishlist ({wishlistProducts.length})
+                </span>
+              </div>
+              <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors">
+                <X size={24} className="text-black" />
+              </button>
+            </div>
+
+            <div className="flex-grow overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+              {!user ? (
+                <div className="text-center py-20 opacity-30 text-black">
+                  <UserIcon size={48} className="mx-auto mb-4" />
+                  <p className="uppercase tracking-widest text-sm font-bold">Login to view your wishlist</p>
+                </div>
+              ) : wishlistProducts.length === 0 ? (
+                <div className="text-center py-20 opacity-30 text-black">
+                  <Heart size={48} className="mx-auto mb-4" />
+                  <p className="uppercase tracking-widest text-sm font-bold">Your wishlist is empty</p>
+                  <button 
+                    onClick={onClose}
+                    className="mt-6 text-[10px] font-bold uppercase tracking-widest underline"
+                  >
+                    Start Shopping
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {wishlistProducts.map((product) => (
+                    <div key={product.id} className="group relative flex gap-4 p-4 border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-xl transition-all duration-500 text-black">
+                      <div 
+                        className="w-24 aspect-[3/4] bg-gray-100 overflow-hidden flex-shrink-0 cursor-pointer"
+                        onClick={() => { navigate(`/product/${product.id}`); onClose(); }}
+                      >
+                        <img 
+                          src={product.image} 
+                          alt={product.name} 
+                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <div className="flex-grow flex flex-col justify-between py-1">
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-tight mb-1">{product.name}</h4>
+                          <p className="text-[10px] opacity-30 uppercase tracking-widest mb-2">{product.brand || 'Studio Born'}</p>
+                          <p className="text-xs font-mono font-bold">{formatPrice(product.price)}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => onAddToCart(product)}
+                            className="flex-grow py-2 bg-black text-white text-[8px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-colors"
+                          >
+                            Add to Cart
+                          </button>
+                          <button 
+                            onClick={() => onToggleWishlist(product.id)}
+                            className="w-8 h-8 flex items-center justify-center border border-red-100 text-red-500 hover:bg-red-50 transition-colors"
+                            title="Remove"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
+
+const CategoryManagementDrawer = ({ 
+  isOpen, 
+  onClose, 
+  categories,
+  onSave,
+  onDelete
+}: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  categories: Category[],
+  onSave: (c: Partial<Category>) => Promise<void>,
+  onDelete: (id: string) => Promise<void>
+}) => {
+  const [editingCategory, setEditingCategory] = useState<Partial<Category> | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCategory) return;
+    setIsSaving(true);
+    await onSave(editingCategory);
+    setIsSaving(false);
+    setEditingCategory(null);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (res.ok) {
+        const { imageUrl } = await res.json();
+        setEditingCategory(prev => prev ? { ...prev, image: imageUrl } : null);
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]"
+          />
+          <motion.div 
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-gray-100 z-[90] p-6 flex flex-col"
+          >
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-display font-bold uppercase tracking-tighter">Manage Categories</h2>
+              <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors text-black">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <button 
+                onClick={() => setEditingCategory({ name: '', description: '', image: '' })}
+                className="w-full py-3 border border-dashed border-gray-200 hover:border-black/20 transition-colors flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-black"
+              >
+                <Plus size={16} /> Add New Category
+              </button>
+            </div>
+
+            <div className="flex-grow overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+              {categories.filter(c => !c.parentId).map((mainCat) => (
+                <div key={mainCat.id} className="space-y-2">
+                  <div className="p-3 border border-gray-50 bg-gray-50/30 flex gap-3 items-center text-black group">
+                    <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                      {mainCat.image && <img src={mainCat.image} alt={mainCat.name} className="w-full h-full object-cover" />}
+                    </div>
+                    <div className="flex-grow">
+                      <h4 className="text-xs font-bold uppercase tracking-tight">{mainCat.name}</h4>
+                      {mainCat.description && (
+                        <p className="text-[8px] opacity-40 uppercase tracking-widest truncate max-w-[150px]">
+                          {mainCat.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <button 
+                        onClick={() => setEditingCategory(mainCat)}
+                        className="p-1.5 hover:bg-black/5 rounded-full transition-colors"
+                      >
+                        <Edit3 size={14} />
+                      </button>
+                      <button 
+                        onClick={() => setDeletingId(mainCat.id)}
+                        className="p-1.5 hover:bg-red-50 rounded-full transition-colors text-red-500"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Sub-categories */}
+                  <div className="pl-6 space-y-2">
+                    {categories.filter(c => c.parentId === mainCat.id).map(subCat => (
+                      <div key={subCat.id} className="p-2 border border-gray-50 bg-white flex gap-3 items-center text-black group">
+                        <div className="w-8 h-8 bg-gray-50 rounded overflow-hidden flex-shrink-0">
+                          {subCat.image && <img src={subCat.image} alt={subCat.name} className="w-full h-full object-cover" />}
+                        </div>
+                        <div className="flex-grow">
+                          <h4 className="text-[10px] font-bold uppercase tracking-tight">{subCat.name}</h4>
+                        </div>
+                        <div className="flex gap-1">
+                          <button 
+                            onClick={() => setEditingCategory(subCat)}
+                            className="p-1 hover:bg-black/5 rounded-full transition-colors"
+                          >
+                            <Edit3 size={12} />
+                          </button>
+                          <button 
+                            onClick={() => setDeletingId(subCat.id)}
+                            className="p-1 hover:bg-red-50 rounded-full transition-colors text-red-500"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              
+              {/* Orphaned sub-categories (if any) */}
+              {categories.filter(c => c.parentId && !categories.find(p => p.id === c.parentId)).map(orphan => (
+                <div key={orphan.id} className="p-3 border border-red-50 bg-red-50/10 flex gap-3 items-center text-black group">
+                  <div className="flex-grow">
+                    <h4 className="text-xs font-bold uppercase tracking-tight">{orphan.name} (Orphaned)</h4>
+                  </div>
+                  <div className="flex gap-1">
+                    <button onClick={() => setEditingCategory(orphan)} className="p-1.5 hover:bg-black/5 rounded-full transition-colors"><Edit3 size={14} /></button>
+                    <button onClick={() => setDeletingId(orphan.id)} className="p-1.5 hover:bg-red-50 rounded-full transition-colors text-red-500"><Trash2 size={14} /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Edit Modal */}
+            <AnimatePresence>
+              {editingCategory && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setEditingCategory(null)}
+                    className="absolute inset-0 bg-white/80 backdrop-blur-sm"
+                  />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="relative w-full max-w-sm bg-white border border-gray-100 shadow-2xl p-6 text-black"
+                  >
+                    <h3 className="text-lg font-bold uppercase tracking-tighter mb-6">
+                      {editingCategory.id ? 'Edit Category' : 'New Category'}
+                    </h3>
+                    <form onSubmit={handleSave} className="space-y-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Category Name</label>
+                        <input 
+                          type="text" 
+                          required
+                          value={editingCategory.name}
+                          onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Description</label>
+                        <textarea 
+                          value={editingCategory.description || ''}
+                          onChange={(e) => setEditingCategory({ ...editingCategory, description: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none h-20 resize-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Image</label>
+                        <div className="flex gap-2">
+                          <div 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-12 h-12 border border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-black transition-colors"
+                          >
+                            {isUploading ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
+                          </div>
+                          <input 
+                            type="text"
+                            placeholder="Image URL"
+                            value={editingCategory.image || ''}
+                            onChange={(e) => setEditingCategory({ ...editingCategory, image: e.target.value })}
+                            className="flex-grow bg-gray-50 border border-gray-100 px-4 py-2 text-[10px] focus:border-black outline-none"
+                          />
+                          <input 
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Parent Category</label>
+                        <select 
+                          value={editingCategory.parentId || ''}
+                          onChange={(e) => setEditingCategory({ ...editingCategory, parentId: e.target.value || undefined })}
+                          className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none appearance-none"
+                        >
+                          <option value="">None (Main Category)</option>
+                          {categories.filter(c => c.id !== editingCategory.id && !c.parentId).map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex gap-3 pt-4">
+                        <button 
+                          type="button"
+                          onClick={() => setEditingCategory(null)}
+                          className="flex-grow py-2 border border-gray-100 font-bold uppercase tracking-widest text-[10px]"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          type="submit"
+                          disabled={isSaving}
+                          className="flex-grow py-2 bg-black text-white font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
+                        >
+                          {isSaving ? <Loader2 className="animate-spin" size={14} /> : 'Save'}
+                        </button>
+                      </div>
+                    </form>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+
+            {/* Delete Confirmation */}
+            <AnimatePresence>
+              {deletingId && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setDeletingId(null)}
+                    className="absolute inset-0 bg-white/80 backdrop-blur-sm"
+                  />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="relative w-full max-w-sm bg-white border border-gray-100 shadow-2xl p-6 text-black text-center"
+                  >
+                    <h3 className="text-lg font-bold uppercase tracking-tighter mb-2">Delete Category?</h3>
+                    <p className="text-[10px] text-gray-500 mb-6 uppercase tracking-widest">This may affect products in this category.</p>
+                    <div className="flex gap-3">
+                      <button onClick={() => setDeletingId(null)} className="flex-grow py-2 border border-gray-100 font-bold uppercase tracking-widest text-[10px]">Cancel</button>
+                      <button 
+                        onClick={async () => {
+                          await onDelete(deletingId);
+                          setDeletingId(null);
+                        }}
+                        className="flex-grow py-2 bg-red-500 text-white font-bold uppercase tracking-widest text-[10px]"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
+
+const BrandManagementDrawer = ({ 
+  isOpen, 
+  onClose, 
+  brands,
+  onSave,
+  onDelete
+}: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  brands: Brand[],
+  onSave: (b: Partial<Brand>) => Promise<void>,
+  onDelete: (id: string) => Promise<void>
+}) => {
+  const [editingBrand, setEditingBrand] = useState<Partial<Brand> | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBrand) return;
+    setIsSaving(true);
+    await onSave(editingBrand);
+    setIsSaving(false);
+    setEditingBrand(null);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (res.ok) {
+        const { imageUrl } = await res.json();
+        setEditingBrand(prev => prev ? { ...prev, logo: imageUrl } : null);
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]"
+          />
+          <motion.div 
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-gray-100 z-[90] p-6 flex flex-col"
+          >
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-display font-bold uppercase tracking-tighter">Manage Brands</h2>
+              <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors text-black">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <button 
+                onClick={() => setEditingBrand({ name: '', description: '', logo: '', banner: '', soldBy: '' })}
+                className="w-full py-3 border border-dashed border-gray-200 hover:border-black/20 transition-colors flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-black"
+              >
+                <Plus size={16} /> Add New Brand
+              </button>
+            </div>
+
+            <div className="flex-grow overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+              {brands.map((brand) => (
+                <div key={brand.id} className="p-3 border border-gray-50 bg-gray-50/30 flex gap-3 items-center text-black group">
+                  <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                    {brand.logo && <img src={brand.logo} alt={brand.name} className="w-full h-full object-cover" />}
+                  </div>
+                  <div className="flex-grow">
+                    <h4 className="text-xs font-bold uppercase tracking-tight">{brand.name}</h4>
+                  </div>
+                  <div className="flex gap-1">
+                    <button 
+                      onClick={() => setEditingBrand(brand)}
+                      className="p-1.5 hover:bg-black/5 rounded-full transition-colors"
+                    >
+                      <Edit3 size={14} />
+                    </button>
+                    <button 
+                      onClick={() => setDeletingId(brand.id!)}
+                      className="p-1.5 hover:bg-red-50 rounded-full transition-colors text-red-500"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Edit Modal */}
+            <AnimatePresence>
+              {editingBrand && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setEditingBrand(null)}
+                    className="absolute inset-0 bg-white/80 backdrop-blur-sm"
+                  />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="relative w-full max-w-sm bg-white border border-gray-100 shadow-2xl p-6 text-black"
+                  >
+                    <h3 className="text-lg font-bold uppercase tracking-tighter mb-6">
+                      {editingBrand.id ? 'Edit Brand' : 'New Brand'}
+                    </h3>
+                    <form onSubmit={handleSave} className="space-y-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Brand Name</label>
+                        <input 
+                          type="text" 
+                          required
+                          value={editingBrand.name}
+                          onChange={(e) => setEditingBrand({ ...editingBrand, name: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Description</label>
+                        <textarea 
+                          value={editingBrand.description || ''}
+                          onChange={(e) => setEditingBrand({ ...editingBrand, description: e.target.value })}
+                          className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none h-20 resize-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Logo</label>
+                        <div className="flex gap-2">
+                          <div 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-12 h-12 border border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-black transition-colors"
+                          >
+                            {isUploading ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
+                          </div>
+                          <input 
+                            type="text"
+                            placeholder="Logo URL"
+                            value={editingBrand.logo || ''}
+                            onChange={(e) => setEditingBrand({ ...editingBrand, logo: e.target.value })}
+                            className="flex-grow bg-gray-50 border border-gray-100 px-4 py-2 text-[10px] focus:border-black outline-none"
+                          />
+                          <input 
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-3 pt-4">
+                        <button 
+                          type="button"
+                          onClick={() => setEditingBrand(null)}
+                          className="flex-grow py-2 border border-gray-100 font-bold uppercase tracking-widest text-[10px]"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          type="submit"
+                          disabled={isSaving}
+                          className="flex-grow py-2 bg-black text-white font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
+                        >
+                          {isSaving ? <Loader2 className="animate-spin" size={14} /> : 'Save'}
+                        </button>
+                      </div>
+                    </form>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+
+            {/* Delete Confirmation */}
+            <AnimatePresence>
+              {deletingId && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setDeletingId(null)}
+                    className="absolute inset-0 bg-white/80 backdrop-blur-sm"
+                  />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="relative w-full max-w-sm bg-white border border-gray-100 shadow-2xl p-6 text-black text-center"
+                  >
+                    <h3 className="text-lg font-bold uppercase tracking-tighter mb-2">Delete Brand?</h3>
+                    <p className="text-[10px] text-gray-500 mb-6 uppercase tracking-widest">This may affect products associated with this brand.</p>
+                    <div className="flex gap-3">
+                      <button onClick={() => setDeletingId(null)} className="flex-grow py-2 border border-gray-100 font-bold uppercase tracking-widest text-[10px]">Cancel</button>
+                      <button 
+                        onClick={async () => {
+                          await onDelete(deletingId);
+                          setDeletingId(null);
+                        }}
+                        className="flex-grow py-2 bg-red-500 text-white font-bold uppercase tracking-widest text-[10px]"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
+
 const ProductManagementDrawer = ({ 
   isOpen, 
   onClose, 
   products,
+  categories,
+  brands,
   onSave,
   onDelete,
-  token
+  onOpenCategories,
+  onOpenBrands
 }: { 
   isOpen: boolean, 
   onClose: () => void, 
   products: Product[],
+  categories: Category[],
+  brands: Brand[],
   onSave: (p: Partial<Product>) => Promise<void>,
   onDelete: (id: string) => Promise<void>,
-  token: string | null
+  onOpenCategories: () => void,
+  onOpenBrands: () => void
 }) => {
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingMultiple, setIsUploadingMultiple] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState<string>('All');
+  const [activeTab, setActiveTab] = useState<'general' | 'media' | 'variants' | 'brand'>('general');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const multipleFileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredProducts = useMemo(() => {
     if (!Array.isArray(products)) return [];
-    return products.filter(p => 
-      p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.brand?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [products, searchQuery]);
+    return products.filter(p => {
+      const matchesSearch = 
+        p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.categories || []).some(c => c.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        p.brand?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesCategory = filterCategory === 'All' || (p.categories || []).includes(filterCategory);
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, searchQuery, filterCategory]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3327,9 +3728,9 @@ const ProductManagementDrawer = ({
     setEditingProduct(null);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'image' | 'brandBanner' | 'soldByLogo' = 'image') => {
     const file = e.target.files?.[0];
-    if (!file || !token) return;
+    if (!file) return;
 
     setIsUploading(true);
     const formData = new FormData();
@@ -3338,21 +3739,56 @@ const ProductManagementDrawer = ({
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
         body: formData
       });
 
       if (res.ok) {
         const { imageUrl } = await res.json();
-        setEditingProduct(prev => prev ? { ...prev, image: imageUrl } : null);
+        setEditingProduct(prev => prev ? { ...prev, [field]: imageUrl } : null);
       }
     } catch (err) {
       console.error("Upload failed:", err);
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleMultipleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingMultiple(true);
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('images', files[i]);
+    }
+
+    try {
+      const res = await fetch('/api/upload-multiple', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (res.ok) {
+        const { imageUrls } = await res.json();
+        setEditingProduct(prev => {
+          if (!prev) return null;
+          const currentImages = prev.images || [];
+          return { ...prev, images: [...currentImages, ...imageUrls] };
+        });
+      }
+    } catch (err) {
+      console.error("Multiple upload failed:", err);
+    } finally {
+      setIsUploadingMultiple(false);
+    }
+  };
+
+  const removeGalleryImage = (url: string) => {
+    setEditingProduct(prev => {
+      if (!prev) return null;
+      return { ...prev, images: (prev.images || []).filter(img => img !== url) };
+    });
   };
 
   const addVariant = () => {
@@ -3427,22 +3863,42 @@ const ProductManagementDrawer = ({
             </div>
 
             <div className="mb-8 space-y-4">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-black/30" size={16} />
-                <input 
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-100 pl-12 pr-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-black outline-none transition-all text-black"
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-grow">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-black/30" size={16} />
+                  <input 
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-100 pl-12 pr-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-black outline-none transition-all text-black"
+                  />
+                </div>
+                <select 
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  className="bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-bold uppercase tracking-widest focus:border-black outline-none appearance-none text-black min-w-[120px]"
+                >
+                  <option value="All">All Categories</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
               </div>
-              <button 
-                onClick={() => setEditingProduct({ name: '', price: 0, category: 'Apparel', image: '', description: '', variants: [] })}
-                className="w-full py-4 border border-dashed border-gray-200 hover:border-black/20 transition-colors flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-black"
-              >
-                <Plus size={16} /> Add New Product
-              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => setEditingProduct({ name: '', price: 0, category: categories[0]?.name || 'Apparel', image: '', description: '', variants: [] })}
+                  className="py-4 border border-dashed border-gray-200 hover:border-black/20 transition-colors flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-black"
+                >
+                  <Plus size={16} /> Add Product
+                </button>
+                <button 
+                  onClick={onOpenCategories}
+                  className="py-4 border border-dashed border-gray-200 hover:border-black/20 transition-colors flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-black"
+                >
+                  <Grid size={16} /> Categories
+                </button>
+              </div>
             </div>
 
             <div className="flex-grow overflow-y-auto space-y-4 pr-4 custom-scrollbar">
@@ -3451,7 +3907,7 @@ const ProductManagementDrawer = ({
                   <img src={product.image || undefined} alt={product.name} className="w-12 h-16 object-cover grayscale" />
                   <div className="flex-grow">
                     <h4 className="text-sm font-bold uppercase tracking-tight">{product.name}</h4>
-                    <p className="text-[10px] opacity-50 uppercase tracking-widest">{formatPrice(product.price)} • {product.category}</p>
+                    <p className="text-[10px] opacity-50 uppercase tracking-widest">{formatPrice(product.price)} • {(product.categories || []).join(', ')}</p>
                   </div>
                   <div className="flex gap-2">
                     <button 
@@ -3532,262 +3988,567 @@ const ProductManagementDrawer = ({
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className="relative w-full max-w-lg bg-white border border-gray-100 shadow-2xl p-6 text-black"
+                    className="relative w-full max-w-2xl bg-white border border-gray-100 shadow-2xl p-0 text-black flex flex-col max-h-[90vh]"
                   >
-                    <h3 className="text-xl font-display font-bold uppercase tracking-tighter mb-6">
-                      {editingProduct.id ? 'Edit Product' : 'New Product'}
-                    </h3>
-                    <form onSubmit={handleSave} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Name</label>
-                          <input 
-                            type="text" 
-                            required
-                            value={editingProduct.name}
-                            onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Brand</label>
-                          <input 
-                            type="text" 
-                            placeholder="e.g. Anatomy"
-                            value={editingProduct.brand || ''}
-                            onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none"
-                          />
-                        </div>
-                      </div>
+                    <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                      <h3 className="text-xl font-display font-bold uppercase tracking-tighter">
+                        {editingProduct.id ? 'Edit Product' : 'New Product'}
+                      </h3>
+                      <button onClick={() => setEditingProduct(null)} className="p-2 hover:bg-gray-50 rounded-full transition-colors">
+                        <X size={20} />
+                      </button>
+                    </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Price (R)</label>
-                          <input 
-                            type="number" 
-                            required
-                            value={editingProduct.price}
-                            onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
-                            className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Original Price (R)</label>
-                          <input 
-                            type="number" 
-                            value={editingProduct.originalPrice || ''}
-                            onChange={(e) => setEditingProduct({ ...editingProduct, originalPrice: Number(e.target.value) })}
-                            className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sold By</label>
-                          <input 
-                            type="text" 
-                            placeholder="e.g. Sportscene"
-                            value={editingProduct.soldBy || ''}
-                            onChange={(e) => setEditingProduct({ ...editingProduct, soldBy: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sold By Logo URL</label>
-                          <input 
-                            type="text" 
-                            placeholder="Logo URL"
-                            value={editingProduct.soldByLogo || ''}
-                            onChange={(e) => setEditingProduct({ ...editingProduct, soldByLogo: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Category</label>
-                          <select 
-                            value={editingProduct.category}
-                            onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none appearance-none"
-                          >
-                            <option value="Apparel">Apparel</option>
-                            <option value="Accessories">Accessories</option>
-                            <option value="Bundles">Bundles</option>
-                          </select>
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Weight (kg)</label>
-                          <input 
-                            type="number" 
-                            step="0.1"
-                            value={editingProduct.weight || ''}
-                            onChange={(e) => setEditingProduct({ ...editingProduct, weight: Number(e.target.value) })}
-                            className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Product Image</label>
-                        <div 
-                          onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-black'); }}
-                          onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-black'); }}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            e.currentTarget.classList.remove('border-black');
-                            const file = e.dataTransfer.files?.[0];
-                            if (file) {
-                              const event = { target: { files: [file] } } as any;
-                              handleFileUpload(event);
-                            }
-                          }}
-                          className={`relative border-2 border-dashed border-gray-200 p-8 transition-all flex flex-col items-center justify-center gap-4 group/drop ${isUploading ? 'opacity-50 pointer-events-none' : 'hover:border-black/20 cursor-pointer'}`}
-                          onClick={() => fileInputRef.current?.click()}
+                    {/* Shopify-like Tabs */}
+                    <div className="flex border-b border-gray-100 px-6 overflow-x-auto no-scrollbar">
+                      {[
+                        { id: 'general', label: 'General' },
+                        { id: 'media', label: 'Media' },
+                        { id: 'variants', label: 'Variants' },
+                        { id: 'brand', label: 'Brand & Tags' }
+                      ].map(tab => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id as any)}
+                          className={`py-4 px-4 text-[10px] font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === tab.id ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'}`}
                         >
-                          {editingProduct.image ? (
-                            <div className="relative w-32 aspect-[4/5] shadow-xl">
-                              <img src={editingProduct.image || undefined} alt="Preview" className="w-full h-full object-cover grayscale group-hover/drop:grayscale-0 transition-all" />
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/drop:opacity-100 transition-opacity flex items-center justify-center">
-                                <p className="text-[8px] font-black uppercase text-white">Change Image</p>
-                              </div>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover/drop:text-black transition-colors">
-                                <Upload size={20} />
-                              </div>
-                              <div className="text-center">
-                                <p className="text-[10px] font-black uppercase tracking-widest">Drag & Drop Image</p>
-                                <p className="text-[8px] opacity-40 uppercase tracking-widest mt-1">or click to browse</p>
-                              </div>
-                            </>
-                          )}
-                          {isUploading && (
-                            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
-                              <Loader2 className="animate-spin text-black" size={24} />
-                            </div>
-                          )}
-                          <input 
-                            type="file" 
-                            accept="image/*"
-                            ref={fileInputRef}
-                            onChange={handleFileUpload}
-                            className="hidden"
-                          />
-                        </div>
-                        <div className="mt-2">
-                          <label className="text-[8px] font-bold uppercase tracking-widest opacity-30">Or use URL</label>
-                          <input 
-                            type="text" 
-                            placeholder="https://image-url.com/photo.jpg"
-                            value={editingProduct.image}
-                            onChange={(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-[10px] font-mono focus:border-black outline-none mt-1"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Additional Images (Comma separated URLs)</label>
-                        <textarea 
-                          placeholder="https://image1.jpg, https://image2.jpg"
-                          value={editingProduct.images?.join(', ') || ''}
-                          onChange={(e) => setEditingProduct({ ...editingProduct, images: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-                          className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none h-16 resize-none text-black"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Description</label>
-                        <textarea 
-                          required
-                          value={editingProduct.description}
-                          onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
-                          className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none h-24 resize-none text-black"
-                        />
-                      </div>
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
 
-                      {/* Variants Section */}
-                      <div className="space-y-4 pt-4 border-t border-gray-100">
-                        <div className="flex justify-between items-center">
-                          <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Variants (e.g. Size, Color)</label>
-                          <button 
-                            type="button"
-                            onClick={addVariant}
-                            className="text-[10px] font-bold uppercase tracking-widest text-black hover:opacity-70 flex items-center gap-1"
-                          >
-                            <Plus size={12} /> Add Variant
-                          </button>
-                        </div>
-                        
-                        <div className="space-y-4">
-                          {editingProduct.variants?.map((variant) => (
-                            <div key={variant.id} className="p-4 bg-gray-50 border border-gray-100 space-y-3">
-                              <div className="flex gap-2 items-center">
+                    <form onSubmit={handleSave} className="flex-grow overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                      {activeTab === 'general' && (
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Product Name</label>
+                              <input 
+                                type="text" 
+                                required
+                                value={editingProduct.name}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                                className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
+                                placeholder="e.g. Classic Street Tee"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Categories</label>
+                              <div className="space-y-3">
+                                <div className="flex gap-2">
+                                  <div className="flex-grow flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-100 min-h-[44px]">
+                                    {(editingProduct.categories || []).map(catName => (
+                                      <span key={catName} className="px-2 py-1 bg-black text-white text-[8px] font-black uppercase tracking-widest flex items-center gap-2">
+                                        {catName}
+                                        <button 
+                                          type="button"
+                                          onClick={() => {
+                                            const newCats = (editingProduct.categories || []).filter(c => c !== catName);
+                                            setEditingProduct({ ...editingProduct, categories: newCats });
+                                          }}
+                                          className="hover:text-red-400 transition-colors"
+                                        >
+                                          <X size={10} />
+                                        </button>
+                                      </span>
+                                    ))}
+                                    {(editingProduct.categories || []).length === 0 && (
+                                      <span className="text-[10px] opacity-30 uppercase tracking-widest">No categories selected</span>
+                                    )}
+                                  </div>
+                                  <button 
+                                    type="button"
+                                    onClick={onOpenCategories}
+                                    className="px-4 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-black/80 transition-colors"
+                                  >
+                                    Manage
+                                  </button>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                                  {categories.map(c => {
+                                    const isSelected = (editingProduct.categories || []).includes(c.name);
+                                    return (
+                                      <button
+                                        key={c.id}
+                                        type="button"
+                                        onClick={() => {
+                                          const current = editingProduct.categories || [];
+                                          if (isSelected) {
+                                            setEditingProduct({ ...editingProduct, categories: current.filter(cat => cat !== c.name) });
+                                          } else {
+                                            setEditingProduct({ ...editingProduct, categories: [...current, c.name] });
+                                          }
+                                        }}
+                                        className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest border transition-all text-left flex items-center justify-between ${isSelected ? 'bg-black text-white border-black' : 'bg-white text-black border-gray-100 hover:border-black/20'}`}
+                                      >
+                                        <span className="truncate">{c.name}</span>
+                                        {isSelected && <Check size={12} />}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sale Price (R)</label>
+                              <input 
+                                type="number" 
+                                required
+                                value={editingProduct.price}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
+                                className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Compare at Price (R)</label>
+                              <input 
+                                type="number" 
+                                value={editingProduct.originalPrice || ''}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, originalPrice: Number(e.target.value) })}
+                                className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
+                                placeholder="Optional"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Description</label>
+                            <textarea 
+                              required
+                              value={editingProduct.description}
+                              onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                              className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none h-32 resize-none text-black transition-all"
+                              placeholder="Describe your product..."
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Weight (kg)</label>
+                              <input 
+                                type="number" 
+                                step="0.1"
+                                value={editingProduct.weight || ''}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, weight: Number(e.target.value) })}
+                                className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
+                              />
+                            </div>
+                            <div className="flex items-center gap-4 pt-6">
+                              <label className="flex items-center gap-2 cursor-pointer group">
                                 <input 
-                                  type="text"
-                                  placeholder="Variant Name (e.g. Size)"
-                                  value={variant.name}
-                                  onChange={(e) => updateVariant(variant.id, { name: e.target.value })}
-                                  className="flex-grow bg-white border border-gray-100 px-3 py-1.5 text-xs focus:border-black outline-none text-black"
+                                  type="checkbox"
+                                  checked={editingProduct.isDrop}
+                                  onChange={(e) => setEditingProduct({ ...editingProduct, isDrop: e.target.checked })}
+                                  className="w-4 h-4 border-gray-200 rounded text-black focus:ring-black"
                                 />
+                                <span className="text-[10px] font-bold uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity">Featured Drop</span>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeTab === 'media' && (
+                        <div className="space-y-6">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Main Product Image</label>
+                            <div 
+                              onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-black'); }}
+                              onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-black'); }}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                e.currentTarget.classList.remove('border-black');
+                                const file = e.dataTransfer.files?.[0];
+                                if (file) {
+                                  const event = { target: { files: [file] } } as any;
+                                  handleFileUpload(event);
+                                }
+                              }}
+                              className={`relative border-2 border-dashed border-gray-200 p-12 transition-all flex flex-col items-center justify-center gap-4 group/drop ${isUploading ? 'opacity-50 pointer-events-none' : 'hover:border-black/20 cursor-pointer'}`}
+                              onClick={() => fileInputRef.current?.click()}
+                            >
+                              {editingProduct.image ? (
+                                <div className="relative w-40 aspect-[4/5] shadow-2xl group/main">
+                                  <img src={editingProduct.image || undefined} alt="Preview" className="w-full h-full object-cover grayscale group-hover/drop:grayscale-0 transition-all" />
+                                  <div className="absolute top-2 left-2 px-2 py-1 bg-black text-white text-[6px] font-black uppercase tracking-widest z-10">
+                                    Main Image
+                                  </div>
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/main:opacity-100 transition-opacity flex items-center justify-center">
+                                    <p className="text-[8px] font-black uppercase text-white">Change Image</p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover/drop:text-black transition-colors">
+                                    <Upload size={24} />
+                                  </div>
+                                  <div className="text-center">
+                                    <p className="text-[10px] font-black uppercase tracking-widest">Drag & Drop Image</p>
+                                    <p className="text-[8px] opacity-40 uppercase tracking-widest mt-1">or click to browse</p>
+                                  </div>
+                                </>
+                              )}
+                              {isUploading && (
+                                <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
+                                  <Loader2 className="animate-spin text-black" size={32} />
+                                </div>
+                              )}
+                              <input 
+                                type="file" 
+                                accept="image/*"
+                                ref={fileInputRef}
+                                onChange={handleFileUpload}
+                                className="hidden"
+                              />
+                            </div>
+                            <div className="mt-4">
+                              <label className="text-[8px] font-bold uppercase tracking-widest opacity-30">Or use URL</label>
+                              <input 
+                                type="text" 
+                                placeholder="https://image-url.com/photo.jpg"
+                                value={editingProduct.image}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
+                                className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-mono focus:border-black outline-none mt-1 transition-all"
+                              />
+                            </div>
+                          </div>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between items-end mb-2">
+                                <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Gallery Images</label>
+                                <span className="text-[8px] font-mono opacity-30 uppercase tracking-widest">
+                                  {editingProduct.images?.length || 0} / 10 Images
+                                </span>
+                              </div>
+                              <div 
+                                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-black'); }}
+                                onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-black'); }}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  e.currentTarget.classList.remove('border-black');
+                                  const files = e.dataTransfer.files;
+                                  if (files && files.length > 0) {
+                                    const event = { target: { files } } as any;
+                                    handleMultipleFileUpload(event);
+                                  }
+                                }}
+                                className="border-2 border-dashed border-gray-100 p-4 rounded-xl transition-all bg-gray-50/30"
+                              >
+                                <div className="grid grid-cols-4 gap-3 mb-4">
+                                  {editingProduct.images?.map((img, idx) => (
+                                    <div key={idx} className="relative aspect-[4/5] group/img bg-gray-50 rounded-lg overflow-hidden border border-gray-100 shadow-sm">
+                                      <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover grayscale group-hover/img:grayscale-0 transition-all" />
+                                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                        <button 
+                                          type="button"
+                                          onClick={() => removeGalleryImage(img)}
+                                          className="p-1.5 bg-white text-red-500 rounded-full hover:scale-110 transition-transform shadow-lg"
+                                        >
+                                          <Trash2 size={12} />
+                                        </button>
+                                      </div>
+                                      <div className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/60 text-white text-[6px] font-mono rounded">
+                                        #{idx + 1}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  <button 
+                                    type="button"
+                                    onClick={() => multipleFileInputRef.current?.click()}
+                                    className={`aspect-[4/5] border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-black hover:bg-white transition-all bg-white/50 ${isUploadingMultiple ? 'opacity-50 pointer-events-none' : ''}`}
+                                  >
+                                    {isUploadingMultiple ? (
+                                      <Loader2 className="animate-spin text-black" size={20} />
+                                    ) : (
+                                      <>
+                                        <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-black">
+                                          <Plus size={16} />
+                                        </div>
+                                        <span className="text-[8px] font-black uppercase tracking-widest">Add Media</span>
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                                
+                                <div className="flex items-center justify-between">
+                                  <p className="text-[8px] opacity-40 uppercase tracking-widest">Drag images here or click to add</p>
+                                  {editingProduct.images && editingProduct.images.length > 0 && (
+                                    <button 
+                                      type="button"
+                                      onClick={() => setEditingProduct({ ...editingProduct, images: [] })}
+                                      className="text-[8px] font-black uppercase tracking-widest text-red-500 hover:underline"
+                                    >
+                                      Clear All
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            
+                            <input 
+                              type="file" 
+                              multiple
+                              accept="image/*"
+                              ref={multipleFileInputRef}
+                              onChange={handleMultipleFileUpload}
+                              className="hidden"
+                            />
+                            
+                            <div className="mt-6">
+                              <label className="text-[8px] font-bold uppercase tracking-widest opacity-30">Gallery URLs (Comma separated)</label>
+                              <textarea 
+                                placeholder="https://image1.jpg, https://image2.jpg"
+                                value={editingProduct.images?.join(', ') || ''}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, images: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                                className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-mono focus:border-black outline-none h-24 resize-none text-black transition-all mt-1"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeTab === 'variants' && (
+                        <div className="space-y-6">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <h4 className="text-[10px] font-black uppercase tracking-widest">Product Variants</h4>
+                              <p className="text-[8px] opacity-40 uppercase tracking-widest mt-1">Add sizes, colors, or materials</p>
+                            </div>
+                            <button 
+                              type="button"
+                              onClick={addVariant}
+                              className="px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:opacity-80 transition-all flex items-center gap-2"
+                            >
+                              <Plus size={14} /> Add Variant
+                            </button>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            {editingProduct.variants?.map((variant) => (
+                              <div key={variant.id} className="p-6 bg-gray-50 border border-gray-100 space-y-4 relative group">
                                 <button 
                                   type="button"
                                   onClick={() => removeVariant(variant.id)}
-                                  className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                                  className="absolute top-4 right-4 p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                                 >
-                                  <Trash2 size={14} />
+                                  <Trash2 size={16} />
                                 </button>
+
+                                <div className="space-y-1">
+                                  <label className="text-[8px] font-black uppercase tracking-widest opacity-30">Variant Name</label>
+                                  <input 
+                                    type="text"
+                                    placeholder="e.g. Size or Color"
+                                    value={variant.name}
+                                    onChange={(e) => updateVariant(variant.id, { name: e.target.value })}
+                                    className="w-full bg-white border border-gray-100 px-4 py-2 text-xs font-bold focus:border-black outline-none text-black transition-all"
+                                  />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <label className="text-[8px] font-black uppercase tracking-widest opacity-30">Options (Press Enter to add)</label>
+                                  <div className="flex flex-wrap gap-2">
+                                    {variant.options.map((opt) => (
+                                      <span key={opt} className="pl-3 pr-2 py-1.5 bg-white border border-gray-100 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-black shadow-sm">
+                                        {opt}
+                                        <button 
+                                          type="button"
+                                          onClick={() => removeOption(variant.id, opt)}
+                                          className="text-gray-300 hover:text-red-500 transition-colors"
+                                        >
+                                          <X size={12} />
+                                        </button>
+                                      </span>
+                                    ))}
+                                    <input 
+                                      type="text"
+                                      placeholder="Add option..."
+                                      className="bg-white border border-gray-100 px-4 py-1.5 text-[10px] font-bold outline-none focus:border-black w-32 text-black shadow-sm"
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          e.preventDefault();
+                                          addOption(variant.id, e.currentTarget.value);
+                                          e.currentTarget.value = '';
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                </div>
                               </div>
-                              
-                              <div className="flex flex-wrap gap-2">
-                                {variant.options.map((opt) => (
-                                  <span key={opt} className="px-2 py-1 bg-gray-100 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 text-black">
-                                    {opt}
-                                    <button 
-                                      type="button"
-                                      onClick={() => removeOption(variant.id, opt)}
-                                      className="hover:text-red-500"
-                                    >
-                                      <X size={10} />
-                                    </button>
-                                  </span>
-                                ))}
-                                <input 
-                                  type="text"
-                                  placeholder="Add option..."
-                                  className="bg-transparent border-b border-gray-100 px-2 py-1 text-[10px] outline-none focus:border-black w-24 text-black"
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
-                                      addOption(variant.id, e.currentTarget.value);
-                                      e.currentTarget.value = '';
+                            ))}
+                            {(!editingProduct.variants || editingProduct.variants.length === 0) && (
+                              <div className="py-12 text-center border-2 border-dashed border-gray-100 rounded-xl">
+                                <p className="text-[10px] font-black uppercase tracking-widest opacity-20">No variants added</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeTab === 'brand' && (
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Select Brand</label>
+                              <div className="flex gap-2">
+                                <select 
+                                  value={editingProduct.brandId || ''}
+                                  onChange={(e) => {
+                                    if (e.target.value === 'new') {
+                                      onOpenBrands();
+                                      return;
+                                    }
+                                    const selectedBrand = brands.find(b => b.id === e.target.value);
+                                    if (selectedBrand) {
+                                      setEditingProduct({ 
+                                        ...editingProduct, 
+                                        brandId: selectedBrand.id,
+                                        brand: selectedBrand.name,
+                                        brandBanner: selectedBrand.banner,
+                                        brandDescription: selectedBrand.description,
+                                        soldBy: selectedBrand.soldBy
+                                      });
+                                    } else {
+                                      setEditingProduct({ ...editingProduct, brandId: '', brand: '' });
                                     }
                                   }}
+                                  className="flex-grow bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none appearance-none"
+                                >
+                                  <option value="">No Brand</option>
+                                  {brands.map(b => (
+                                    <option key={b.id} value={b.id}>{b.name}</option>
+                                  ))}
+                                  <option value="new">+ Add New Brand</option>
+                                </select>
+                                <button 
+                                  type="button"
+                                  onClick={onOpenBrands}
+                                  className="px-4 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-black/80 transition-colors"
+                                >
+                                  Manage
+                                </button>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Brand Name (Display)</label>
+                              <input 
+                                type="text" 
+                                placeholder="e.g. Anatomy"
+                                value={editingProduct.brand || ''}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
+                                className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Brand Banner</label>
+                              <div className="flex gap-2">
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    const input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.accept = 'image/*';
+                                    input.onchange = (e) => handleFileUpload(e as any, 'brandBanner');
+                                    input.click();
+                                  }}
+                                  className="w-12 h-12 border border-dashed border-gray-200 flex items-center justify-center hover:border-black transition-colors"
+                                >
+                                  {isUploading ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
+                                </button>
+                                <input 
+                                  type="text" 
+                                  placeholder="Banner Image URL"
+                                  value={editingProduct.brandBanner || ''}
+                                  onChange={(e) => setEditingProduct({ ...editingProduct, brandBanner: e.target.value })}
+                                  className="flex-grow bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                                 />
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sold By</label>
+                              <input 
+                                type="text" 
+                                placeholder="e.g. Sportscene"
+                                value={editingProduct.soldBy || ''}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, soldBy: e.target.value })}
+                                className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
+                              />
+                            </div>
+                          </div>
 
-                      <div className="flex gap-4 pt-4">
-                        <button 
-                          type="button"
-                          onClick={() => setEditingProduct(null)}
-                          className="flex-grow py-3 border border-gray-100 font-bold uppercase tracking-widest text-xs text-black"
-                        >
-                          Cancel
-                        </button>
-                        <button 
-                          type="submit"
-                          disabled={isSaving}
-                          className="flex-grow py-3 bg-black text-white font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2"
-                        >
-                          {isSaving ? <Loader2 className="animate-spin" size={16} /> : 'Save Product'}
-                        </button>
-                      </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Brand Description</label>
+                            <textarea 
+                              placeholder="Briefly introduce the brand..."
+                              value={editingProduct.brandDescription || ''}
+                              onChange={(e) => setEditingProduct({ ...editingProduct, brandDescription: e.target.value })}
+                              className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none h-24 resize-none text-black transition-all"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sold By Logo</label>
+                              <div className="flex gap-2">
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    const input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.accept = 'image/*';
+                                    input.onchange = (e) => handleFileUpload(e as any, 'soldByLogo');
+                                    input.click();
+                                  }}
+                                  className="w-12 h-12 border border-dashed border-gray-200 flex items-center justify-center hover:border-black transition-colors"
+                                >
+                                  {isUploading ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
+                                </button>
+                                <input 
+                                  type="text" 
+                                  placeholder="Logo URL"
+                                  value={editingProduct.soldByLogo || ''}
+                                  onChange={(e) => setEditingProduct({ ...editingProduct, soldByLogo: e.target.value })}
+                                  className="flex-grow bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Tags (Comma separated)</label>
+                              <input 
+                                type="text" 
+                                placeholder="Summer, Streetwear, Limited"
+                                value={editingProduct.tags?.join(', ') || ''}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                                className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </form>
+
+                    <div className="p-6 border-t border-gray-100 flex gap-4 bg-white">
+                      <button 
+                        type="button"
+                        onClick={() => setEditingProduct(null)}
+                        className="flex-grow py-4 border border-gray-100 font-bold uppercase tracking-widest text-[10px] text-black hover:bg-gray-50 transition-all"
+                      >
+                        Discard Changes
+                      </button>
+                      <button 
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="flex-grow py-4 bg-black text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:opacity-90 transition-all disabled:opacity-50"
+                      >
+                        {isSaving ? <Loader2 className="animate-spin" size={16} /> : 'Save Product'}
+                      </button>
+                    </div>
                   </motion.div>
                 </div>
               )}
@@ -3805,14 +4566,16 @@ const CartDrawer = ({
   cartItems, 
   onUpdateQuantity,
   onRemove,
-  onCheckout 
+  onCheckout,
+  isLoading = false
 }: { 
   isOpen: boolean, 
   onClose: () => void, 
   cartItems: CartItem[],
   onUpdateQuantity: (id: string, delta: number, variants?: Record<string, string>) => void,
   onRemove: (id: string, variants?: Record<string, string>) => void,
-  onCheckout: () => void
+  onCheckout: () => void,
+  isLoading?: boolean
 }) => (
   <AnimatePresence>
     {isOpen && (
@@ -3843,7 +4606,12 @@ const CartDrawer = ({
               </button>
             </div>
 
-            <div className="flex-grow overflow-y-auto space-y-6 pr-2 custom-scrollbar">
+            <div className="flex-grow overflow-y-auto space-y-6 pr-2 custom-scrollbar relative">
+              {isLoading && (
+                <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
+                  <Loader2 className="animate-spin text-black" size={32} />
+                </div>
+              )}
             {cartItems.length === 0 ? (
               <div className="text-center py-20 opacity-30 text-black">
                 <ShoppingBag size={48} className="mx-auto mb-4" />
@@ -3866,7 +4634,7 @@ const CartDrawer = ({
                     <div className="flex justify-between items-start">
                       <div>
                         <h4 className="font-bold uppercase text-sm tracking-tight leading-tight">{item.name}</h4>
-                        <p className="text-[10px] opacity-50 uppercase tracking-widest mt-1">{item.category}</p>
+                        <p className="text-[10px] opacity-50 uppercase tracking-widest mt-1">{(item.categories || []).join(', ')}</p>
                         {item.selectedVariants && Object.keys(item.selectedVariants).length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1">
                             {Object.entries(item.selectedVariants).map(([k, v]) => (
@@ -4032,22 +4800,33 @@ const HybridCheckoutModal = ({
 
       // In this frontend-only demo, we simulate the payment success by saving directly to Firestore
       console.log("[DEMO] Saving order to Firestore...");
+      
+      // Set to processing state for better UX
+      onPaymentStatusChange('processing');
+      
       const savedOrder = await orderService.createOrder(orderData);
       
       // Send Order Confirmation Email
       try {
         await emailService.sendOrderConfirmation({
           ...orderData,
-          id: savedOrder.id
+          id: savedOrder.id,
+          status: 'pending',
+          date: new Date().toISOString()
         });
       } catch (emailErr) {
         console.error("Failed to send order confirmation email:", emailErr);
       }
 
       setDemoMessage("Order Successfully Placed! (Demo Mode: Payment simulated and order saved to Firestore)");
-      onPaymentStatusChange('success');
+      
+      // Small delay to show processing state
+      setTimeout(() => {
+        onPaymentStatusChange('success');
+      }, 1500);
       
     } catch (err: any) {
+      onPaymentStatusChange(null);
       setPaymentError(err.message || 'Failed to place order');
     } finally {
       setIsPaying(false);
@@ -4092,7 +4871,7 @@ const HybridCheckoutModal = ({
                 <CheckCircle2 size={24} className="md:w-8 md:h-8" />
               </div>
               <h2 className="text-xl md:text-2xl font-display font-bold uppercase tracking-tighter mb-4">Order Confirmed!</h2>
-              <p className="text-xs md:text-sm text-gray-500 max-w-md mb-6 px-4">Thank you for your order. We've sent a confirmation email to {email} and a WhatsApp alert to {phone}.</p>
+              <p className="text-xs md:text-sm text-gray-500 max-w-md mb-6 px-4">Thank you for your order. We've sent a confirmation email to {email}.</p>
               
               {!user && (
                 <div className="mb-8 p-6 bg-gray-50 border border-gray-100 rounded-xl max-w-md mx-4 text-center">
@@ -4406,10 +5185,13 @@ const HybridCheckoutModal = ({
                         className="w-full p-4 border border-black bg-gray-50 rounded-md flex items-center justify-between transition-all"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-6 bg-blue-600 rounded flex items-center justify-center text-[8px] text-white font-bold uppercase">Yoco</div>
+                          <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-6 object-contain" referrerPolicy="no-referrer" />
                           <span className="text-sm font-medium">Yoco Secure Checkout</span>
                         </div>
-                        <CheckCircle2 size={16} />
+                        <div className="flex gap-2">
+                          <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-4 object-contain" referrerPolicy="no-referrer" />
+                          <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-5 object-contain" referrerPolicy="no-referrer" />
+                        </div>
                       </div>
                     </div>
                     
@@ -4456,7 +5238,7 @@ const HybridCheckoutModal = ({
                         </div>
                         <div className="flex-grow min-w-0">
                           <h4 className="text-xs md:text-sm font-bold leading-tight truncate">{item.name}</h4>
-                          <p className="text-[8px] md:text-[10px] text-gray-500 uppercase tracking-widest truncate">{item.category}</p>
+                          <p className="text-[8px] md:text-[10px] text-gray-500 uppercase tracking-widest truncate">{(item.categories || []).join(', ')}</p>
                           {item.selectedVariants && Object.keys(item.selectedVariants).length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {Object.entries(item.selectedVariants).map(([k, v]) => (
@@ -4583,7 +5365,7 @@ const EmailProductModal = ({
               <img src={product.image || undefined} alt={product.name} className="w-12 h-16 md:w-16 md:h-20 object-cover grayscale" />
               <div className="min-w-0">
                 <h4 className="font-bold uppercase text-xs md:text-sm tracking-tight truncate">{product.name}</h4>
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest truncate">{product.category}</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest truncate">{(product.categories || []).join(', ')}</p>
                 <p className="text-xs font-bold mt-1">{formatPrice(product.price)}</p>
               </div>
             </div>
@@ -4635,6 +5417,145 @@ const EmailProductModal = ({
 
 // --- Main App ---
 
+const BrandBanner = ({ brand, banner, description }: { brand: string, banner?: string, description?: string }) => (
+  <div className="relative w-full h-[40vh] md:h-[50vh] overflow-hidden mb-12 group">
+    <div className="absolute inset-0 bg-black/40 z-10 group-hover:bg-black/30 transition-all duration-700" />
+    <img 
+      src={banner || `https://picsum.photos/seed/${brand}/1920/1080?grayscale`} 
+      alt={brand} 
+      className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-1000"
+      referrerPolicy="no-referrer"
+    />
+    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+      >
+        <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/60 mb-4">Official Brand Partner</p>
+        <h2 className="text-4xl md:text-7xl font-display font-bold uppercase tracking-tighter text-white mb-6 leading-none">{brand}</h2>
+        {description && (
+          <p className="max-w-xl mx-auto text-xs md:text-sm text-white/80 uppercase tracking-widest leading-relaxed font-medium">
+            {description}
+          </p>
+        )}
+      </motion.div>
+    </div>
+    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
+      <div className="w-[1px] h-12 bg-white/20 relative overflow-hidden">
+        <motion.div 
+          animate={{ y: [0, 48] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="absolute top-0 left-0 w-full h-1/2 bg-white"
+        />
+      </div>
+    </div>
+  </div>
+);
+
+const CategoryPanel = ({ 
+  categories, 
+  activeCategory, 
+  onSelect 
+}: { 
+  categories: Category[], 
+  activeCategory: string, 
+  onSelect: (c: string) => void 
+}) => {
+  const mainCategories = useMemo(() => categories.filter(c => !c.parentId), [categories]);
+  const subCategories = useMemo(() => {
+    const activeMain = mainCategories.find(c => c.name === activeCategory);
+    if (!activeMain) {
+      // Check if activeCategory is a sub-category
+      const activeSub = categories.find(c => c.name === activeCategory && c.parentId);
+      if (activeSub) {
+        return categories.filter(c => c.parentId === activeSub.parentId);
+      }
+      return [];
+    }
+    return categories.filter(c => c.parentId === activeMain.id);
+  }, [categories, activeCategory, mainCategories]);
+
+  const getIcon = (cat: string) => {
+    switch (cat.toLowerCase()) {
+      case 'apparel': return <Shirt size={18} />;
+      case 'accessories': return <Watch size={18} />;
+      case 'footwear': return <Footprints size={18} />;
+      case 'bundles': return <Package size={18} />;
+      case 'headwear': return <Grid size={18} />;
+      case 'outerwear': return <Shirt size={18} />;
+      case 'sale': return <Tag size={18} />;
+      case 'new arrivals': return <Sparkles size={18} />;
+      case 'limited': return <Zap size={18} />;
+      default: return <Grid size={18} />;
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap gap-4 md:gap-8 items-center">
+        <button
+          onClick={() => onSelect('All')}
+          className={`group flex items-center gap-3 py-2 transition-all relative ${activeCategory === 'All' ? 'text-black' : 'text-black/30 hover:text-black/60'}`}
+        >
+          <span className={`p-2 rounded-full transition-all ${activeCategory === 'All' ? 'bg-black text-white' : 'bg-gray-50 group-hover:bg-gray-100'}`}>
+            <Grid size={18} />
+          </span>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">
+            All
+          </span>
+          {activeCategory === 'All' && (
+            <motion.div 
+              layoutId="cat-underline"
+              className="absolute -bottom-1 left-0 right-0 h-[2px] bg-black"
+            />
+          )}
+        </button>
+
+        {mainCategories.map(cat => (
+          <button
+            key={cat.id}
+            onClick={() => onSelect(cat.name)}
+            className={`group flex items-center gap-3 py-2 transition-all relative ${activeCategory === cat.name || categories.find(c => c.name === activeCategory)?.parentId === cat.id ? 'text-black' : 'text-black/30 hover:text-black/60'}`}
+          >
+            <span className={`p-2 rounded-full transition-all ${activeCategory === cat.name || categories.find(c => c.name === activeCategory)?.parentId === cat.id ? 'bg-black text-white' : 'bg-gray-50 group-hover:bg-gray-100'}`}>
+              {getIcon(cat.name)}
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">
+              {cat.name}
+            </span>
+            {(activeCategory === cat.name || categories.find(c => c.name === activeCategory)?.parentId === cat.id) && (
+              <motion.div 
+                layoutId="cat-underline"
+                className="absolute -bottom-1 left-0 right-0 h-[2px] bg-black"
+              />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {subCategories.length > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap gap-3 md:gap-6 items-center pl-2 border-l-2 border-gray-100"
+        >
+          {subCategories.map(sub => (
+            <button
+              key={sub.id}
+              onClick={() => onSelect(sub.name)}
+              className={`text-[9px] font-bold uppercase tracking-widest transition-all ${activeCategory === sub.name ? 'text-black underline underline-offset-4' : 'text-black/40 hover:text-black/70'}`}
+            >
+              {sub.name}
+            </button>
+          ))}
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
 const HomePage = ({ 
   filteredAndSortedProducts, 
   filterCategory, 
@@ -4646,7 +5567,12 @@ const HomePage = ({
   addToCart, 
   handleBuyNow,
   onEmailDetails,
-  searchQuery
+  searchQuery,
+  wishlist,
+  toggleWishlist,
+  isCartLoading = false,
+  brands,
+  categories
 }: {
   filteredAndSortedProducts: Product[],
   filterCategory: string,
@@ -4658,149 +5584,208 @@ const HomePage = ({
   addToCart: (p: Product, v?: Record<string, string>, q?: number) => void,
   handleBuyNow: (p: Product, v?: Record<string, string>) => void,
   onEmailDetails: (p: Product) => void,
-  searchQuery: string
-}) => (
-  <main className="bg-white text-black">
-    <Hero />
-    
-    <section id="drops" className="py-16 md:py-20 px-6 max-w-7xl mx-auto overflow-hidden">
-      <div className="flex flex-col md:flex-row justify-between items-baseline mb-12 md:mb-16 gap-8">
-        <h2 className="text-[8vw] md:text-[4vw] font-display font-bold uppercase tracking-tighter leading-none text-black">
-          Featured<br />Drops
-        </h2>
-        
-        <div className="flex flex-col md:flex-row gap-8 items-start md:items-center w-full md:w-auto">
-          <div className="flex gap-6 overflow-x-auto pb-4 md:pb-0 no-scrollbar w-full md:w-auto">
-            {['All', 'Apparel', 'Accessories', 'Bundles'].map(cat => (
-              <button
-                key={cat}
-                onClick={() => setFilterCategory(cat)}
-                className={`text-[10px] font-black uppercase tracking-[0.3em] transition-all whitespace-nowrap ${filterCategory === cat ? 'opacity-100 underline underline-offset-8 text-black' : 'opacity-30 hover:opacity-50 text-black'}`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+  searchQuery: string,
+  wishlist: string[],
+  toggleWishlist: (productId: string) => void,
+  isCartLoading?: boolean,
+  brands: Brand[],
+  categories: Category[]
+}) => {
+  const brandNames = useMemo(() => {
+    const b = new Set<string>();
+    filteredAndSortedProducts.forEach(p => {
+      if (p.brand) b.add(p.brand);
+    });
+    return Array.from(b);
+  }, [filteredAndSortedProducts]);
+
+  return (
+    <main className="bg-white text-black">
+      <Hero />
+      
+      {/* Interactive Category Panel */}
+      <div className="sticky top-16 md:top-20 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 py-4 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+          <CategoryPanel 
+            categories={categories}
+            activeCategory={filterCategory}
+            onSelect={setFilterCategory}
+          />
           
-          <div className="flex items-center gap-3 border-b border-black/10 pb-2 ml-auto md:ml-0">
+          <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-full">
+            <span className="text-[8px] font-black uppercase tracking-widest opacity-30">Sort By</span>
             <select 
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-transparent text-[10px] font-black uppercase tracking-[0.3em] outline-none cursor-pointer appearance-none pr-4 text-black"
+              className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none pr-4 text-black"
             >
-              <option value="default" className="bg-white">Sort: Default</option>
-              <option value="price-low" className="bg-white">Price: Low to High</option>
-              <option value="price-high" className="bg-white">Price: High to Low</option>
+              <option value="default">Default</option>
+              <option value="price-low">Price: Low-High</option>
+              <option value="price-high">Price: High-Low</option>
             </select>
-            <ChevronDown size={12} className="opacity-30 text-black" />
+            <ChevronDown size={10} className="opacity-30 text-black" />
           </div>
         </div>
       </div>
-      
-      <div className="relative group">
-        {/* Navigation Buttons */}
-        <div className="absolute top-1/2 -translate-y-1/2 -left-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity hidden md:block">
-          <button 
-            onClick={() => scrollProducts('left')}
-            className="w-12 h-12 bg-black text-white flex items-center justify-center rounded-full shadow-2xl hover:scale-110 transition-transform"
-          >
-            <ChevronLeft size={24} />
-          </button>
-        </div>
-        <div className="absolute top-1/2 -translate-y-1/2 -right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity hidden md:block">
-          <button 
-            onClick={() => scrollProducts('right')}
-            className="w-12 h-12 bg-black text-white flex items-center justify-center rounded-full shadow-2xl hover:scale-110 transition-transform"
-          >
-            <ChevronRight size={24} />
-          </button>
-        </div>
 
+      <section id="drops" className="py-16 md:py-24 px-6 max-w-7xl mx-auto overflow-hidden">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.5em] opacity-30 mb-4">Curated Selection</p>
+            <h2 className="text-5xl md:text-7xl font-display font-bold uppercase tracking-tighter leading-none text-black">
+              Featured<br />Drops
+            </h2>
+          </div>
+          
+          <div className="flex gap-4">
+            <button 
+              onClick={() => scrollProducts('left')}
+              className="w-14 h-14 border border-black/10 flex items-center justify-center rounded-full hover:bg-black hover:text-white transition-all"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button 
+              onClick={() => scrollProducts('right')}
+              className="w-14 h-14 border border-black/10 flex items-center justify-center rounded-full hover:bg-black hover:text-white transition-all"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </div>
+        </div>
+        
         <div 
           ref={productScrollRef}
-          className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 md:gap-8 pb-12 -mx-6 px-6 md:mx-0 md:px-0 scroll-smooth"
+          className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-6 md:gap-10 pb-12 -mx-6 px-6 md:mx-0 md:px-0 scroll-smooth"
         >
-          {filteredAndSortedProducts.map((product, idx) => (
-            <div key={product.id || `featured-${idx}`} className="min-w-[45vw] md:min-w-[30vw] lg:min-w-[22vw] snap-center">
+          {filteredAndSortedProducts.filter(p => p.isDrop).map((product, idx) => (
+            <div key={product.id || `featured-${idx}`} className="min-w-[70vw] md:min-w-[35vw] lg:min-w-[28vw] snap-center">
               <ProductCard 
                 product={product} 
                 onAddToCart={addToCart} 
                 onEmailDetails={onEmailDetails}
                 onBuyNow={handleBuyNow}
                 searchQuery={searchQuery}
+                isWishlisted={wishlist.includes(product.id)}
+                onToggleWishlist={toggleWishlist}
+                isLoading={isCartLoading}
               />
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Brand Sections with Banners */}
+      {brandNames.map(brandName => {
+        const brandProducts = filteredAndSortedProducts.filter(p => p.brand === brandName);
+        const brandInfo = brands.find(b => b.name === brandName || b.id === brandProducts[0]?.brandId);
         
-        {/* Carousel Indicators */}
-        <div className="flex justify-center gap-2 mt-4">
-          {filteredAndSortedProducts.map((_, idx) => (
-            <div key={idx} className="w-1 h-1 rounded-full bg-black/10" />
-          ))}
-        </div>
-      </div>
+        return (
+          <section key={brandName} className="pb-24">
+            <BrandBanner 
+              brand={brandName} 
+              banner={brandInfo?.banner || brandProducts[0]?.brandBanner} 
+              description={brandInfo?.description || brandProducts[0]?.brandDescription} 
+            />
+            <div className="max-w-7xl mx-auto px-6">
+              <div className="space-y-16">
+                {categories.filter(c => !c.parentId).map(cat => {
+                  const catProducts = brandProducts.filter(p => (p.categories || []).includes(cat.name));
+                  if (catProducts.length === 0) return null;
+                  return (
+                    <div key={cat.id}>
+                      <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30 mb-8 border-b border-gray-100 pb-2">{cat.name}</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10">
+                        {catProducts.map((product, idx) => (
+                          <ProductCard 
+                            key={product.id ? `brand-${brandName}-${product.id}` : `brand-${brandName}-${idx}`}
+                            product={product} 
+                            onAddToCart={addToCart} 
+                            onEmailDetails={onEmailDetails}
+                            onBuyNow={handleBuyNow}
+                            isWishlisted={wishlist.includes(product.id)}
+                            onToggleWishlist={toggleWishlist}
+                            isLoading={isCartLoading}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        );
+      })}
+
+      {/* Fallback for products without brands */}
+      {filteredAndSortedProducts.filter(p => !p.brand).length > 0 && (
+        <section className="py-24 px-6 border-t border-gray-100">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-16">
+              <h2 className="text-4xl font-display font-bold uppercase tracking-tighter mb-2 text-black">More Essentials</h2>
+              <p className="text-[10px] opacity-40 uppercase tracking-widest text-black">Handpicked for you</p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10">
+              {filteredAndSortedProducts.filter(p => !p.brand).map((product, idx) => (
+                <ProductCard 
+                  key={product.id ? `grid-${product.id}` : `grid-fallback-${idx}`}
+                  product={product} 
+                  onAddToCart={addToCart} 
+                  onEmailDetails={onEmailDetails}
+                  onBuyNow={handleBuyNow}
+                  isWishlisted={wishlist.includes(product.id)}
+                  onToggleWishlist={toggleWishlist}
+                  isLoading={isCartLoading}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
       
       {filteredAndSortedProducts.length === 0 && (
-        <div className="py-20 text-center opacity-30 uppercase tracking-widest text-sm font-bold text-black">
-          No products found
-        </div>
-      )}
-    </section>
-
-    {/* Ever-scrolling Grid Section */}
-    <section className="py-16 px-6 border-t border-gray-100">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-end mb-12">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-display font-bold uppercase tracking-tighter mb-2 text-black">Explore More</h2>
-            <p className="text-[10px] opacity-40 uppercase tracking-widest text-black">Curated for your style</p>
+        <div className="py-40 text-center">
+          <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Search size={32} className="opacity-10" />
           </div>
-          <div className="flex gap-4">
-            <button className="p-3 border border-black/10 rounded-full hover:bg-black hover:text-white transition-all text-black">
-              <Filter size={18} />
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-          {filteredAndSortedProducts.map((product, idx) => (
-            <ProductCard 
-              key={product.id ? `grid-${product.id}` : `grid-fallback-${idx}`}
-              product={product} 
-              onAddToCart={addToCart} 
-              onEmailDetails={onEmailDetails}
-              onBuyNow={handleBuyNow}
-            />
-          ))}
-        </div>
-
-        <div className="mt-24 text-center">
-          <button className="px-12 py-6 border border-black/10 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-black hover:text-white transition-all text-black">
-            Load More
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 text-black">
+            No products match your selection
+          </p>
+          <button 
+            onClick={() => { setFilterCategory('All'); setSortBy('default'); }}
+            className="mt-6 text-[10px] font-black uppercase tracking-widest underline underline-offset-4 hover:opacity-60 transition-opacity"
+          >
+            Clear All Filters
           </button>
         </div>
-      </div>
-    </section>
-  </main>
-);
+      )}
+    </main>
+  );
+};
 
 const ProductPage = ({ 
   products, 
   addToCart, 
   handleBuyNow,
   onEmailDetails,
-  searchQuery
+  searchQuery,
+  wishlist,
+  onToggleWishlist,
+  isCartLoading = false
 }: { 
   products: Product[], 
   addToCart: (p: Product, v?: Record<string, string>, q?: number) => void, 
   handleBuyNow: (p: Product, v?: Record<string, string>) => void,
   onEmailDetails: (p: Product) => void,
-  searchQuery: string
+  searchQuery: string,
+  wishlist: string[],
+  onToggleWishlist: (productId: string) => void,
+  isCartLoading?: boolean
 }) => {
   const { id } = useParams();
   const product = products.find(p => p.id === id);
-  return <ProductDetailContent product={product || null} allProducts={products} onAddToCart={addToCart} onBuyNow={handleBuyNow} onEmailDetails={onEmailDetails} searchQuery={searchQuery} />;
+  return <ProductDetailContent product={product || null} allProducts={products} onAddToCart={addToCart} onBuyNow={handleBuyNow} onEmailDetails={onEmailDetails} searchQuery={searchQuery} wishlist={wishlist} onToggleWishlist={onToggleWishlist} isCartLoading={isCartLoading} />;
 };
 
 export default function App() {
@@ -4822,17 +5807,25 @@ function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [isBrandsOpen, setIsBrandsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'cancelled' | 'processing' | null>(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [isCartLoading, setIsCartLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [wishlist, setWishlist] = useState<string[]>([]);
   const productScrollRef = useRef<HTMLDivElement>(null);
 
   // --- Auth Check ---
@@ -4870,18 +5863,52 @@ function AppContent() {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (user?.wishlist) {
+      setWishlist(user.wishlist);
+    } else {
+      setWishlist([]);
+    }
+  }, [user]);
+
   // --- Data Fetching ---
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
+      setIsDataLoading(true);
       try {
-        const data = await productService.getProducts();
-        setProducts(Array.isArray(data) ? data : []);
+        console.log("Fetching products, categories and brands...");
+        const [productsData, categoriesData, brandsData] = await Promise.all([
+          productService.getProducts().catch(err => {
+            console.error("Products fetch error:", err);
+            return [];
+          }),
+          categoryService.getCategories().catch(err => {
+            console.error("Categories fetch error:", err);
+            return [];
+          }),
+          brandService.getBrands().catch(err => {
+            console.error("Brands fetch error:", err);
+            return [];
+          })
+        ]);
+        
+        console.log("Products received:", productsData?.length || 0);
+        console.log("Categories received:", categoriesData?.length || 0);
+        console.log("Brands received:", brandsData?.length || 0);
+        
+        setProducts(Array.isArray(productsData) ? productsData : []);
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        setBrands(Array.isArray(brandsData) ? brandsData : []);
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Critical error fetching data:", error);
         setProducts([]);
+        setCategories([]);
+        setBrands([]);
+      } finally {
+        setIsDataLoading(false);
       }
     };
-    fetchProducts();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -4908,6 +5935,23 @@ function AppContent() {
       const scrollAmount = clientWidth * 0.8;
       const scrollTo = direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount;
       productScrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+    }
+  };
+
+  const toggleWishlist = async (productId: string) => {
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
+    const newWishlist = wishlist.includes(productId)
+      ? wishlist.filter(id => id !== productId)
+      : [...wishlist, productId];
+    
+    setWishlist(newWishlist);
+    try {
+      await authService.updateWishlist(newWishlist);
+    } catch (error) {
+      console.error("Failed to update wishlist:", error);
     }
   };
 
@@ -4960,6 +6004,58 @@ function AppContent() {
       alert(message);
     } finally {
       setIsProfileLoading(false);
+    }
+  };
+
+  const handleSaveCategory = async (category: Partial<Category>) => {
+    try {
+      const saved = await categoryService.saveCategory(category);
+      setCategories(prev => {
+        const index = prev.findIndex(c => c.id === saved.id);
+        if (index >= 0) {
+          const newCategories = [...prev];
+          newCategories[index] = saved;
+          return newCategories;
+        }
+        return [...prev, saved];
+      });
+    } catch (error) {
+      console.error("Failed to save category:", error);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      await categoryService.deleteCategory(id);
+      setCategories(prev => prev.filter(c => c.id !== id));
+    } catch (error) {
+      console.error("Failed to delete category:", error);
+    }
+  };
+
+  const handleSaveBrand = async (brand: Partial<Brand>) => {
+    try {
+      const saved = await brandService.saveBrand(brand);
+      setBrands(prev => {
+        const index = prev.findIndex(b => b.id === saved.id);
+        if (index >= 0) {
+          const newBrands = [...prev];
+          newBrands[index] = saved;
+          return newBrands;
+        }
+        return [...prev, saved];
+      });
+    } catch (error) {
+      console.error("Failed to save brand:", error);
+    }
+  };
+
+  const handleDeleteBrand = async (id: string) => {
+    try {
+      await brandService.deleteBrand(id);
+      setBrands(prev => prev.filter(b => b.id !== id));
+    } catch (error) {
+      console.error("Failed to delete brand:", error);
     }
   };
 
@@ -5023,7 +6119,7 @@ function AppContent() {
     let result = [...products];
     
     if (filterCategory !== 'All') {
-      result = result.filter(p => p.category === filterCategory);
+      result = result.filter(p => (p.categories || []).includes(filterCategory));
     }
 
     if (searchQuery) {
@@ -5031,7 +6127,8 @@ function AppContent() {
       result = result.filter(p => 
         p.name.toLowerCase().includes(query) || 
         p.description.toLowerCase().includes(query) ||
-        p.category.toLowerCase().includes(query)
+        (p.categories || []).some(c => c.toLowerCase().includes(query)) ||
+        p.brand?.toLowerCase().includes(query)
       );
     }
     
@@ -5049,6 +6146,7 @@ function AppContent() {
   }, [cart]);
 
   const addToCart = (product: Product, selectedVariants?: Record<string, string>, quantity: number = 1) => {
+    setIsCartLoading(true);
     setCart(prev => {
       const variantKey = selectedVariants ? JSON.stringify(selectedVariants) : '';
       const existing = prev.find(item => 
@@ -5065,11 +6163,15 @@ function AppContent() {
       return [...prev, { ...product, quantity, selectedVariants }];
     });
     setLastAdded(product.name);
-    setTimeout(() => setLastAdded(null), 3000);
+    setTimeout(() => {
+      setLastAdded(null);
+      setIsCartLoading(false);
+    }, 500);
     setIsCartOpen(true);
   };
 
   const updateQuantity = (productId: string, delta: number, variants?: Record<string, string>) => {
+    setIsCartLoading(true);
     setCart(prev => prev.map(item => {
       if (item.id === productId && JSON.stringify(item.selectedVariants || {}) === JSON.stringify(variants || {})) {
         const newQty = Math.max(1, item.quantity + delta);
@@ -5077,6 +6179,7 @@ function AppContent() {
       }
       return item;
     }));
+    setTimeout(() => setIsCartLoading(false), 300);
   };
 
   const removeFromCart = (productId: string, variants?: Record<string, string>) => {
@@ -5120,22 +6223,36 @@ function AppContent() {
       
       <Routes>
         <Route path="/" element={
-          <HomePage 
-            filteredAndSortedProducts={filteredAndSortedProducts}
-            filterCategory={filterCategory}
-            setFilterCategory={setFilterCategory}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            scrollProducts={scrollProducts}
-            productScrollRef={productScrollRef}
-            addToCart={addToCart}
-            handleBuyNow={handleBuyNow}
-            onEmailDetails={(p) => {
-              setSelectedProduct(p);
-              setIsSendingEmail(true);
-            }}
-            searchQuery={searchQuery}
-          />
+          isDataLoading ? (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 className="animate-spin text-black" size={48} />
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30">Loading Studio...</p>
+              </div>
+            </div>
+          ) : (
+            <HomePage 
+              filteredAndSortedProducts={filteredAndSortedProducts}
+              filterCategory={filterCategory}
+              setFilterCategory={setFilterCategory}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              scrollProducts={scrollProducts}
+              productScrollRef={productScrollRef}
+              addToCart={addToCart}
+              handleBuyNow={handleBuyNow}
+              onEmailDetails={(p) => {
+                setSelectedProduct(p);
+                setIsSendingEmail(true);
+              }}
+              searchQuery={searchQuery}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+              isCartLoading={isCartLoading}
+              brands={brands}
+              categories={categories}
+            />
+          )
         } />
         <Route path="/product/:id" element={
           <ProductPage 
@@ -5147,6 +6264,9 @@ function AppContent() {
               setIsSendingEmail(true);
             }}
             searchQuery={searchQuery}
+            wishlist={wishlist}
+            onToggleWishlist={toggleWishlist}
+            isCartLoading={isCartLoading}
           />
         } />
         <Route path="/order-success" element={
@@ -5168,7 +6288,7 @@ function AppContent() {
         <Route path="/shipping" element={<ShippingPolicyPage />} />
         <Route path="/faq" element={<FAQPage />} />
         <Route path="/helpdesk" element={<HelpDeskPage />} />
-        <Route path="/returns" element={<SelfServiceReturnsPage />} />
+        <Route path="/track-order" element={<OrderTrackingPage />} />
         <Route path="/story" element={<OurStoryPage />} />
         <Route path="/admin/system" element={user?.role === 'admin' ? <SystemHealthDashboard /> : <NotFoundPage />} />
         <Route path="*" element={<NotFoundPage />} />
@@ -5190,6 +6310,7 @@ function AppContent() {
         onClose={() => setIsMenuOpen(false)}
         onOpenOrders={() => setIsOrdersOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenWishlist={() => setIsWishlistOpen(true)}
         onLogout={handleLogout}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenProducts={() => setIsProductsOpen(true)}
@@ -5204,6 +6325,7 @@ function AppContent() {
         onUpdateQuantity={updateQuantity}
         onRemove={removeFromCart}
         onCheckout={handleCheckout}
+        isLoading={isCartLoading}
       />
 
       <HybridCheckoutModal 
@@ -5229,13 +6351,42 @@ function AppContent() {
         onUpdateOrder={handleUpdateOrder}
       />
 
-      <ProductManagementDrawer
+      <WishlistDrawer 
+        isOpen={isWishlistOpen}
+        onClose={() => setIsWishlistOpen(false)}
+        wishlist={wishlist}
+        products={products}
+        onToggleWishlist={toggleWishlist}
+        onAddToCart={(p) => addToCart(p)}
+        user={user}
+      />
+
+      <ProductManagementDrawer 
         isOpen={isProductsOpen}
         onClose={() => setIsProductsOpen(false)}
         products={products}
+        categories={categories}
+        brands={brands}
         onSave={handleSaveProduct}
         onDelete={handleDeleteProduct}
-        token={null}
+        onOpenCategories={() => setIsCategoriesOpen(true)}
+        onOpenBrands={() => setIsBrandsOpen(true)}
+      />
+
+      <CategoryManagementDrawer
+        isOpen={isCategoriesOpen}
+        onClose={() => setIsCategoriesOpen(false)}
+        categories={categories}
+        onSave={handleSaveCategory}
+        onDelete={handleDeleteCategory}
+      />
+
+      <BrandManagementDrawer
+        isOpen={isBrandsOpen}
+        onClose={() => setIsBrandsOpen(false)}
+        brands={brands}
+        onSave={handleSaveBrand}
+        onDelete={handleDeleteBrand}
       />
 
       <AuthModal 

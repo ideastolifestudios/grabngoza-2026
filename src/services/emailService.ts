@@ -53,7 +53,7 @@ export const emailService = {
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee;">
         <h1 style="color: #000; text-transform: uppercase; letter-spacing: -1px;">${product.name}</h1>
-        <p style="color: #888; text-transform: uppercase; font-size: 12px;">${product.category}</p>
+        <p style="color: #888; text-transform: uppercase; font-size: 12px;">${(product.categories || []).join(', ')}</p>
         <img src="${product.image}" alt="${product.name}" style="width: 100%; max-width: 300px; height: auto; margin: 20px 0;">
         <p style="font-weight: bold; font-size: 20px;">R ${product.price}</p>
         <p>${product.description || ''}</p>
@@ -121,29 +121,5 @@ export const emailService = {
       </div>
     `;
     return emailService.sendEmail(email, subject, html, text);
-  },
-
-  sendReturnRequestNotification: async (data: any) => {
-    const subject = `New Return Request: Order #${data.orderId}`;
-    const text = `New return request for Order #${data.orderId} from ${data.email}.`;
-    const html = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee;">
-        <h1 style="color: #000; text-transform: uppercase; letter-spacing: -1px;">New Return Request</h1>
-        <p><strong>Order ID:</strong> #${data.orderId}</p>
-        <p><strong>Customer Email:</strong> ${data.email}</p>
-        <div style="margin: 20px 0; padding: 20px; background: #f9f9f9;">
-          <h3 style="margin-top: 0; text-transform: uppercase; font-size: 14px;">Items to Return</h3>
-          ${data.items.map((item: any) => `
-            <div style="margin-bottom: 10px; font-size: 12px;">
-              <strong>${item.name}</strong> x ${item.quantity}<br>
-              <span style="color: #888;">Reason: ${item.reason}</span>
-            </div>
-          `).join('')}
-          ${data.notes ? `<p style="margin-top: 20px; font-size: 12px;"><strong>Notes:</strong> ${data.notes}</p>` : ''}
-        </div>
-      </div>
-    `;
-    // Send to business email
-    return emailService.sendEmail(process.env.VITE_BUSINESS_EMAIL || 'support@grabandgo.co.za', subject, html, text);
   }
 };

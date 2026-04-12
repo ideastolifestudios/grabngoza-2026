@@ -12,7 +12,10 @@
 //   - image: string (required)
 //   - images: list (optional)
 //   - category: string (required)
+//   - brandId: string (optional)
 //   - brand: string (optional)
+//   - brandBanner: string (optional)
+//   - brandDescription: string (optional)
 //   - soldBy: string (optional)
 //   - soldByLogo: string (optional)
 //   - isDrop: bool (optional)
@@ -20,6 +23,16 @@
 //   - description: string (required)
 //   - weight: number (optional)
 //   - variants: list (optional)
+//
+// Collection: brands
+// Document ID: brandId
+// Fields:
+//   - id: string (required)
+//   - name: string (required)
+//   - description: string (optional)
+//   - banner: string (optional)
+//   - logo: string (optional)
+//   - soldBy: string (optional)
 //
 // Collection: users
 // Document ID: userId (matches auth.uid)
@@ -29,6 +42,7 @@
 //   - firstName: string (required)
 //   - lastName: string (required)
 //   - role: string (required, 'user' or 'admin')
+//   - wishlist: list (optional, strings of product IDs)
 //
 // Collection: orders
 // Document ID: orderId
@@ -51,18 +65,17 @@
 //   - phone: string (required)
 //   - shippingCost: number (required)
 //
-// Collection: returnRequests
-// Document ID: requestId
+// Collection: categories
+// Document ID: categoryId
 // Fields:
 //   - id: string (required)
-//   - orderId: string (required)
-//   - email: string (required)
-//   - items: list (required)
-//   - status: string (required)
-//   - date: timestamp (required)
+//   - name: string (required)
+//   - description: string (optional)
+//   - image: string (optional)
 //
 // ===============================================================
 
+// Last Updated: 2026-04-12T10:40:00Z
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -105,7 +118,13 @@ service cloud.firestore {
              data.price is number && data.price >= 0 &&
              data.image is string &&
              data.category is string &&
-             data.description is string && data.description.size() < 5000;
+             data.description is string && data.description.size() < 5000 &&
+             (!('brandId' in data) || (data.brandId is string)) &&
+             (!('brand' in data) || (data.brand is string)) &&
+             (!('brandBanner' in data) || (data.brandBanner is string)) &&
+             (!('brandDescription' in data) || (data.brandDescription is string)) &&
+             (!('soldBy' in data) || (data.soldBy is string)) &&
+             (!('soldByLogo' in data) || (data.soldByLogo is string));
     }
 
     function isValidUser(data) {
@@ -114,7 +133,8 @@ service cloud.firestore {
              isValidEmail(data.email) &&
              data.firstName is string && data.firstName.size() > 0 && data.firstName.size() < 100 &&
              data.lastName is string && data.lastName.size() < 100 &&
-             data.role in ['user', 'admin'];
+             data.role in ['user', 'admin'] &&
+             (!('wishlist' in data) || (data.wishlist is list && data.wishlist.size() <= 100));
     }
 
     function isValidOrder(data) {
@@ -126,13 +146,40 @@ service cloud.firestore {
              isValidTimestamp(data.date);
     }
 
+    function isValidCategory(data) {
+      return data.keys().hasAll(['id', 'name']) &&
+             data.id is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             (!('description' in data) || (data.description is string && data.description.size() < 1000)) &&
+             (!('image' in data) || (data.image is string));
+    }
+
+    function isValidBrand(data) {
+      return data.keys().hasAll(['id', 'name']) &&
+             data.id is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             (!('description' in data) || (data.description is string && data.description.size() < 2000)) &&
+             (!('banner' in data) || (data.banner is string)) &&
+             (!('logo' in data) || (data.logo is string)) &&
+             (!('soldBy' in data) || (data.soldBy is string && data.soldBy.size() < 100));
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
 
-    match /products/{productId} {
+    match /categories/{document=**} {
       allow read: if true;
-      allow write: if isAdmin() && isValidProduct(request.resource.data);
+      allow write: if isAdmin();
+    }
+
+    match /brands/{document=**} {
+      allow read, write: if true;
+    }
+
+    match /products/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     match /users/{userId} {
@@ -145,12 +192,6 @@ service cloud.firestore {
     match /orders/{orderId} {
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || resource.data.email == request.auth.token.email || isAdmin());
       allow create: if isAuthenticated() && isValidOrder(request.resource.data) && (request.resource.data.userId == request.auth.uid || isAdmin());
-      allow update: if isAdmin();
-    }
-
-    match /returnRequests/{requestId} {
-      allow read: if isAuthenticated() && (resource.data.email == request.auth.token.email || isAdmin());
-      allow create: if isAuthenticated() && (request.resource.data.email == request.auth.token.email || isAdmin());
       allow update: if isAdmin();
     }
   }

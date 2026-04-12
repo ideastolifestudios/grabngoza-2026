@@ -6,7 +6,7 @@ export const PRODUCTS: Product[] = [
     name: 'CUSTOMBYREBA Essential Tee',
     price: 450,
     image: 'https://picsum.photos/seed/tee1/800/1000',
-    category: 'Apparel',
+    categories: ['Apparel'],
     isDrop: true,
     description: 'Premium heavyweight cotton tee. Studio-born quality.'
   },
@@ -15,7 +15,7 @@ export const PRODUCTS: Product[] = [
     name: 'Grab & Go "Fast" Hoodie',
     price: 850,
     image: 'https://picsum.photos/seed/hoodie1/800/1000',
-    category: 'Apparel',
+    categories: ['Apparel'],
     isDrop: true,
     description: 'Limited edition collaboration hoodie.'
   },
@@ -24,7 +24,7 @@ export const PRODUCTS: Product[] = [
     name: 'Lifestyle Bundle Pack',
     price: 1200,
     image: 'https://picsum.photos/seed/bundle1/800/1000',
-    category: 'Bundles',
+    categories: ['Bundles'],
     isBundle: true,
     description: 'Tee + Cap + Tote. The ultimate starter pack.'
   },
@@ -33,7 +33,7 @@ export const PRODUCTS: Product[] = [
     name: 'Studio Tote Bag',
     price: 250,
     image: 'https://picsum.photos/seed/tote1/800/1000',
-    category: 'Accessories',
+    categories: ['Accessories'],
     description: 'Durable canvas tote for your daily grab.'
   }
 ];
@@ -45,13 +45,6 @@ export const TESTIMONIALS: Testimonial[] = [
     handle: '@lindi_m',
     content: 'Literally grabbed and it was here the next day. So smooth! 🔥',
     type: 'instagram'
-  },
-  {
-    id: '2',
-    user: 'Thabo S.',
-    handle: '082 *** 4567',
-    content: 'The WhatsApp checkout is genius. Paid via Paystack link and done. 2 mins max.',
-    type: 'whatsapp'
   },
   {
     id: '3',

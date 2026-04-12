@@ -13,13 +13,14 @@ import {
   getDocFromServer
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { Product, Order, CartItem, User, ReturnRequest } from '../types';
+import { Product, Order, CartItem, User, Category, Brand } from '../types';
 
 export const productService = {
   getProducts: async (): Promise<Product[]> => {
     const path = 'products';
     try {
       const querySnapshot = await getDocs(collection(db, path));
+      console.log(`Firestore query for ${path} returned ${querySnapshot.size} documents`);
       return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, path);
@@ -48,6 +49,47 @@ export const productService = {
     const path = `products/${id}`;
     try {
       await deleteDoc(doc(db, 'products', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
+      throw error;
+    }
+  },
+};
+
+export const brandService = {
+  getBrands: async (): Promise<Brand[]> => {
+    const path = 'brands';
+    try {
+      const querySnapshot = await getDocs(collection(db, path));
+      console.log(`Firestore query for ${path} returned ${querySnapshot.size} documents`);
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Brand));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return [];
+    }
+  },
+  saveBrand: async (brand: Partial<Brand>): Promise<Brand> => {
+    const path = `brands/${brand.id || 'new'}`;
+    try {
+      if (brand.id) {
+        const docRef = doc(db, 'brands', brand.id);
+        await setDoc(docRef, brand, { merge: true });
+        return { ...brand } as Brand;
+      } else {
+        const docRef = await addDoc(collection(db, 'brands'), brand);
+        const newBrand = { ...brand, id: docRef.id } as Brand;
+        await updateDoc(docRef, { id: docRef.id });
+        return newBrand;
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
+  },
+  deleteBrand: async (id: string): Promise<void> => {
+    const path = `brands/${id}`;
+    try {
+      await deleteDoc(doc(db, 'brands', id));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
       throw error;
@@ -111,19 +153,37 @@ export const orderService = {
   lookupOrder: async (orderId: string, email: string): Promise<Order | null> => {
     const path = 'orders';
     try {
+      // Clean orderId (remove # if present)
+      const cleanId = orderId.startsWith('#') ? orderId.substring(1) : orderId;
+      
       // First try by ID
-      const docRef = doc(db, 'orders', orderId);
+      const docRef = doc(db, 'orders', cleanId);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
         const data = docSnap.data() as Order;
-        if (data.email.toLowerCase() === email.toLowerCase()) {
+        if (data.email.toLowerCase().trim() === email.toLowerCase().trim()) {
           return { ...data, id: docSnap.id } as Order;
         }
       }
       
-      // If not found by ID or email mismatch, try searching (in case orderId is a custom field or something)
-      // But usually orderId is the document ID.
+      // If not found by ID, try searching by a potential 'orderNumber' field if we had one,
+      // or just search all orders for this email and check if the ID matches (case insensitive)
+      const ordersRef = collection(db, 'orders');
+      const q = query(ordersRef, where('email', '==', email.toLowerCase().trim()));
+      const querySnapshot = await getDocs(q);
+      
+      for (const doc of querySnapshot.docs) {
+        if (doc.id.toLowerCase() === cleanId.toLowerCase()) {
+          const data = doc.data();
+          return { 
+            ...data, 
+            id: doc.id,
+            date: data.date instanceof Timestamp ? data.date.toDate().toISOString() : data.date
+          } as Order;
+        }
+      }
+      
       return null;
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, `${path}/${orderId}`);
@@ -195,6 +255,47 @@ async function testConnection() {
 }
 testConnection();
 
+export const categoryService = {
+  getCategories: async (): Promise<Category[]> => {
+    const path = 'categories';
+    try {
+      const querySnapshot = await getDocs(collection(db, path));
+      console.log(`Firestore query for ${path} returned ${querySnapshot.size} documents`);
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return [];
+    }
+  },
+  saveCategory: async (category: Partial<Category>): Promise<Category> => {
+    const path = `categories/${category.id || 'new'}`;
+    try {
+      if (category.id) {
+        const docRef = doc(db, 'categories', category.id);
+        await setDoc(docRef, category, { merge: true });
+        return { ...category } as Category;
+      } else {
+        const docRef = await addDoc(collection(db, 'categories'), category);
+        const newCategory = { ...category, id: docRef.id } as Category;
+        await updateDoc(docRef, { id: docRef.id });
+        return newCategory;
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
+  },
+  deleteCategory: async (id: string): Promise<void> => {
+    const path = `categories/${id}`;
+    try {
+      await deleteDoc(doc(db, 'categories', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
+      throw error;
+    }
+  },
+};
+
 export const authService = {
   getCurrentUser: async (): Promise<User> => {
     const user = auth.currentUser;
@@ -213,7 +314,8 @@ export const authService = {
           email: user.email || '',
           firstName: nameParts[0] || 'User',
           lastName: nameParts.slice(1).join(' ') || 'Customer', // Ensure lastName is not empty
-          role: user.email === 'cbrprints22@gmail.com' ? 'admin' : 'user'
+          role: user.email === 'cbrprints22@gmail.com' ? 'admin' : 'user',
+          wishlist: []
         };
         await setDoc(docRef, newUser);
         return newUser;
@@ -222,24 +324,21 @@ export const authService = {
       handleFirestoreError(error, OperationType.GET, path);
       throw error; // unreachable due to handleFirestoreError throwing
     }
+  },
+  updateWishlist: async (wishlist: string[]): Promise<void> => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("No user logged in");
+    const path = `users/${user.uid}`;
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      await updateDoc(docRef, { wishlist });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
   }
 };
 
 export const supportService = {
-  submitReturn: async (returnData: any): Promise<any> => {
-    const path = 'returnRequests';
-    try {
-      const docRef = await addDoc(collection(db, path), {
-        ...returnData,
-        date: Timestamp.now(),
-        status: 'pending'
-      });
-      return { ...returnData, id: docRef.id, status: 'pending' };
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, path);
-      throw error;
-    }
-  },
   subscribeNewsletter: async (email: string): Promise<any> => {
     // For demo, just log it
     console.log("Newsletter subscription:", email);

@@ -11,10 +11,14 @@ export interface Product {
   originalPrice?: number;
   image: string;
   images?: string[];
-  category: string;
-  brand?: string;
+  categories: string[];
+  brandId?: string; // Reference to Brand entity
+  brand?: string; // Keep for backward compatibility or display
+  brandBanner?: string;
+  brandDescription?: string;
   soldBy?: string;
   soldByLogo?: string;
+  tags?: string[];
   isDrop?: boolean;
   isBundle?: boolean;
   description: string;
@@ -22,12 +26,21 @@ export interface Product {
   variants?: ProductVariant[];
 }
 
+export interface Brand {
+  id: string;
+  name: string;
+  description?: string;
+  banner?: string;
+  logo?: string;
+  soldBy?: string;
+}
+
 export interface Testimonial {
   id: string;
   user: string;
   handle: string;
   content: string;
-  type: 'whatsapp' | 'instagram';
+  type: 'instagram';
   image?: string;
 }
 
@@ -44,23 +57,6 @@ export interface CartItem extends Product {
 }
 
 export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled' | 'returned';
-
-export type ReturnStatus = 'pending' | 'approved' | 'rejected' | 'completed';
-
-export interface ReturnRequest {
-  id: string;
-  orderId: string;
-  email: string;
-  items: {
-    productId: string;
-    quantity: number;
-    reason: string;
-    selectedVariants?: Record<string, string>;
-  }[];
-  status: ReturnStatus;
-  date: string;
-  notes?: string;
-}
 
 export type ShippingMethod = 'standard' | 'pickup' | 'international';
 
@@ -89,10 +85,19 @@ export interface Order {
   paymentGateway?: 'yoco';
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  image?: string;
+  parentId?: string;
+}
+
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
   role: 'user' | 'admin';
+  wishlist?: string[];
 }
