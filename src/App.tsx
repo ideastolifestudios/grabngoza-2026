@@ -1,7 +1,42 @@
 import React, { useState, useEffect, useRef, useMemo, Component } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+
 import { 
+  ShoppingBag, Zap, MessageSquare, Instagram, ArrowRight, X, Check,
+  CheckCircle2, Truck, CreditCard, Facebook, Phone, MapPin, Menu,
+  ChevronRight, ChevronLeft, ChevronDown, Heart, Plus, Minus, Trash2,
+  Mail, Send, Loader2, Info, Star, RotateCcw, User as UserIcon,
+  LogOut, Settings, Clock, Package, AlertCircle, AlertTriangle,
+  Activity, ShieldAlert, RefreshCw, Search, Edit3, Database,
+  Upload, Filter, ExternalLink, Globe, Ruler, ShieldCheck,
+  Shirt, Watch
+} from 'lucide-react';
+
+import { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod, Category, Brand, Testimonial, Partner } from './types';
+
+import { 
+  productService, 
+  orderService, 
+  authService, 
+  supportService,
+  categoryService,
+  brandService,
+  testimonialService,
+  partnerService
+} from './services/api';
+
+import { emailService } from './services/emailService';
+import { auth, googleProvider, facebookProvider } from './firebase';
+
+import { 
+  onAuthStateChanged, 
+  signInWithPopup, 
+  signOut,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile
+} from 'firebase/auth';
   ShoppingBag, 
   Zap, 
   MessageSquare, 
@@ -48,10 +83,7 @@ import {
   Globe,
   Ruler,
   ShieldCheck,
-  Shirt,
-  Watch,
-  import { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod, Category, Brand, Testimonial, Partner } from './types';
-import { 
+
   productService, 
   orderService, 
   authService, 
@@ -60,17 +92,6 @@ import {
   brandService,
   testimonialService,
   partnerService
-} from './services/api';
-import { emailService } from './services/emailService';
-import { auth, googleProvider, facebookProvider } from './firebase';
-import { 
-  onAuthStateChanged, 
-  signInWithPopup, 
-  signOut,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  updateProfile
-} from 'firebase/auth';
 
 // --- Constants & Utils ---
 
