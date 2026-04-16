@@ -50,7 +50,7 @@ import {
   ShieldCheck,
   Shirt,
   Watch,
-  Footprintimport { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod, Category, Brand, Testimonial, Partner } from './types';
+  import { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod, Category, Brand, Testimonial, Partner } from './types';
 import { 
   productService, 
   orderService, 
