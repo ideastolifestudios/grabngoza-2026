@@ -11,7 +11,7 @@ import {
   LogOut, Settings, Clock, Package, AlertCircle, AlertTriangle,
   Activity, ShieldAlert, RefreshCw, Search, Edit3, Database,
   Upload, Filter, ExternalLink, Globe, Ruler, ShieldCheck,
-  Shirt, Watch
+    Shirt, Watch, Sparkles
 } from 'lucide-react';
 
 import { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod, Category, Brand, Testimonial, Partner } from './types';
