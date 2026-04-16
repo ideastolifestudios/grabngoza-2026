@@ -1749,7 +1749,7 @@ const SystemHealthDashboard = () => {
 };
 
 const SystemAlertBanner = ({ user }: { user: User | null }) => {
-  return null;
+  return [];
 };
 
 const HelpDeskPage = () => {
@@ -3699,7 +3699,7 @@ const ProductManagementDrawer = ({
       if (res.ok) {
         const { imageUrls } = await res.json();
         setEditingProduct(prev => {
-          if (!prev) return null;
+          if (!prev) return [];
           const currentImages = prev.images || [];
           return { ...prev, images: [...currentImages, ...imageUrls] };
         });
@@ -3713,7 +3713,7 @@ const ProductManagementDrawer = ({
 
   const removeGalleryImage = (url: string) => {
     setEditingProduct(prev => {
-      if (!prev) return null;
+      if (!prev) return [];
       return { ...prev, images: (prev.images || []).filter(img => img !== url) };
     });
   };
@@ -4157,9 +4157,15 @@ const ProductManagementDrawer = ({
                                 </span>
                               </div>
                               <div 
-                                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-black'); }}
-                                onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-black'); }}
-                                onDrop={async(e) => {
+                                onDragOver={async (e) => {
+                                  e.preventDefault();
+                                  e.currentTarget.classList.add('border-black');
+                                }}
+                                onDragLeave={async (e) => {
+                                  e.preventDefault();
+                                  e.currentTarget.classList.remove('border-black');
+                                }}
+                                onDrop={async (e) => {
                                   e.preventDefault();
                                   e.currentTarget.classList.remove('border-black');
                                   const files = e.dataTransfer.files;
@@ -5246,7 +5252,7 @@ const EmailProductModal = ({
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
 
-  if (!product) return null;
+  if (!product) return [];
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -5473,7 +5479,7 @@ const CategoryPanel = ({
   activeCategory: string, 
   onSelect: (c: string) => void 
 }) => {
-  return null;
+  return [];
 };
 
 const HomePage = ({ 
@@ -5639,7 +5645,7 @@ const HomePage = ({
               <div className="space-y-8">
                 {categories.filter(c => !c.parentId).map(cat => {
                   const catProducts = brandProducts.filter(p => (p.categories || []).includes(cat.name));
-                  if (catProducts.length === 0) return null;
+                  if (catProducts.length === 0) return [];
                   return (
                     <div key={cat.id}>
                       <div className="flex items-center gap-6 mb-4">
