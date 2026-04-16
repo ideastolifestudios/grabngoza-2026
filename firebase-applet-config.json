@@ -1,10 +1,13 @@
 {
-  "projectId": "grab-go-za",
-  "appId": "1:111606509611:web:ec702c03f5779a88b47a6e",
-  "apiKey": "AIzaSyCcQWjvjcwO5S-KQoTP-6sRIOJkHCKBj1I",
-  "authDomain": "grab-go-za.firebaseapp.com",
-  "firestoreDatabaseId": "(default)",
-  "storageBucket": "grab-go-za.firebasestorage.app",
-  "messagingSenderId": "111606509611",
-  "measurementId": ""
+  "type": "service_account",
+  "project_id": "grab-go-za",
+  "private_key_id": "8fd9321fcbe25929fed68158038f778dd3f4d935",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDafxHUibAUCKaH\nFRaUMrJsKq3ZEbXJQ+BXCpBdey6Ta0pZV+smpTG5d3i6GXJ7AEmEcHSRcNArBAv7\nT1DsCPUK9R8cfrXkqRYhuYgKyuyE72dRH+VfizF7VAYAnPZD3A6ZOXxRQ2sUZc7Y\n+86X2k4kgg7l1RG2fj0slxr62yP2jAeWoNemeK2X9DdjGdGO5Lghc+xK4Xo6llut\nuHYHmQiQYX1AxmMnuzdXnN2GqAUOuYmer9qlByIbRRsfpxYoSQ9o4CQrwUXD+yo/\n4oEYKDo8G6U/jLHhtzJW2CI6mLr4HP2YCx5QYWSLpOtQ/3bkSnaNfYZgHOEhNWs+\nYHtcJVxdAgMBAAECggEAALwlG7CBQiybqMoVY5IcAfQsaaSQW33u7/U+skK5QQR/\nKLLQOE92IZFm1B1ErtSUb6Y0L7Y084I+YTpGF0YVIbGXpnxxx0y3wz5kpwqkHq4e\nx1O2bVvnSghGQ0dha4Zv6KwSWRzviYVar0gy7y4E0p261sCls+TO2XI4cLk58MLC\na3VDILt2pfewIyAxosn5KbyWcBjYBTPew8oLA4hfBfLjn4Y+o9T4ItRzc80IkI0F\nyFxnTA3ZjvUPVBV+G6sPwqwTDkcOtgq8fnvR0TkVKFAFT0rZmA8VagJYXoThVS46\nDJN7oJXdWuSLUKUTZ1JOQf/JOpLDEPuy8FA8naOcUQKBgQDzNDzSyoRv2esbLo6r\neupZ+X9Ir5PdwKEoM8uRQ0jdOQ+pahAhac+dnkMwKmi2PCIAE87tu8O7Mw1n5mub\nJEb/bV+f0W9yDkqmoiIsV/yfIR0K5g2kGxs6UJ9hIDEQIvX+XV0B/+P51KGByiZe\nIsEkDVwp8Ffse52WM0J+6Vuu0QKBgQDl/goY1L8G6AKZ9CdJHZxQPp9e/K6Ct626\nwu5OVcQIk7335RGsvQMFIcnoBrUGAmTyLCw0RNArH4KQBDilA/HuhkpoeYsUM+4z\nL7BN0p8pBH/hBr8rRX+dg39a9F98qtRpbUskNTVrFf/uxIBhKpHfd8s/1dzpr+Sd\nCnd3WwIvzQKBgHSb5FnxbkSvCPJUhWWlHr6bSTNRtCVMGjlLdFynFUW0+VRynV9X\n+4sIehCbFO/jry24UaxdLgEQ/mmF6qxNXZlVGNdpNPVL8vEophf67A5kcydpnLrF\noG16gKCyLbQd/zLCEzlFN0rvb6zqfzD9mvutSDZ3ncCumKWO2GA/hY0xAoGBAKlz\n2MCezvgprPD9YIyQUoEVApsblQAekNPPl4ED0+F16Tth/PnGcRkw4fAgMPPyg6mi\nPhdss+tx1eKCGbILDA9vxhbfpkcGU/RGqKFOE5JHDGkhbWxWUkYdgpHjBw91Vfcv\nXXOZ+Hejx+OFyAjPMpbxTkEEMzXCMLA76/V2ik/pAoGARDMsoogCZ87odqmzWaRG\n5sv9dZJKRW9mLJWJ2rkpsXPVz6Pw2GUAcJsJq92BoGJPJeVs3dZr77Lj7Qgt+BXq\noCmPFtmXpKIcwVSSC2OJDOulYVXm6M0jFR2grWrgyIt9lbEZJEJZrFYdV0anf1pF\n7xnuYz0n7LFUF5ksbXUDXes=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@grab-go-za.iam.gserviceaccount.com",
+  "client_id": "115600004556075458966",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40grab-go-za.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
 }
