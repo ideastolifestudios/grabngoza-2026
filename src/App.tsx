@@ -4700,7 +4700,7 @@ const HybridCheckoutModal = ({
     }
   }, [user]);
 
-  const handleFinalize = async () => {
+const handleFinalize = async () => {
     setIsPaying(true);
     setPaymentError(null);
 
@@ -4717,7 +4717,6 @@ const HybridCheckoutModal = ({
     }
 
     try {
-      // Save pending order details
       const orderData: any = {
         userId: user?.id || null,
         email,
@@ -4736,37 +4735,44 @@ const HybridCheckoutModal = ({
         paymentGateway
       };
 
-      // In a production environment, this would integrate with a payment gateway
-      // For now, we save the order to Firestore to finalize the purchase
-      
-      // Set to processing state for better UX
       onPaymentStatusChange('processing');
-      
-      const savedOrder = await orderService.createOrder(orderData);
-      
-      // Send Order Confirmation Email
-      try {
-        await emailService.sendOrderConfirmation({
-          ...orderData,
-          id: savedOrder.id,
-          status: 'pending',
-          date: new Date().toISOString()
-        });
-      } catch (emailErr) {
-        console.error("Failed to send order confirmation email:", emailErr);
+
+      // 1. Save order to Firestore with payment_pending status
+      const savedOrder = await orderService.createOrder({
+        ...orderData,
+        status: 'payment_pending'
+      });
+
+      // 2. Store order ID for post-payment processing
+      localStorage.setItem('grab_go_pending_order', JSON.stringify({
+        orderId: savedOrder.id,
+        orderData: { ...orderData, id: savedOrder.id }
+      }));
+
+      // 3. Create Yoco checkout session
+      const paymentRes = await fetch('/api/create-yoco-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: finalTotal,
+          currency: 'ZAR',
+          metadata: { orderId: savedOrder.id }
+        })
+      });
+
+      const paymentData = await paymentRes.json();
+
+      if (!paymentRes.ok || !paymentData.redirectUrl) {
+        // Payment creation failed — clean up
+        throw new Error(paymentData.details || paymentData.error || 'Failed to create payment session');
       }
 
-      setOrderMessage("Order Successfully Placed! Your order has been saved to our studio.");
-      
-      // Small delay to show processing state
-      setTimeout(() => {
-        onPaymentStatusChange('success');
-      }, 1500);
-      
+      // 4. Redirect to Yoco payment page
+      window.location.href = paymentData.redirectUrl;
+
     } catch (err: any) {
       onPaymentStatusChange(null);
       setPaymentError(err.message || 'Failed to place order');
-    } finally {
       setIsPaying(false);
     }
   };
@@ -6072,11 +6078,37 @@ function AppContent() {
     const status = params.get('status');
     const orderId = params.get('id');
 
-    if (status === 'success' || (orderId && window.location.pathname === '/order-success')) {
+   if (status === 'success' || (orderId && window.location.pathname === '/order-success')) {
       setPaymentStatus('success');
       setIsCheckoutOpen(true);
       setCart([]);
       localStorage.removeItem('grab_and_go_cart');
+
+      // Process post-payment: update order status + send confirmations
+      const pendingRaw = localStorage.getItem('grab_go_pending_order');
+      if (pendingRaw) {
+        try {
+          const { orderId: pendingId, orderData } = JSON.parse(pendingRaw);
+          const finalOrderId = orderId || pendingId;
+
+          // Update order status from payment_pending to pending (paid)
+          if (finalOrderId) {
+            orderService.updateOrder(finalOrderId, { status: 'pending' }).catch(console.error);
+          }
+
+          // Send confirmation email + WhatsApp
+          emailService.sendOrderConfirmation({
+            ...orderData,
+            id: finalOrderId,
+            status: 'pending',
+            date: new Date().toISOString()
+          }).catch(console.error);
+
+          localStorage.removeItem('grab_go_pending_order');
+        } catch (e) {
+          console.error('Post-payment processing error:', e);
+        }
+      }
     } else if (status === 'cancelled') {
       setPaymentStatus('cancelled');
       setIsCheckoutOpen(true);
