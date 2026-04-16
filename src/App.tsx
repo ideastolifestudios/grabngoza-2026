@@ -50,12 +50,7 @@ import {
   ShieldCheck,
   Shirt,
   Watch,
-  Footprints,
-  Grid,
-  Sparkles,
-  Tag
-} from 'lucide-react';
-import { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod, Category, Brand, Testimonial, Partner } from './types';
+  Footprintimport { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod, Category, Brand, Testimonial, Partner } from './types';
 import { 
   productService, 
   orderService, 
@@ -3122,19 +3117,36 @@ const CategoryManagementDrawer = ({
     setEditingCategory(null);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append('image', file);
 
     try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        const base64 = reader.result as string;
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ image: base64 })
+        });
+
+        if (res.ok) {
+          const { imageUrl } = await res.json();
+          setEditingProduct(prev => prev ? { ...prev, image: imageUrl } : null);
+        }
+        setIsUploading(false);
+      };
+    } catch (err) {
+      console.error("Upload failed:", err);
+      setIsUploading(false);
+    }
+  };
 
       if (res.ok) {
         const { imageUrl } = await res.json();
@@ -6452,6 +6464,186 @@ function AppContent() {
           </>
         )}
       </AnimatePresence>
+) => setIsAuthOpen(true)}
+        onLogout={handleLogout}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        products={products}
+      />
+      
+      <Routes>
+        <Route path="/" element={
+          isDataLoading ? (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 className="animate-spin text-black" size={48} />
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30">Loading Studio...</p>
+              </div>
+            </div>
+          ) : (
+            <HomePage 
+              filteredAndSortedProducts={filteredAndSortedProducts}
+              filterCategory={filterCategory}
+              setFilterCategory={setFilterCategory}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              scrollProducts={scrollProducts}
+              productScrollRef={productScrollRef}
+              addToCart={addToCart}
+              handleBuyNow={handleBuyNow}
+              onEmailDetails={(p) => {
+                setSelectedProduct(p);
+                setIsSendingEmail(true);
+              }}
+              searchQuery={searchQuery}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+              isCartLoading={isCartLoading}
+              brands={brands}
+              categories={categories}
+            />
+          )
+        } />
+        <Route path="/product/:id" element={
+          <ProductPage 
+            products={products}
+            addToCart={addToCart}
+            handleBuyNow={handleBuyNow}
+            onEmailDetails={(p) => {
+              setSelectedProduct(p);
+              setIsSendingEmail(true);
+            }}
+            searchQuery={searchQuery}
+            wishlist={wishlist}
+            onToggleWishlist={toggleWishlist}
+            isCartLoading={isCartLoading}
+          />
+        } />
+        <Route path="/order-success" element={
+          <div className="min-h-screen flex items-center justify-center bg-white">
+            <div className="text-center p-8">
+              <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 size={32} />
+              </div>
+              <h1 className="text-2xl font-display font-bold uppercase tracking-tighter mb-4">Processing Your Order...</h1>
+              <p className="text-sm text-gray-500 max-w-md mx-auto">Please wait while we finalize your order details.</p>
+              <div className="mt-8">
+                <Loader2 className="animate-spin mx-auto text-black" size={24} />
+              </div>
+            </div>
+          </div>
+        } />
+        <Route path="/legal" element={<LegalPage />} />
+        <Route path="/refunds" element={<RefundPolicyPage />} />
+        <Route path="/shipping" element={<ShippingPolicyPage />} />
+        <Route path="/faq" element={<FAQPage />} />
+        <Route path="/helpdesk" element={<HelpDeskPage />} />
+        <Route path="/track-order" element={<OrderTrackingPage />} />
+        <Route path="/story" element={<OurStoryPage />} />
+        <Route path="/admin/system" element={user?.role === 'admin' ? <SystemHealthDashboard /> : <NotFoundPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+
+      <EmailProductModal 
+        isOpen={isSendingEmail} 
+        onClose={() => {
+          setIsSendingEmail(false);
+          setSelectedProduct(null);
+        }} 
+        product={selectedProduct} 
+      />
+
+      <Footer />
+
+      <Sidebar 
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        onOpenOrders={() => setIsOrdersOpen(true)}
+        onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenWishlist={() => setIsWishlistOpen(true)}
+        onLogout={handleLogout}
+        onOpenCart={() => setIsCartOpen(true)}
+        onOpenProducts={() => setIsProductsOpen(true)}
+        cartCount={cart.length}
+        user={user}
+      />
+
+      <CartDrawer 
+        isOpen={isCartOpen} 
+        onClose={() => setIsCartOpen(false)} 
+        cartItems={cart}
+        onUpdateQuantity={updateQuantity}
+        onRemove={removeFromCart}
+        onCheckout={handleCheckout}
+        isLoading={isCartLoading}
+      />
+
+      <HybridCheckoutModal 
+        isOpen={isCheckoutOpen} 
+        onClose={() => {
+          setIsCheckoutOpen(false);
+          setPaymentStatus(null);
+          window.history.replaceState({}, document.title, "/");
+        }}
+        cartItems={cart}
+        total={cartTotal}
+        paymentStatus={paymentStatus}
+        onPaymentStatusChange={setPaymentStatus}
+        user={user}
+        onOpenAuth={() => setIsAuthOpen(true)}
+      />
+
+      <OrdersDrawer 
+        isOpen={isOrdersOpen} 
+        onClose={() => setIsOrdersOpen(false)}
+        orders={orders}
+        user={user}
+        onUpdateOrder={handleUpdateOrder}
+      />
+
+      <WishlistDrawer 
+        isOpen={isWishlistOpen}
+        onClose={() => setIsWishlistOpen(false)}
+        wishlist={wishlist}
+        products={products}
+        onToggleWishlist={toggleWishlist}
+        onAddToCart={(p) => addToCart(p)}
+        user={user}
+      />
+
+      <ProductManagementDrawer 
+        isOpen={isProductsOpen}
+        onClose={() => setIsProductsOpen(false)}
+        products={products}
+        categories={categories}
+        brands={brands}
+        onSave={handleSaveProduct}
+        onDelete={handleDeleteProduct}
+        onOpenCategories={() => setIsCategoriesOpen(true)}
+        onOpenBrands={() => setIsBrandsOpen(true)}
+      />
+
+      <CategoryManagementDrawer
+        isOpen={isCategoriesOpen}
+        onClose={() => setIsCategoriesOpen(false)}
+        categories={categories}
+        onSave={handleSaveCategory}
+        onDelete={handleDeleteCategory}
+      />
+
+      <BrandManagementDrawer
+        isOpen={isBrandsOpen}
+        onClose={() => setIsBrandsOpen(false)}
+        brands={brands}
+        onSave={handleSaveBrand}
+        onDelete={handleDeleteBrand}
+      />
+
+      <AuthModal 
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onSuccess={handleLoginSuccess}
+      />
     </div>
   );
 }
