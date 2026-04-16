@@ -55,15 +55,16 @@ import {
   Sparkles,
   Tag
 } from 'lucide-react';
-import { TESTIMONIALS, PARTNERS } from './constants';
-import { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod, Category, Brand } from './types';
+import { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod, Category, Brand, Testimonial, Partner } from './types';
 import { 
   productService, 
   orderService, 
   authService, 
   supportService,
   categoryService,
-  brandService
+  brandService,
+  testimonialService,
+  partnerService
 } from './services/api';
 import { emailService } from './services/emailService';
 import { auth, googleProvider, facebookProvider } from './firebase';
@@ -182,6 +183,117 @@ const formatPrice = (amount: number) => {
 
 // --- Components ---
 
+const Toast = ({ message, type = 'success', onClose }: { message: string, type?: 'success' | 'error', onClose: () => void }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50, x: '-50%' }}
+      animate={{ opacity: 1, y: 0, x: '-50%' }}
+      exit={{ opacity: 0, y: 50, x: '-50%' }}
+      className={`fixed bottom-10 left-1/2 z-[300] px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 border ${
+        type === 'success' ? 'bg-black text-white border-white/10' : 'bg-red-600 text-white border-red-500'
+      }`}
+    >
+      {type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+      <span className="text-[10px] font-black uppercase tracking-widest">{message}</span>
+    </motion.div>
+  );
+};
+
+const WishlistDrawer = ({ 
+  isOpen, 
+  onClose, 
+  wishlist, 
+  products, 
+  onAddToCart, 
+  onToggleWishlist 
+}: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  wishlist: string[], 
+  products: Product[], 
+  onAddToCart: (p: Product) => void,
+  onToggleWishlist: (id: string) => void
+}) => {
+  const wishlistItems = products.filter(p => wishlist.includes(p.id));
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            onClick={onClose} 
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150]" 
+          />
+          <motion.div 
+            initial={{ x: '100%' }} 
+            animate={{ x: 0 }} 
+            exit={{ x: '100%' }} 
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed top-0 right-0 bottom-0 w-full md:w-[450px] bg-white z-[160] flex flex-col shadow-2xl"
+          >
+            <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Heart size={20} className="text-red-500" fill="currentColor" />
+                <h2 className="text-xl font-display font-bold uppercase tracking-tighter">My Wishlist</h2>
+              </div>
+              <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="flex-grow overflow-y-auto p-6 md:p-8 custom-scrollbar">
+              {wishlistItems.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-30">
+                  <Heart size={48} />
+                  <p className="text-[10px] font-black uppercase tracking-widest">Your wishlist is empty</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {wishlistItems.map((item) => (
+                    <div key={item.id} className="flex gap-4 group">
+                      <div className="w-24 h-32 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                      <div className="flex-grow flex flex-col justify-between py-1">
+                        <div>
+                          <h3 className="text-[10px] font-black uppercase tracking-widest mb-1">{item.name}</h3>
+                          <p className="text-[10px] font-bold text-gray-400">{formatPrice(item.price)}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => onAddToCart(item)}
+                            className="flex-grow py-2 bg-black text-white text-[8px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-colors"
+                          >
+                            Add to Cart
+                          </button>
+                          <button 
+                            onClick={() => onToggleWishlist(item.id)}
+                            className="p-2 border border-gray-100 hover:bg-red-50 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
+
 const WelcomePopup = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
@@ -201,11 +313,16 @@ const WelcomePopup = () => {
     localStorage.setItem('grab-go-welcome-popup', 'true');
   };
 
-  const handleClaim = (e: React.FormEvent) => {
+  const handleClaim = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you'd send the email to a newsletter service
-    alert('Welcome to the family! Use code FIRST10 at checkout for 10% off.');
-    handleClose();
+    if (email) {
+      try {
+        await supportService.subscribeNewsletter(email);
+        handleClose();
+      } catch (err) {
+        console.error("Popup subscription error:", err);
+      }
+    }
   };
 
   return (
@@ -309,6 +426,105 @@ const Logo = ({ className = "h-8 w-auto", light = false, dark = false }: { class
   );
 };
 
+const HowToOrderDrawer = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
+  return (
+    <motion.div 
+      initial={{ x: '100%' }}
+      animate={{ x: 0 }}
+      exit={{ x: '100%' }}
+      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      className="fixed inset-y-0 right-0 w-full md:w-[500px] bg-white z-[100] shadow-2xl flex flex-col"
+    >
+      <div className="p-6 md:p-10 border-b border-gray-100 flex items-center justify-between">
+        <h2 className="text-2xl font-display font-bold uppercase tracking-tighter">How to Order</h2>
+        <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition-colors">
+          <X size={24} />
+        </button>
+      </div>
+      
+      <div className="flex-grow overflow-y-auto p-6 md:p-10 custom-scrollbar">
+        <div className="prose prose-sm max-w-none space-y-10">
+          <section className="space-y-4">
+            <h3 className="text-lg font-black uppercase tracking-widest border-b-2 border-black pb-2 inline-block">1. Browse & Select</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Explore our curated collections of premium streetwear and limited drops. Use the category filters and search bar to find exactly what you're looking for.
+            </p>
+            <ul className="list-disc pl-5 space-y-2 text-gray-500">
+              <li>Select your size and color variants carefully.</li>
+              <li>Check the product description for specific fit details.</li>
+              <li>Add items to your cart to begin the checkout process.</li>
+            </ul>
+          </section>
+
+          <section className="space-y-4">
+            <h3 className="text-lg font-black uppercase tracking-widest border-b-2 border-black pb-2 inline-block">2. Secure Checkout</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Once you're ready, click the shopping bag icon to review your cart and proceed to checkout. We offer multiple secure payment options:
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <span className="text-[10px] font-black uppercase tracking-widest block mb-2">Cards</span>
+                <p className="text-[10px] text-gray-400">Visa, Mastercard, American Express via secure gateway.</p>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <span className="text-[10px] font-black uppercase tracking-widest block mb-2">Digital</span>
+                <p className="text-[10px] text-gray-400">Apple Pay, Google Pay, and PayPal supported.</p>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <span className="text-[10px] font-black uppercase tracking-widest block mb-2">Installments</span>
+                <p className="text-[10px] text-gray-400">PayFlex: Buy now, pay later in 4 interest-free payments.</p>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <span className="text-[10px] font-black uppercase tracking-widest block mb-2">EFT</span>
+                <p className="text-[10px] text-gray-400">Direct Bank Transfer (EFT) available on request.</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-4">
+            <h3 className="text-lg font-black uppercase tracking-widest border-b-2 border-black pb-2 inline-block">3. Shipping & Delivery</h3>
+            <p className="text-gray-600 leading-relaxed">
+              We ship nationwide across South Africa using premium courier services.
+            </p>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="text-[10px] font-bold uppercase tracking-widest">Standard Shipping</span>
+                <span className="text-[10px] font-black">R100 Flat Fee</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="text-[10px] font-bold uppercase tracking-widest">Free Shipping</span>
+                <span className="text-[10px] font-black">Orders over R1500</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="text-[10px] font-bold uppercase tracking-widest">Delivery Time</span>
+                <span className="text-[10px] font-black">2-4 Business Days</span>
+              </div>
+            </div>
+          </section>
+
+          <section className="p-6 bg-black text-white rounded-xl space-y-4">
+            <h3 className="text-sm font-black uppercase tracking-[0.3em]">Important Notes</h3>
+            <ul className="text-[10px] space-y-2 opacity-80 list-disc pl-4">
+              <li>Limited drops are restricted to one item per customer.</li>
+              <li>Returns are accepted within 14 days of delivery (unworn/original packaging).</li>
+              <li>Sale items are final and cannot be returned or exchanged.</li>
+              <li>Address changes are not possible once an order is processed.</li>
+            </ul>
+          </section>
+
+          <div className="pt-10 border-t border-gray-100 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Need help?</p>
+            <div className="flex justify-center gap-6">
+              <a href="mailto:support@grabandgo.co.za" className="text-[10px] font-black uppercase tracking-widest hover:underline">Email Support</a>
+              <a href="tel:+27123456789" className="text-[10px] font-black uppercase tracking-widest hover:underline">Call Us</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const Header = ({ 
   cartCount, 
   onOpenCart, 
@@ -320,7 +536,8 @@ const Header = ({
   onLogout,
   searchQuery,
   setSearchQuery,
-  products
+  products,
+  onOpenHowToOrder
 }: { 
   cartCount: number, 
   onOpenCart: () => void, 
@@ -332,9 +549,12 @@ const Header = ({
   onLogout: () => void,
   searchQuery: string,
   setSearchQuery: (q: string) => void,
-  products: Product[]
+  products: Product[],
+  onOpenHowToOrder: () => void
 }) => {
   const [scrolled, setScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const debouncedSearch = useDebounce(localSearch, 300);
@@ -343,11 +563,22 @@ const Header = ({
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      const currentScrollY = window.scrollY;
+      
+      // Hide on scroll down, show on scroll up
+      // Only hide if we've scrolled past a certain threshold
+      if (currentScrollY > lastScrollY && currentScrollY > 150) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+      setScrolled(currentScrollY > 50);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   useEffect(() => {
     setSearchQuery(debouncedSearch);
@@ -369,124 +600,34 @@ const Header = ({
   }, [products, localSearch]);
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-white/90 backdrop-blur-md py-2 shadow-sm' : 'bg-white py-4'}`}>
-      <div className="max-w-[1800px] mx-auto px-4 md:px-10 flex items-center justify-between transition-all duration-500">
+    <motion.header 
+      initial={false}
+      animate={{ 
+        y: isVisible ? 0 : -100,
+        opacity: isVisible ? 1 : 0
+      }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className={`fixed top-0 left-0 right-0 z-50 ${scrolled ? 'bg-white/95 backdrop-blur-md py-1 border-b border-gray-100' : 'bg-white py-2'}`}
+    >
+      <div className="max-w-[1800px] mx-auto px-4 md:px-10 flex items-center justify-between">
         
-        {/* Left: Logo */}
-        <div className="flex-shrink-0">
+        {/* Left: Navigation Links */}
+        <div className="hidden lg:flex items-center gap-8 flex-1">
+          <Link to="/" className="text-[10px] font-black uppercase tracking-[0.2em] hover:opacity-50 transition-opacity">Shop</Link>
+          <button onClick={onOpenHowToOrder} className="text-[10px] font-black uppercase tracking-[0.2em] hover:opacity-50 transition-opacity">How to Order</button>
+        </div>
+
+        {/* Center: Logo */}
+        <div className="flex-shrink-0 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
           <Link to="/" className="block group">
-            <Logo className="h-8 md:h-12 transition-transform duration-500 group-hover:scale-105" dark />
+            <Logo className="h-6 md:h-8 transition-transform duration-500 group-hover:scale-105" dark />
           </Link>
         </div>
 
-        {/* Center: Search (Desktop) */}
-        <div className="hidden md:flex flex-grow max-w-md mx-8 relative">
-          <div className="relative w-full group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors" size={16} />
-            <input 
-              type="text" 
-              placeholder="SEARCH PRODUCTS..."
-              value={localSearch}
-              onChange={(e) => {
-                setLocalSearch(e.target.value);
-                setShowSuggestions(true);
-              }}
-              onFocus={() => setShowSuggestions(true)}
-              className="w-full bg-gray-50 border border-transparent focus:border-black/10 focus:bg-white px-10 py-2 text-[10px] font-black uppercase tracking-widest outline-none transition-all"
-            />
-            {localSearch && (
-              <button 
-                onClick={() => {
-                  setLocalSearch('');
-                  setSearchQuery('');
-                }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-
-          {/* Suggestions Dropdown */}
-          <AnimatePresence>
-            {showSuggestions && suggestions.length > 0 && (
-              <>
-                <div 
-                  className="fixed inset-0 z-[-1]" 
-                  onClick={() => setShowSuggestions(false)}
-                />
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 shadow-2xl rounded-xl overflow-hidden z-50"
-                >
-                  <div className="p-2 border-b border-gray-50">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-gray-400 px-3">Suggestions</span>
-                  </div>
-                  <div className="max-h-[300px] overflow-y-auto">
-                    {suggestions.map((product) => (
-                      <button
-                        key={product.id}
-                        onClick={() => {
-                          navigate(`/product/${product.id}`);
-                          setShowSuggestions(false);
-                          setLocalSearch('');
-                          setSearchQuery('');
-                        }}
-                        className="w-full flex items-center gap-4 p-3 hover:bg-gray-50 transition-colors text-left group"
-                      >
-                        <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                          <img 
-                            src={product.image || undefined} 
-                            alt={product.name} 
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                            referrerPolicy="no-referrer"
-                          />
-                        </div>
-                        <div className="flex-grow min-w-0">
-                          <div className="text-[10px] font-black uppercase tracking-widest text-black truncate">
-                            <Highlight text={product.name} query={localSearch} />
-                          </div>
-                          <div className="text-[8px] font-bold uppercase tracking-widest text-gray-400">
-                            {(product.categories || []).join(', ')}
-                          </div>
-                        </div>
-                        <div className="text-[10px] font-black text-black">
-                          R{product.price}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  <button 
-                    onClick={() => setShowSuggestions(false)}
-                    className="w-full p-3 text-[8px] font-black uppercase tracking-widest text-center bg-gray-50 hover:bg-gray-100 transition-colors"
-                  >
-                    View all results
-                  </button>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-        </div>
-
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 md:gap-4">
-          {/* Mobile Search Toggle */}
-          <button 
-            onClick={() => setIsSearchOpen(!isSearchOpen)}
-            className="md:hidden p-2 hover:bg-black/5 rounded-full transition-colors text-black"
-            title="Search"
-          >
-            <Search size={22} />
-          </button>
-
-          <button 
-            onClick={onOpenCart} 
-            className="relative p-2 hover:bg-black/5 rounded-full transition-colors text-black" 
-            title="Cart"
-          >
-            <ShoppingBag size={22} />
+        <div className="flex items-center justify-end gap-2 md:gap-6 flex-1">
+          <button onClick={onOpenCart} className="relative p-2 hover:bg-black/5 rounded-full transition-colors text-black">
+            <ShoppingBag size={20} />
             {cartCount > 0 && (
               <span className="absolute top-1 right-1 w-4 h-4 bg-black text-white text-[8px] font-black rounded-full flex items-center justify-center">
                 {cartCount}
@@ -494,115 +635,26 @@ const Header = ({
             )}
           </button>
 
-          {user?.role === 'admin' && (
-            <button 
-              onClick={onOpenProducts}
-              className="p-2 hover:bg-black/5 rounded-full transition-colors text-black"
-              title="Manage Products"
-            >
-              <Database size={22} />
+          {!user ? (
+            <>
+              <button onClick={onOpenAuth} className="p-2 hover:bg-black/5 rounded-full transition-colors text-black hidden sm:flex items-center gap-2">
+                <UserIcon size={20} />
+                <span className="text-[10px] font-black uppercase tracking-widest">Login</span>
+              </button>
+              <button onClick={onOpenMenu} className="p-2 hover:bg-black/5 rounded-full transition-colors flex items-center gap-2 group text-black">
+                <Menu size={24} />
+              </button>
+            </>
+          ) : (
+            <button onClick={onOpenMenu} className="p-2 hover:bg-black/5 rounded-full transition-colors text-black flex items-center gap-2">
+              <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-[10px] font-black uppercase ring-2 ring-offset-2 ring-black/5">
+                {user.firstName[0]}{user.lastName[0]}
+              </div>
             </button>
           )}
-
-          {!user && (
-            <button 
-              onClick={onOpenAuth}
-              className="p-2 hover:bg-black/5 rounded-full transition-colors text-black hidden sm:flex items-center gap-2"
-              title="Login"
-            >
-              <UserIcon size={22} />
-              <span className="text-[10px] font-black uppercase tracking-widest">Login</span>
-            </button>
-          )}
-
-          <button 
-            onClick={onOpenMenu} 
-            className="p-2 hover:bg-black/5 rounded-full transition-colors flex items-center gap-2 group text-black"
-          >
-            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block group-hover:opacity-60 transition-opacity">Menu</span>
-            <Menu size={28} />
-          </button>
         </div>
       </div>
-
-      <AnimatePresence>
-        {isSearchOpen && (
-          <motion.div 
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="md:hidden bg-white border-t border-gray-50 overflow-hidden relative"
-          >
-            <div className="p-4">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input 
-                  autoFocus
-                  type="text" 
-                  placeholder="SEARCH PRODUCTS..."
-                  value={localSearch}
-                  onChange={(e) => {
-                    setLocalSearch(e.target.value);
-                    setShowSuggestions(true);
-                  }}
-                  className="w-full bg-gray-50 border border-transparent focus:border-black/10 focus:bg-white px-10 py-3 text-[10px] font-black uppercase tracking-widest outline-none transition-all"
-                />
-                {localSearch && (
-                  <button 
-                    onClick={() => {
-                      setLocalSearch('');
-                      setSearchQuery('');
-                    }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-
-              {/* Mobile Suggestions */}
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="mt-4 border-t border-gray-50 pt-4">
-                  <span className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Suggestions</span>
-                  <div className="space-y-2">
-                    {suggestions.map((product) => (
-                      <button
-                        key={product.id}
-                        onClick={() => {
-                          navigate(`/product/${product.id}`);
-                          setShowSuggestions(false);
-                          setIsSearchOpen(false);
-                          setLocalSearch('');
-                          setSearchQuery('');
-                        }}
-                        className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 transition-colors text-left"
-                      >
-                        <div className="w-8 h-8 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                          <img 
-                            src={product.image || undefined} 
-                            alt={product.name} 
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                        </div>
-                        <div className="flex-grow min-w-0">
-                          <div className="text-[10px] font-black uppercase tracking-widest text-black truncate">
-                            <Highlight text={product.name} query={localSearch} />
-                          </div>
-                          <div className="text-[8px] font-bold uppercase tracking-widest text-gray-400">
-                            {product.category}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </header>
+    </motion.header>
   );
 };
 
@@ -616,7 +668,10 @@ const Sidebar = ({
   onOpenCart,
   onOpenProducts,
   cartCount,
-  user
+  user,
+  partners = [],
+  searchQuery,
+  setSearchQuery
 }: { 
   isOpen: boolean, 
   onClose: () => void, 
@@ -627,16 +682,20 @@ const Sidebar = ({
   onOpenCart: () => void,
   onOpenProducts: () => void,
   cartCount: number,
-  user: User | null
+  user: User | null,
+  partners?: Partner[],
+  searchQuery: string,
+  setSearchQuery: (q: string) => void
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const navLinks = [
-    { name: 'NEW ARRIVALS', id: 'drops' },
-    { name: 'APPAREL', id: 'drops' },
-    { name: 'ACCESSORIES', id: 'drops' },
-    { name: 'FOOTWEAR', id: 'drops' }
+    { name: 'MEN', id: 'drops', filter: 'Men' },
+    { name: 'WOMEN', id: 'drops', filter: 'Women' },
+    { name: 'KIDS', id: 'drops', filter: 'Kids' },
+    { name: 'NEW ARRIVALS', id: 'drops', filter: 'New' },
+    { name: 'ACCESSORIES', id: 'drops', filter: 'Accessories' }
   ];
 
   return (
@@ -648,26 +707,39 @@ const Sidebar = ({
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             onClick={onClose} 
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80]" 
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[180]" 
           />
           <motion.div 
             initial={{ x: '100%' }} 
             animate={{ x: 0 }} 
             exit={{ x: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-black text-white border-l border-white/10 z-[90] p-8 md:p-12 flex flex-col"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-black text-white border-l border-white/10 z-[190] flex flex-col"
           >
-            <div className="flex justify-between items-center mb-12">
+            <div className="p-8 md:p-12 pb-6 flex justify-between items-center">
               <Logo className="h-6" light />
               <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
                 <X size={24} className="text-white" />
               </button>
             </div>
 
-            <nav className="flex-grow overflow-y-auto pr-4 custom-scrollbar space-y-12">
+            <div className="px-8 md:px-12 mb-8">
+              <div className="relative group">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-white transition-colors" size={16} />
+                <input 
+                  type="text" 
+                  placeholder="SEARCH THE STUDIO..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 focus:border-white/30 px-10 py-4 text-[10px] font-black uppercase tracking-widest outline-none transition-all rounded-sm"
+                />
+              </div>
+            </div>
+
+            <nav className="flex-grow overflow-y-auto px-8 md:px-12 custom-scrollbar space-y-12 pb-12">
               {/* Main Navigation */}
               <div className="flex flex-col gap-6">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-2">Navigation</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-2">Collections</p>
                 {navLinks.map((link) => (
                   <button 
                     key={link.name}
@@ -675,102 +747,105 @@ const Sidebar = ({
                       onClose();
                       if (location.pathname !== '/') {
                         navigate('/');
-                        setTimeout(() => document.getElementById(link.id)?.scrollIntoView({ behavior: 'smooth' }), 100);
+                        setTimeout(() => {
+                          const el = document.getElementById(link.id);
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }, 100);
                       } else {
-                        document.getElementById(link.id)?.scrollIntoView({ behavior: 'smooth' });
+                        const el = document.getElementById(link.id);
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
                       }
                     }}
-                    className="text-2xl font-black uppercase tracking-tighter text-left hover:text-white/60 transition-all"
+                    className="text-3xl font-black uppercase tracking-tighter text-left hover:text-white/60 transition-all flex items-center justify-between group"
                   >
-                    {link.name}
+                    <span>{link.name}</span>
+                    <ChevronRight size={20} className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                   </button>
                 ))}
-              </div>
-
-              {/* Utility Icons Section */}
-              <div className="flex flex-col gap-6 pt-8 border-t border-white/10">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-2">Utilities</p>
-                <div className="grid grid-cols-3 gap-4">
-                  <button 
-                    onClick={() => { onClose(); onOpenCart(); }}
-                    className="relative p-4 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center transition-colors"
-                    title="Cart"
-                  >
-                    <ShoppingBag size={20} />
-                    {cartCount > 0 && (
-                      <span className="absolute top-2 right-2 w-4 h-4 bg-white text-black text-[8px] font-black rounded-full flex items-center justify-center">
-                        {cartCount}
-                      </span>
-                    )}
-                  </button>
-                  <button className="p-4 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center transition-colors" title="Location">
-                    <MapPin size={20} />
-                  </button>
-                  {user?.role === 'admin' && (
-                    <button 
-                      onClick={() => { onClose(); onOpenProducts(); }}
-                      className="p-4 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center transition-colors"
-                      title="Admin"
-                    >
-                      <Settings size={20} />
-                    </button>
-                  )}
-                </div>
               </div>
 
               {/* Account Section */}
               <div className="flex flex-col gap-4 pt-8 border-t border-white/10">
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-2">Account</p>
-                <button 
-                  onClick={() => { onClose(); onOpenOrders(); }}
-                  className="text-sm font-bold uppercase tracking-widest text-left text-white/60 hover:text-white transition-colors"
-                >
-                  My Orders
-                </button>
-                <Link 
-                  to="/track-order"
-                  onClick={onClose}
-                  className="text-sm font-bold uppercase tracking-widest text-left text-white/60 hover:text-white transition-colors"
-                >
-                  Track Order
-                </Link>
-                <button 
-                  onClick={() => { onClose(); onOpenWishlist(); }}
-                  className="text-sm font-bold uppercase tracking-widest text-left text-white/60 hover:text-white transition-colors"
-                >
-                  My Wishlist
-                </button>
-                {user ? (
+                <div className="grid grid-cols-2 gap-4">
                   <button 
-                    onClick={() => { onClose(); onLogout(); }}
-                    className="flex items-center gap-3 text-red-400 font-bold uppercase tracking-widest text-xs mt-2"
+                    onClick={() => { onClose(); onOpenOrders(); }}
+                    className="p-4 bg-white/5 hover:bg-white/10 rounded-xl flex flex-col items-center justify-center gap-2 transition-colors border border-white/5"
                   >
-                    <LogOut size={16} /> Logout ({user.firstName})
+                    <Package size={20} />
+                    <span className="text-[8px] font-black uppercase tracking-widest">Orders</span>
                   </button>
+                  <button 
+                    onClick={() => { onClose(); onOpenWishlist(); }}
+                    className="p-4 bg-white/5 hover:bg-white/10 rounded-xl flex flex-col items-center justify-center gap-2 transition-colors border border-white/5"
+                  >
+                    <Heart size={20} />
+                    <span className="text-[8px] font-black uppercase tracking-widest">Wishlist</span>
+                  </button>
+                </div>
+
+                {user ? (
+                  <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center text-[10px] font-black uppercase">
+                        {user.firstName[0]}{user.lastName[0]}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase tracking-widest">{user.firstName}</span>
+                        <span className="text-[8px] opacity-40 uppercase tracking-widest">{user.role}</span>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => { onClose(); onLogout(); }}
+                      className="p-2 hover:bg-red-500/20 text-red-400 rounded-full transition-colors"
+                    >
+                      <LogOut size={16} />
+                    </button>
+                  </div>
                 ) : (
                   <button 
                     onClick={() => { onClose(); onOpenAuth(); }}
-                    className="flex items-center gap-3 text-white font-bold uppercase tracking-widest text-xs mt-2"
+                    className="w-full py-4 bg-white text-black font-black uppercase text-[10px] tracking-widest rounded-sm hover:bg-white/90 transition-all mt-2"
                   >
-                    <UserIcon size={16} /> Login / Sign Up
+                    Login / Sign Up
                   </button>
                 )}
               </div>
 
+              {/* Partners Section */}
+              {partners.length > 0 && (
+                <div className="pt-8 border-t border-white/10">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-6">Official Partners</p>
+                  <div className="flex flex-wrap gap-6 items-center opacity-40 hover:opacity-100 transition-opacity">
+                    {partners.slice(0, 4).map(p => (
+                      <img 
+                        key={p.id} 
+                        src={p.logo} 
+                        alt={p.name} 
+                        className="h-4 md:h-5 w-auto object-contain brightness-0 invert" 
+                        referrerPolicy="no-referrer" 
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Info Links */}
               <div className="flex flex-col gap-3 pt-8 border-t border-white/10">
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-2">Information</p>
-                <Link to="/faq" onClick={onClose} className="text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">FAQ</Link>
-                <Link to="/story" onClick={onClose} className="text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">Our Story</Link>
-                <Link to="/shipping" onClick={onClose} className="text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">Shipping</Link>
-                <Link to="/refunds" onClick={onClose} className="text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">Returns</Link>
+                <div className="grid grid-cols-2 gap-y-3">
+                  <Link to="/faq" onClick={onClose} className="text-[9px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">FAQ</Link>
+                  <Link to="/story" onClick={onClose} className="text-[9px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">Our Story</Link>
+                  <Link to="/shipping" onClick={onClose} className="text-[9px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">Shipping</Link>
+                  <Link to="/refunds" onClick={onClose} className="text-[9px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">Returns</Link>
+                </div>
               </div>
             </nav>
 
-            <div className="mt-auto pt-8 border-t border-white/10 flex justify-between items-center">
+            <div className="mt-auto p-8 md:p-12 pt-6 border-t border-white/10 flex justify-between items-center bg-black/50 backdrop-blur-md">
               <div className="flex gap-6 text-white/40">
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Instagram size={20} /></a>
-                <a href="https://github.com/ideastolifestudios/Grab-Go-ZA" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Globe size={20} /></a>
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Instagram size={18} /></a>
+                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Facebook size={18} /></a>
               </div>
               <p className="text-[8px] font-mono uppercase tracking-widest opacity-20">Grab & Go Studio © 2026</p>
             </div>
@@ -782,42 +857,54 @@ const Sidebar = ({
 };
 
 const Hero = () => (
-  <section className="relative h-[85vh] md:h-screen flex items-center justify-center overflow-hidden bg-white">
+  <section className="relative h-[60vh] md:h-[70vh] flex items-center overflow-hidden bg-white">
     <div className="absolute inset-0 z-0">
       <img 
-        src="https://picsum.photos/seed/streetwear/1920/1080?grayscale" 
+        src="https://picsum.photos/seed/streetwear/1920/1080" 
         alt="Hero" 
-        className="w-full h-full object-cover opacity-20"
+        className="w-full h-full object-cover"
         referrerPolicy="no-referrer"
       />
+      <div className="absolute inset-0 bg-black/20" />
     </div>
     
-    <div className="relative z-10 text-center px-4 md:px-6 max-w-3xl mx-auto">
+    <div className="relative z-10 w-full max-w-[1800px] mx-auto px-4 md:px-10">
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-2xl text-white"
       >
-        <h1 className="text-3xl md:text-5xl font-semibold uppercase tracking-tight mb-4 md:mb-6 text-black leading-[1.1]">
-          Command<br />Presence
+        <span className="text-[10px] font-black uppercase tracking-[0.5em] mb-3 block">New Arrival</span>
+        <h1 className="text-5xl md:text-8xl font-display font-bold uppercase tracking-tighter mb-4 leading-[0.9]">
+          Urban<br />Elite
         </h1>
-        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
+        <div className="flex flex-col md:flex-row items-start gap-4">
           <button 
             onClick={() => document.getElementById('drops')?.scrollIntoView({ behavior: 'smooth' })}
-            className="w-full md:w-auto px-8 py-3 bg-black text-white font-semibold uppercase text-[10px] tracking-wider hover:opacity-90 transition-opacity"
+            className="px-8 py-3 bg-white text-black font-black uppercase text-[10px] tracking-[0.2em] hover:bg-black hover:text-white transition-all"
           >
-            Shop Collection
+            Explore Drops
           </button>
-          <p className="text-[10px] font-semibold uppercase tracking-wider opacity-40 text-black">
-            Studio Born • South Africa
-          </p>
+          <div className="flex items-center gap-4 py-4">
+            <div className="w-12 h-[1px] bg-white/30" />
+            <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">
+              Limited Edition Collection
+            </p>
+          </div>
         </div>
       </motion.div>
     </div>
 
-    <div className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 md:gap-4 opacity-30">
-      <div className="w-[1px] h-8 md:h-12 bg-black animate-bounce" />
-      <span className="text-[8px] font-black uppercase tracking-[0.5em] text-black">Scroll</span>
+    <div className="absolute bottom-10 right-10 hidden lg:flex flex-col items-end gap-2 opacity-50 text-white">
+      <span className="text-[8px] font-black uppercase tracking-[0.5em] rotate-90 origin-right translate-y-20">Scroll to Explore</span>
+      <div className="w-[1px] h-24 bg-white/30 relative overflow-hidden">
+        <motion.div 
+          animate={{ y: [0, 96] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="absolute top-0 left-0 w-full h-1/2 bg-white"
+        />
+      </div>
     </div>
   </section>
 );
@@ -840,7 +927,8 @@ const ProductDetailContent = ({
   searchQuery = '',
   wishlist,
   onToggleWishlist,
-  isCartLoading = false
+  isCartLoading = false,
+  categories = []
 }: { 
   product: Product | null; 
   allProducts: Product[];
@@ -851,6 +939,7 @@ const ProductDetailContent = ({
   wishlist: string[];
   onToggleWishlist: (productId: string) => void;
   isCartLoading?: boolean;
+  categories?: Category[];
 }) => {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [activeImage, setActiveImage] = useState(0);
@@ -932,16 +1021,17 @@ const ProductDetailContent = ({
   );
 
   return (
-    <div className="pt-20 md:pt-24 pb-16">
+    <div className="pt-16 md:pt-20 pb-12">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row gap-10 lg:gap-20">
+        <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
           {/* Left: Image Gallery */}
           <div className="w-full md:w-[55%] flex flex-col gap-6">
             {/* Breadcrumbs (Mobile) */}
-            <div className="md:hidden flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-widest overflow-x-auto whitespace-nowrap">
-              <Link to="/">Studio</Link> <ChevronRight size={8} /> 
-              <span>{(product.categories || []).join(', ')}</span> <ChevronRight size={8} /> 
-              <span className="text-black">{product.name}</span>
+            <div className="md:hidden">
+              <Breadcrumbs 
+                categories={categories} 
+                product={product}
+              />
             </div>
 
             <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden group">
@@ -961,7 +1051,7 @@ const ProductDetailContent = ({
                 {allImages.map((img, idx) => (
                   <div key={idx} className="min-w-full h-full snap-center">
                     <img 
-                      src={img || undefined} 
+                      src={img || null} 
                       alt={`${product.name} ${idx + 1}`} 
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
@@ -1001,7 +1091,7 @@ const ProductDetailContent = ({
                   onClick={() => setActiveImage(idx)}
                   className={`w-20 aspect-[4/5] flex-shrink-0 border-2 transition-all ${activeImage === idx ? 'border-black' : 'border-transparent opacity-50 hover:opacity-100'}`}
                 >
-                  <img src={img || undefined} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={img || null} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </button>
               ))}
             </div>
@@ -1010,14 +1100,15 @@ const ProductDetailContent = ({
           {/* Right: Info */}
           <div className="w-full md:w-[45%] flex flex-col">
             {/* Breadcrumbs (Desktop) */}
-            <div className="hidden md:flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-widest mb-8">
-              <Link to="/">Studio</Link> <ChevronRight size={8} /> 
-              <span>{(product.categories || []).join(', ')}</span> <ChevronRight size={8} /> 
-              <span className="text-black">{product.name}</span>
+            <div className="hidden md:block">
+              <Breadcrumbs 
+                categories={categories}
+                product={product}
+              />
             </div>
 
-            <div className="mb-8">
-              <div className="flex justify-between items-start mb-6">
+            <div className="mb-4">
+              <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center border border-black p-1">
                   <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-1 hover:bg-black/5 transition-colors"><Minus size={12} /></button>
                   <span className="px-4 text-xs font-black">{quantity}</span>
@@ -1044,7 +1135,7 @@ const ProductDetailContent = ({
             </div>
 
             {/* Variants */}
-            <div className="space-y-8 mb-10">
+            <div className="space-y-4 mb-6">
               {product.variants?.map(v => (
                 <div key={v.id} className="space-y-4">
                   <div className="flex justify-between items-baseline">
@@ -1085,7 +1176,7 @@ const ProductDetailContent = ({
             </div>
 
             {/* Actions */}
-            <div className="space-y-2 mb-8">
+            <div className="space-y-2 mb-6">
               <button 
                 onClick={() => {
                   onAddToCart(product, selectedVariants, quantity);
@@ -1104,22 +1195,29 @@ const ProductDetailContent = ({
               </button>
             </div>
 
-            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest opacity-40 mb-10">
+            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest opacity-40 mb-6">
               <Truck size={14} />
               <span>Ships in 5-10 Business days</span>
             </div>
 
             {/* Payment Icons */}
-            <div className="flex flex-wrap items-center gap-4 mb-12">
-              <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-6 object-contain" referrerPolicy="no-referrer" />
-              <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-8 object-contain" referrerPolicy="no-referrer" />
-              <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-8 object-contain" referrerPolicy="no-referrer" />
-              <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-8 object-contain" referrerPolicy="no-referrer" />
-              <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-6 object-contain" referrerPolicy="no-referrer" />
+            <div className="mb-8 p-4 bg-gray-50/50 border border-gray-100 rounded-sm">
+              <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Secure Checkout via Paystack</p>
+              <div className="flex flex-wrap items-center gap-6">
+                <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-4 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-4 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-3 text-[9px] font-bold uppercase tracking-widest text-black/60">
+                <ShieldCheck size={14} className="text-green-600" />
+                <span>6 Interest-free installments available</span>
+              </div>
             </div>
 
             {/* Accordions */}
-            <div className="space-y-1 mb-16">
+            <div className="space-y-1 mb-10">
               <AccordionItem id="features" title="Features & Care" icon={Star}>
                 Premium heavyweight cotton. Hand wash cold. Hang dry only. Studio-born quality guaranteed.
               </AccordionItem>
@@ -1128,9 +1226,6 @@ const ProductDetailContent = ({
               </AccordionItem>
               <AccordionItem id="shipping" title="Shipping & Pickup" icon={Truck}>
                 Nationwide delivery. Free shipping on orders over {formatPrice(1500)}.
-              </AccordionItem>
-              <AccordionItem id="payments" title="Payments & Installments" icon={CreditCard}>
-                Secure payments via Paystack. 6 interest-free installments available.
               </AccordionItem>
               <AccordionItem id="returns" title="Returns" icon={RotateCcw}>
                 14-day return policy. Items must be unworn and in original packaging.
@@ -1141,9 +1236,9 @@ const ProductDetailContent = ({
             <div className="space-y-4 pt-8 border-t border-gray-100">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Sold by</p>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                <div className="h-12 sm:h-10 px-4 border border-gray-100 flex items-center justify-center rounded-sm bg-white">
+                <div className="h-14 px-6 border border-gray-100 flex items-center justify-center rounded-sm bg-white shadow-sm">
                   {product.soldByLogo ? (
-                    <img src={product.soldByLogo || undefined} alt={product.soldBy} className="h-6 object-contain" referrerPolicy="no-referrer" />
+                    <img src={product.soldByLogo || undefined} alt={product.soldBy} className="h-8 w-auto object-contain" referrerPolicy="no-referrer" />
                   ) : (
                     <span className="font-bold text-xs uppercase tracking-widest">{product.soldBy || 'Studio'}</span>
                   )}
@@ -1154,8 +1249,8 @@ const ProductDetailContent = ({
         </div>
 
         {/* Pairs Well With */}
-        <div className="mt-12 md:mt-16 pt-12 md:pt-16 border-t border-gray-100">
-          <div className="flex justify-between items-center mb-6 md:mb-8">
+        <div className="mt-8 md:mt-10 pt-8 md:pt-10 border-t border-gray-100">
+          <div className="flex justify-between items-center mb-4 md:mb-6">
             <h4 className="text-sm md:text-lg font-bold uppercase tracking-tighter">Pairs well with</h4>
             <div className="flex gap-2">
               <button 
@@ -1221,6 +1316,7 @@ const ProductCard = ({
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const allImages = useMemo(() => [product.image, ...(product.images || [])], [product.image, product.images]);
   const navigate = useNavigate();
+  const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
 
   useEffect(() => {
     if (product.variants) {
@@ -1236,129 +1332,103 @@ const ProductCard = ({
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      whileHover={{ 
-        y: -5,
-        transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] }
-      }}
       viewport={{ once: true }}
-      className="group cursor-pointer relative bg-white border border-gray-50 md:border-transparent rounded-xl md:rounded-none overflow-hidden md:overflow-visible"
+      className="group cursor-pointer relative bg-white"
     >
-      <div className="aspect-[3/4] overflow-hidden bg-gray-50 mb-3 relative shadow-sm group-hover:shadow-xl transition-all duration-500">
+      <div className="aspect-[4/5] overflow-hidden bg-white mb-2 relative group-hover:shadow-2xl transition-all duration-700">
         {isLoading && (
           <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-40 flex items-center justify-center">
             <Loader2 className="animate-spin text-black" size={24} />
           </div>
         )}
-        {/* Action Icons - Visible on mobile, hover on desktop */}
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-30 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 md:translate-x-[-10px] md:group-hover:translate-x-0">
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart(product, selectedVariants);
-            }}
-            className="w-10 h-10 md:w-8 md:h-8 bg-white text-black flex items-center justify-center rounded-full shadow-lg hover:bg-black hover:text-white transition-all duration-300"
-            title="Add to Cart"
-          >
-            <ShoppingBag size={16} className="md:w-3.5 md:h-3.5" />
-          </button>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onEmailDetails(product);
-            }}
-            className="w-10 h-10 md:w-8 md:h-8 bg-white text-black flex items-center justify-center rounded-full shadow-lg hover:bg-black hover:text-white transition-all duration-300"
-            title="Share via Email"
-          >
-            <Mail size={16} className="md:w-3.5 md:h-3.5" />
-          </button>
+
+        {/* Action Icons */}
+        <div className="absolute right-4 top-4 flex flex-col gap-2 z-30 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
           <button 
             onClick={(e) => {
               e.stopPropagation();
               onToggleWishlist(product.id);
             }}
-            className={`w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-full shadow-lg transition-all duration-300 ${isWishlisted ? 'bg-red-500 text-white' : 'bg-white text-black hover:bg-red-50 text-red-500'}`}
-            title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+            className={`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-all duration-300 ${isWishlisted ? 'bg-black text-white' : 'bg-white text-black hover:bg-black hover:text-white'}`}
           >
-            <Heart size={16} className="md:w-3.5 md:h-3.5" fill={isWishlisted ? "currentColor" : "none"} />
+            <Heart size={16} fill={isWishlisted ? "currentColor" : "none"} />
           </button>
         </div>
 
         {/* Primary Image */}
         <img 
-          src={allImages[0] || undefined} 
+          src={allImages[0] || null} 
           alt={product.name} 
           onClick={() => navigate(`/product/${product.id}`)}
-          className={`w-full h-full object-cover grayscale md:grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000 ease-out ${allImages.length > 1 ? 'group-hover:opacity-0' : ''}`}
+          onError={(e) => {
+            e.currentTarget.src = `https://picsum.photos/seed/${product.id}/800/1000?grayscale`;
+          }}
+          className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-1000 ease-out ${allImages.length > 1 ? 'group-hover:opacity-0' : ''}`}
           referrerPolicy="no-referrer"
         />
         
         {/* Secondary Image on Hover */}
         {allImages.length > 1 && (
           <img 
-            src={allImages[1] || undefined} 
+            src={allImages[1] || null} 
             alt={`${product.name} alternate`} 
             onClick={() => navigate(`/product/${product.id}`)}
-            className="absolute inset-0 w-full h-full object-cover grayscale md:grayscale group-hover:grayscale-0 scale-105 opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-1000 ease-out"
+            onError={(e) => {
+              e.currentTarget.src = `https://picsum.photos/seed/${product.id}-alt/800/1000?grayscale`;
+            }}
+            className="absolute inset-0 w-full h-full object-cover scale-105 opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-1000 ease-out"
             referrerPolicy="no-referrer"
           />
         )}
 
         {product.isDrop && (
-          <div className="absolute top-4 left-4 px-2 py-0.5 bg-black text-white text-[7px] font-black uppercase tracking-[0.2em] z-20">
-            Drop
+          <div className="absolute bottom-4 left-4 px-3 py-1 bg-black text-white text-[8px] font-black uppercase tracking-[0.2em] z-20">
+            Limited Drop
           </div>
         )}
-        
-        <motion.div 
-          initial="hidden"
-          whileHover="visible"
-          className="absolute inset-0 bg-black/5 pointer-events-none transition-opacity z-10"
-        >
-          {product.soldByLogo && (
-            <motion.div 
-              variants={{
-                hidden: { opacity: 0, x: -10 },
-                visible: { opacity: 1, x: 0 }
-              }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-              className="absolute bottom-4 left-4 flex flex-col items-start gap-1"
-            >
-              <img 
-                src={product.soldByLogo || undefined} 
-                alt={product.soldBy || 'Brand'} 
-                className="h-4 w-auto object-contain bg-white/10 p-0.5 rounded"
-                referrerPolicy="no-referrer"
-              />
-            </motion.div>
-          )}
-        </motion.div>
-      </div>
 
-      <div className="p-3 md:p-0">
-        <div className="flex justify-between items-start mb-1">
-          <h3 className="text-[9px] md:text-[10px] font-semibold uppercase tracking-wider text-black truncate pr-4">
-            <Highlight text={product.name} query={searchQuery} />
-          </h3>
-          <span className="text-[9px] md:text-[10px] font-semibold text-black">{formatPrice(product.price)}</span>
-        </div>
-        <p className="text-[7px] md:text-[8px] font-semibold uppercase tracking-wider opacity-20 text-black">{(product.categories || []).join(', ')}</p>
-        
-        {/* Mobile Add to Cart Button */}
+        {discount > 0 && (
+          <div className="absolute top-4 left-4 px-2 py-1 bg-red-500 text-white text-[8px] font-black uppercase tracking-widest z-20">
+            -{discount}%
+          </div>
+        )}
+
+        {/* Quick Add Button */}
         <button 
           onClick={(e) => {
             e.stopPropagation();
             onAddToCart(product, selectedVariants);
           }}
-          className="w-full mt-3 py-3 bg-black text-white text-[8px] font-black uppercase tracking-widest md:hidden active:scale-95 transition-transform"
+          className="absolute bottom-0 left-0 right-0 py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] translate-y-full group-hover:translate-y-0 transition-transform duration-500 z-30"
         >
-          Add to Cart
+          Quick Add
         </button>
+      </div>
+
+      <div className="space-y-1 px-1" onClick={() => navigate(`/product/${product.id}`)}>
+        <div className="flex justify-between items-start gap-2">
+          <div className="min-w-0">
+            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 mb-0 truncate">{product.brand}</p>
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-black truncate group-hover:text-gray-600 transition-colors">
+              <Highlight text={product.name} query={searchQuery} />
+            </h3>
+          </div>
+          <p className="text-[10px] font-black text-black whitespace-nowrap">R{product.price}</p>
+        </div>
+        <div className="flex items-center justify-between">
+          <p className="text-[8px] font-bold uppercase tracking-widest text-gray-300">
+            {(product.categories || []).join(' / ')}
+          </p>
+          {product.soldByLogo && (
+            <img src={product.soldByLogo} alt="" className="h-3 w-auto object-contain opacity-20 grayscale" referrerPolicy="no-referrer" />
+          )}
+        </div>
       </div>
     </motion.div>
   );
 };
 
-const SocialProof = () => (
+const SocialProof = ({ testimonials }: { testimonials: Testimonial[] }) => (
   <section className="py-12 md:py-20 px-4 md:px-6 border-y border-gray-50">
     <div className="max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-12 gap-4 md:gap-6">
@@ -1382,7 +1452,7 @@ const SocialProof = () => (
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        {TESTIMONIALS.map((t) => (
+        {(testimonials.length > 0 ? testimonials : []).map((t) => (
           <div key={t.id} className="p-6 md:p-8 bg-gray-50 border border-gray-50 relative overflow-hidden group rounded-xl">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Instagram size={32} className="text-black" />
@@ -1404,26 +1474,36 @@ const SocialProof = () => (
   </section>
 );
 
-const PartnershipHub = () => (
+const PartnershipHub = ({ partners }: { partners: Partner[] }) => (
   <section id="collabs" className="py-12 md:py-20 px-4 md:px-6">
     <div className="max-w-7xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
         <div>
-          <h2 className="text-3xl md:text-5xl font-semibold uppercase tracking-tight mb-4 md:mb-6 text-black">
+          <div className="flex items-center gap-3 mb-6 md:mb-8">
+            <Logo className="h-6 md:h-8" dark />
+            <div className="h-px w-12 bg-black/10" />
+            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] text-black/30">Collective</span>
+          </div>
+          <h2 className="text-4xl md:text-7xl font-bold uppercase tracking-tighter mb-6 md:mb-8 text-black leading-[0.9]">
             The Culture<br />Collective
           </h2>
-          <p className="text-sm md:text-lg opacity-60 mb-6 md:mb-8 leading-relaxed text-black">
+          <p className="text-sm md:text-xl font-medium opacity-70 mb-8 md:mb-12 leading-relaxed text-black max-w-lg">
             We don't just sell products; we build bridges. Collaborating with micro-influencers and cultural events to bring you exclusive studio-born drops.
           </p>
           <div className="space-y-3 md:space-y-4">
-            {PARTNERS.map(p => (
+            {(partners.length > 0 ? partners : []).map(p => (
               <div 
                 key={p.id} 
                 onClick={() => document.getElementById('drops')?.scrollIntoView({ behavior: 'smooth' })}
                 className="flex items-center gap-3 md:gap-4 p-2 md:p-3 hover:bg-black/5 transition-colors border-l border-black/10 cursor-pointer group"
               >
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden rounded-md">
-                   <img src={p.logo || undefined} alt={p.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <div className="w-10 h-10 bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden rounded-md">
+                   <img 
+                     src={p.logo || null} 
+                     alt={p.name} 
+                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" 
+                     referrerPolicy="no-referrer" 
+                   />
                 </div>
                 <div>
                   <h4 className="font-semibold uppercase tracking-wider text-[10px] md:text-xs text-black">{p.name}</h4>
@@ -1477,8 +1557,8 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-white py-12 md:py-20 px-6 md:px-8 border-t border-gray-50">
-      <div className="max-w-7xl mx-auto mb-12 md:mb-16">
+    <footer className="bg-white py-8 md:py-12 px-6 md:px-8 border-t border-gray-50">
+      <div className="max-w-7xl mx-auto mb-8 md:mb-10">
         <div className="max-w-md">
           <h3 className="text-lg md:text-xl font-semibold uppercase tracking-tight mb-2 text-black">Join the Grab & Go Fam</h3>
           <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider mb-6">Get 10% off your first drop. No spam, just fresh gear.</p>
@@ -2947,7 +3027,7 @@ const OrdersDrawer = ({
                                   a.click();
                                   a.remove();
                                 } else {
-                                  alert("Failed to download label");
+                                  console.error("Failed to download label");
                                 }
                               } catch (err) {
                                 console.error("Label download error:", err);
@@ -3005,122 +3085,6 @@ const OrdersDrawer = ({
                     )}
                   </div>
                 ))
-              )}
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-};
-
-const WishlistDrawer = ({ 
-  isOpen, 
-  onClose, 
-  wishlist,
-  products,
-  onToggleWishlist,
-  onAddToCart,
-  user
-}: { 
-  isOpen: boolean, 
-  onClose: () => void, 
-  wishlist: string[],
-  products: Product[],
-  onToggleWishlist: (productId: string) => void,
-  onAddToCart: (p: Product) => void,
-  user: User | null
-}) => {
-  const wishlistProducts = products.filter(p => wishlist.includes(p.id));
-  const navigate = useNavigate();
-
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[60]"
-          />
-          <motion.div 
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 w-full md:max-w-md bg-white border-l border-gray-100 z-[70] p-6 flex flex-col"
-          >
-            <div className="flex justify-between items-center mb-8">
-              <div className="flex flex-col gap-1">
-                <Logo className="h-8" dark />
-                <span className="text-[10px] font-mono opacity-30 uppercase tracking-widest text-black">
-                  My Wishlist ({wishlistProducts.length})
-                </span>
-              </div>
-              <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors">
-                <X size={24} className="text-black" />
-              </button>
-            </div>
-
-            <div className="flex-grow overflow-y-auto space-y-4 pr-2 custom-scrollbar">
-              {!user ? (
-                <div className="text-center py-20 opacity-30 text-black">
-                  <UserIcon size={48} className="mx-auto mb-4" />
-                  <p className="uppercase tracking-widest text-sm font-bold">Login to view your wishlist</p>
-                </div>
-              ) : wishlistProducts.length === 0 ? (
-                <div className="text-center py-20 opacity-30 text-black">
-                  <Heart size={48} className="mx-auto mb-4" />
-                  <p className="uppercase tracking-widest text-sm font-bold">Your wishlist is empty</p>
-                  <button 
-                    onClick={onClose}
-                    className="mt-6 text-[10px] font-bold uppercase tracking-widest underline"
-                  >
-                    Start Shopping
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-4">
-                  {wishlistProducts.map((product) => (
-                    <div key={product.id} className="group relative flex gap-4 p-4 border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-xl transition-all duration-500 text-black">
-                      <div 
-                        className="w-24 aspect-[3/4] bg-gray-100 overflow-hidden flex-shrink-0 cursor-pointer"
-                        onClick={() => { navigate(`/product/${product.id}`); onClose(); }}
-                      >
-                        <img 
-                          src={product.image} 
-                          alt={product.name} 
-                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
-                      <div className="flex-grow flex flex-col justify-between py-1">
-                        <div>
-                          <h4 className="text-xs font-bold uppercase tracking-tight mb-1">{product.name}</h4>
-                          <p className="text-[10px] opacity-30 uppercase tracking-widest mb-2">{product.brand || 'Studio Born'}</p>
-                          <p className="text-xs font-mono font-bold">{formatPrice(product.price)}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => onAddToCart(product)}
-                            className="flex-grow py-2 bg-black text-white text-[8px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-colors"
-                          >
-                            Add to Cart
-                          </button>
-                          <button 
-                            onClick={() => onToggleWishlist(product.id)}
-                            className="w-8 h-8 flex items-center justify-center border border-red-100 text-red-500 hover:bg-red-50 transition-colors"
-                            title="Remove"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               )}
             </div>
           </motion.div>
@@ -3222,7 +3186,7 @@ const CategoryManagementDrawer = ({
                 <div key={mainCat.id} className="space-y-2">
                   <div className="p-3 border border-gray-50 bg-gray-50/30 flex gap-3 items-center text-black group">
                     <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                      {mainCat.image && <img src={mainCat.image} alt={mainCat.name} className="w-full h-full object-cover" />}
+                      {mainCat.image ? <img src={mainCat.image} alt={mainCat.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : null}
                     </div>
                     <div className="flex-grow">
                       <h4 className="text-xs font-bold uppercase tracking-tight">{mainCat.name}</h4>
@@ -3253,7 +3217,7 @@ const CategoryManagementDrawer = ({
                     {categories.filter(c => c.parentId === mainCat.id).map(subCat => (
                       <div key={subCat.id} className="p-2 border border-gray-50 bg-white flex gap-3 items-center text-black group">
                         <div className="w-8 h-8 bg-gray-50 rounded overflow-hidden flex-shrink-0">
-                          {subCat.image && <img src={subCat.image} alt={subCat.name} className="w-full h-full object-cover" />}
+                          {subCat.image ? <img src={subCat.image} alt={subCat.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : null}
                         </div>
                         <div className="flex-grow">
                           <h4 className="text-[10px] font-bold uppercase tracking-tight">{subCat.name}</h4>
@@ -3523,7 +3487,7 @@ const BrandManagementDrawer = ({
               {brands.map((brand) => (
                 <div key={brand.id} className="p-3 border border-gray-50 bg-gray-50/30 flex gap-3 items-center text-black group">
                   <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                    {brand.logo && <img src={brand.logo} alt={brand.name} className="w-full h-full object-cover" />}
+                    {brand.logo ? <img src={brand.logo} alt={brand.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : null}
                   </div>
                   <div className="flex-grow">
                     <h4 className="text-xs font-bold uppercase tracking-tight">{brand.name}</h4>
@@ -3904,7 +3868,12 @@ const ProductManagementDrawer = ({
             <div className="flex-grow overflow-y-auto space-y-4 pr-4 custom-scrollbar">
               {filteredProducts.map((product) => (
                 <div key={product.id} className="p-4 border border-gray-50 bg-gray-50/30 flex gap-4 items-center text-black group">
-                  <img src={product.image || undefined} alt={product.name} className="w-12 h-16 object-cover grayscale" />
+                  <img 
+                    src={product.image || null} 
+                    alt={product.name} 
+                    className="w-12 h-16 object-cover grayscale" 
+                    referrerPolicy="no-referrer" 
+                  />
                   <div className="flex-grow">
                     <h4 className="text-sm font-bold uppercase tracking-tight">{product.name}</h4>
                     <p className="text-[10px] opacity-50 uppercase tracking-widest">{formatPrice(product.price)} • {(product.categories || []).join(', ')}</p>
@@ -4173,7 +4142,7 @@ const ProductManagementDrawer = ({
                             >
                               {editingProduct.image ? (
                                 <div className="relative w-40 aspect-[4/5] shadow-2xl group/main">
-                                  <img src={editingProduct.image || undefined} alt="Preview" className="w-full h-full object-cover grayscale group-hover/drop:grayscale-0 transition-all" />
+                                  <img src={editingProduct.image || undefined} alt="Preview" className="w-full h-full object-cover grayscale group-hover/drop:grayscale-0 transition-all" referrerPolicy="no-referrer" />
                                   <div className="absolute top-2 left-2 px-2 py-1 bg-black text-white text-[6px] font-black uppercase tracking-widest z-10">
                                     Main Image
                                   </div>
@@ -4241,7 +4210,7 @@ const ProductManagementDrawer = ({
                                 <div className="grid grid-cols-4 gap-3 mb-4">
                                   {editingProduct.images?.map((img, idx) => (
                                     <div key={idx} className="relative aspect-[4/5] group/img bg-gray-50 rounded-lg overflow-hidden border border-gray-100 shadow-sm">
-                                      <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover grayscale group-hover/img:grayscale-0 transition-all" />
+                                      <img src={img || undefined} alt={`Gallery ${idx}`} className="w-full h-full object-cover grayscale group-hover/img:grayscale-0 transition-all" referrerPolicy="no-referrer" />
                                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                         <button 
                                           type="button"
@@ -4742,7 +4711,7 @@ const HybridCheckoutModal = ({
   const [phone, setPhone] = useState('');
   const [isPaying, setIsPaying] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [demoMessage, setDemoMessage] = useState<string | null>(null);
+  const [orderMessage, setOrderMessage] = useState<string | null>(null);
   const [paymentGateway, setPaymentGateway] = useState<'yoco'>('yoco');
 
   const shippingCost = useMemo(() => {
@@ -4798,34 +4767,32 @@ const HybridCheckoutModal = ({
         paymentGateway
       };
 
-      // Save pending order to localStorage before redirecting to Yoco
-      const pendingOrder = {
-        ...orderData,
-        id: Math.random().toString(36).substr(2, 9).toUpperCase(),
-        status: 'pending',
-        date: new Date().toISOString()
-      };
-      localStorage.setItem('grab_and_go_pending_order', JSON.stringify(pendingOrder));
-
-      // Call Yoco payment API
-      const response = await fetch('/api/create-yoco-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: finalTotal,
-          currency: 'ZAR',
-          metadata: { orderId: pendingOrder.id },
-          order: pendingOrder
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.redirectUrl) {
-        window.location.href = data.redirectUrl;
-      } else {
-        throw new Error(data.error || 'Payment failed to initialize');
+      // In a production environment, this would integrate with a payment gateway
+      // For now, we save the order to Firestore to finalize the purchase
+      
+      // Set to processing state for better UX
+      onPaymentStatusChange('processing');
+      
+      const savedOrder = await orderService.createOrder(orderData);
+      
+      // Send Order Confirmation Email
+      try {
+        await emailService.sendOrderConfirmation({
+          ...orderData,
+          id: savedOrder.id,
+          status: 'pending',
+          date: new Date().toISOString()
+        });
+      } catch (emailErr) {
+        console.error("Failed to send order confirmation email:", emailErr);
       }
+
+      setOrderMessage("Order Successfully Placed! Your order has been saved to our studio.");
+      
+      // Small delay to show processing state
+      setTimeout(() => {
+        onPaymentStatusChange('success');
+      }, 1500);
       
     } catch (err: any) {
       onPaymentStatusChange(null);
@@ -4891,9 +4858,9 @@ const HybridCheckoutModal = ({
                 </div>
               )}
 
-              {demoMessage && (
-                <div className="mb-6 md:mb-8 p-4 bg-yellow-50 border border-yellow-100 rounded-lg max-w-md mx-4">
-                  <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-yellow-700">{demoMessage}</p>
+              {orderMessage && (
+                <div className="mb-6 md:mb-8 p-4 bg-emerald-50 border border-emerald-100 rounded-lg max-w-md mx-4">
+                  <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-emerald-700">{orderMessage}</p>
                 </div>
               )}
 
@@ -5419,8 +5386,8 @@ const EmailProductModal = ({
 
 // --- Main App ---
 
-const BrandBanner = ({ brand, banner, description }: { brand: string, banner?: string, description?: string }) => (
-  <div className="relative w-full h-[40vh] md:h-[50vh] overflow-hidden mb-12 group">
+const BrandBanner = ({ brand, banner, description, logo }: { brand: string, banner?: string, description?: string, logo?: string }) => (
+  <div className="relative w-full h-[20vh] md:h-[25vh] overflow-hidden mb-4 group">
     <div className="absolute inset-0 bg-black/40 z-10 group-hover:bg-black/30 transition-all duration-700" />
     <img 
       src={banner || `https://picsum.photos/seed/${brand}/1920/1080?grayscale`} 
@@ -5434,9 +5401,21 @@ const BrandBanner = ({ brand, banner, description }: { brand: string, banner?: s
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.8 }}
+        className="flex flex-col items-center"
       >
         <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/60 mb-4">Official Brand Partner</p>
-        <h2 className="text-4xl md:text-7xl font-display font-bold uppercase tracking-tighter text-white mb-6 leading-none">{brand}</h2>
+        
+        {logo ? (
+          <img 
+            src={logo} 
+            alt={brand} 
+            className="h-12 md:h-20 w-auto object-contain mb-6 brightness-0 invert" 
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <h2 className="text-3xl md:text-6xl font-display font-bold uppercase tracking-tighter text-white mb-4 leading-none">{brand}</h2>
+        )}
+
         {description && (
           <p className="max-w-xl mx-auto text-xs md:text-sm text-white/80 uppercase tracking-widest leading-relaxed font-medium">
             {description}
@@ -5444,17 +5423,83 @@ const BrandBanner = ({ brand, banner, description }: { brand: string, banner?: s
         )}
       </motion.div>
     </div>
-    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
-      <div className="w-[1px] h-12 bg-white/20 relative overflow-hidden">
-        <motion.div 
-          animate={{ y: [0, 48] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="absolute top-0 left-0 w-full h-1/2 bg-white"
-        />
-      </div>
-    </div>
   </div>
 );
+
+const Breadcrumbs = ({ 
+  categories, 
+  currentCategory, 
+  product,
+  onCategorySelect
+}: { 
+  categories: Category[], 
+  currentCategory?: string, 
+  product?: Product,
+  onCategorySelect?: (name: string) => void
+}) => {
+  const getPath = () => {
+    const path: { name: string; id?: string }[] = [];
+    
+    if (product) {
+      // Find the most specific category for the product
+      const productCatNames = product.categories || [];
+      const productCats = categories.filter(c => productCatNames.includes(c.name));
+      
+      // Prefer sub-categories (those with parentId)
+      let targetCat = productCats.find(c => c.parentId) || productCats[0];
+      
+      if (targetCat) {
+        const buildPath = (cat: Category) => {
+          path.unshift({ name: cat.name, id: cat.id });
+          if (cat.parentId) {
+            const parent = categories.find(c => c.id === cat.parentId);
+            if (parent) buildPath(parent);
+          }
+        };
+        buildPath(targetCat);
+      }
+    } else if (currentCategory && currentCategory !== 'All') {
+      const cat = categories.find(c => c.name === currentCategory);
+      if (cat) {
+        const buildPath = (c: Category) => {
+          path.unshift({ name: c.name, id: c.id });
+          if (c.parentId) {
+            const parent = categories.find(p => p.id === c.parentId);
+            if (parent) buildPath(parent);
+          }
+        };
+        buildPath(cat);
+      }
+    }
+    
+    return path;
+  };
+
+  const path = getPath();
+
+  return (
+    <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-black/30 mb-6 overflow-x-auto no-scrollbar whitespace-nowrap">
+      <Link to="/" onClick={() => onCategorySelect?.('All')} className="hover:text-black transition-colors">Studio</Link>
+      {path.map((item, idx) => (
+        <React.Fragment key={idx}>
+          <ChevronRight size={8} className="flex-shrink-0" />
+          <button 
+            onClick={() => onCategorySelect?.(item.name)}
+            className={`hover:text-black transition-colors ${idx === path.length - 1 && !product ? 'text-black' : ''}`}
+          >
+            {item.name}
+          </button>
+        </React.Fragment>
+      ))}
+      {product && (
+        <>
+          <ChevronRight size={8} className="flex-shrink-0" />
+          <span className="text-black truncate max-w-[150px] md:max-w-none">{product.name}</span>
+        </>
+      )}
+    </nav>
+  );
+};
 
 const CategoryPanel = ({ 
   categories, 
@@ -5465,97 +5510,7 @@ const CategoryPanel = ({
   activeCategory: string, 
   onSelect: (c: string) => void 
 }) => {
-  const mainCategories = useMemo(() => categories.filter(c => !c.parentId), [categories]);
-  const subCategories = useMemo(() => {
-    const activeMain = mainCategories.find(c => c.name === activeCategory);
-    if (!activeMain) {
-      // Check if activeCategory is a sub-category
-      const activeSub = categories.find(c => c.name === activeCategory && c.parentId);
-      if (activeSub) {
-        return categories.filter(c => c.parentId === activeSub.parentId);
-      }
-      return [];
-    }
-    return categories.filter(c => c.parentId === activeMain.id);
-  }, [categories, activeCategory, mainCategories]);
-
-  const getIcon = (cat: string) => {
-    switch (cat.toLowerCase()) {
-      case 'apparel': return <Shirt size={18} />;
-      case 'accessories': return <Watch size={18} />;
-      case 'footwear': return <Footprints size={18} />;
-      case 'bundles': return <Package size={18} />;
-      case 'headwear': return <Grid size={18} />;
-      case 'outerwear': return <Shirt size={18} />;
-      case 'sale': return <Tag size={18} />;
-      case 'new arrivals': return <Sparkles size={18} />;
-      case 'limited': return <Zap size={18} />;
-      default: return <Grid size={18} />;
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap gap-4 md:gap-8 items-center">
-        <button
-          onClick={() => onSelect('All')}
-          className={`group flex items-center gap-3 py-2 transition-all relative ${activeCategory === 'All' ? 'text-black' : 'text-black/30 hover:text-black/60'}`}
-        >
-          <span className={`p-2 rounded-full transition-all ${activeCategory === 'All' ? 'bg-black text-white' : 'bg-gray-50 group-hover:bg-gray-100'}`}>
-            <Grid size={18} />
-          </span>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">
-            All
-          </span>
-          {activeCategory === 'All' && (
-            <motion.div 
-              layoutId="cat-underline"
-              className="absolute -bottom-1 left-0 right-0 h-[2px] bg-black"
-            />
-          )}
-        </button>
-
-        {mainCategories.map(cat => (
-          <button
-            key={cat.id}
-            onClick={() => onSelect(cat.name)}
-            className={`group flex items-center gap-3 py-2 transition-all relative ${activeCategory === cat.name || categories.find(c => c.name === activeCategory)?.parentId === cat.id ? 'text-black' : 'text-black/30 hover:text-black/60'}`}
-          >
-            <span className={`p-2 rounded-full transition-all ${activeCategory === cat.name || categories.find(c => c.name === activeCategory)?.parentId === cat.id ? 'bg-black text-white' : 'bg-gray-50 group-hover:bg-gray-100'}`}>
-              {getIcon(cat.name)}
-            </span>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">
-              {cat.name}
-            </span>
-            {(activeCategory === cat.name || categories.find(c => c.name === activeCategory)?.parentId === cat.id) && (
-              <motion.div 
-                layoutId="cat-underline"
-                className="absolute -bottom-1 left-0 right-0 h-[2px] bg-black"
-              />
-            )}
-          </button>
-        ))}
-      </div>
-
-      {subCategories.length > 0 && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-3 md:gap-6 items-center pl-2 border-l-2 border-gray-100"
-        >
-          {subCategories.map(sub => (
-            <button
-              key={sub.id}
-              onClick={() => onSelect(sub.name)}
-              className={`text-[9px] font-bold uppercase tracking-widest transition-all ${activeCategory === sub.name ? 'text-black underline underline-offset-4' : 'text-black/40 hover:text-black/70'}`}
-            >
-              {sub.name}
-            </button>
-          ))}
-        </motion.div>
-      )}
-    </div>
-  );
+  return null;
 };
 
 const HomePage = ({ 
@@ -5574,7 +5529,9 @@ const HomePage = ({
   toggleWishlist,
   isCartLoading = false,
   brands,
-  categories
+  categories,
+  testimonials,
+  partners
 }: {
   filteredAndSortedProducts: Product[],
   filterCategory: string,
@@ -5591,8 +5548,28 @@ const HomePage = ({
   toggleWishlist: (productId: string) => void,
   isCartLoading?: boolean,
   brands: Brand[],
-  categories: Category[]
+  categories: Category[],
+  testimonials: Testimonial[],
+  partners: Partner[]
 }) => {
+  const [isBarVisible, setIsBarVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      // Hide bar when scrolling down, show when scrolling up
+      if (currentScrollY > lastScrollY && currentScrollY > 400) {
+        setIsBarVisible(false);
+      } else {
+        setIsBarVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
   const brandNames = useMemo(() => {
     const b = new Set<string>();
     filteredAndSortedProducts.forEach(p => {
@@ -5604,77 +5581,83 @@ const HomePage = ({
   return (
     <main className="bg-white text-black">
       <Hero />
-      
-      {/* Interactive Category Panel */}
-      <div className="sticky top-16 md:top-20 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 py-4 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <CategoryPanel 
-            categories={categories}
-            activeCategory={filterCategory}
-            onSelect={setFilterCategory}
-          />
-          
-          <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-full">
-            <span className="text-[8px] font-black uppercase tracking-widest opacity-30">Sort By</span>
-            <select 
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none pr-4 text-black"
-            >
-              <option value="default">Default</option>
-              <option value="price-low">Price: Low-High</option>
-              <option value="price-high">Price: High-Low</option>
-            </select>
-            <ChevronDown size={10} className="opacity-30 text-black" />
-          </div>
-        </div>
-      </div>
 
-      <section id="drops" className="py-16 md:py-24 px-6 max-w-7xl mx-auto overflow-hidden">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.5em] opacity-30 mb-4">Curated Selection</p>
-            <h2 className="text-5xl md:text-7xl font-display font-bold uppercase tracking-tighter leading-none text-black">
-              Featured<br />Drops
-            </h2>
-          </div>
-          
-          <div className="flex gap-4">
-            <button 
-              onClick={() => scrollProducts('left')}
-              className="w-14 h-14 border border-black/10 flex items-center justify-center rounded-full hover:bg-black hover:text-white transition-all"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <button 
-              onClick={() => scrollProducts('right')}
-              className="w-14 h-14 border border-black/10 flex items-center justify-center rounded-full hover:bg-black hover:text-white transition-all"
-            >
-              <ChevronRight size={24} />
-            </button>
-          </div>
-        </div>
-        
-        <div 
-          ref={productScrollRef}
-          className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-6 md:gap-10 pb-12 -mx-6 px-6 md:mx-0 md:px-0 scroll-smooth"
-        >
-          {filteredAndSortedProducts.filter(p => p.isDrop).map((product, idx) => (
-            <div key={product.id || `featured-${idx}`} className="min-w-[70vw] md:min-w-[35vw] lg:min-w-[28vw] snap-center">
-              <ProductCard 
-                product={product} 
-                onAddToCart={addToCart} 
-                onEmailDetails={onEmailDetails}
-                onBuyNow={handleBuyNow}
-                searchQuery={searchQuery}
-                isWishlisted={wishlist.includes(product.id)}
-                onToggleWishlist={toggleWishlist}
-                isLoading={isCartLoading}
-              />
+      {/* Studio Experience Section (Separator) */}
+      <section className="py-20 bg-white border-y border-gray-50">
+        <div className="max-w-[1800px] mx-auto px-4 md:px-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div className="space-y-4">
+              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mb-6">
+                <Sparkles size={24} />
+              </div>
+              <h3 className="text-xl font-display font-bold uppercase tracking-tighter">Curated Drops</h3>
+              <p className="text-xs text-gray-400 uppercase tracking-widest leading-relaxed">
+                Exclusive limited edition streetwear sourced from the most innovative local and international creators.
+              </p>
             </div>
-          ))}
+            <div className="space-y-4">
+              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mb-6">
+                <ShieldCheck size={24} />
+              </div>
+              <h3 className="text-xl font-display font-bold uppercase tracking-tighter">Verified Quality</h3>
+              <p className="text-xs text-gray-400 uppercase tracking-widest leading-relaxed">
+                Every piece in our studio undergoes a rigorous authentication and quality check process.
+              </p>
+            </div>
+            <div className="space-y-4">
+              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mb-6">
+                <Globe size={24} />
+              </div>
+              <h3 className="text-xl font-display font-bold uppercase tracking-tighter">Global Vision</h3>
+              <p className="text-xs text-gray-400 uppercase tracking-widest leading-relaxed">
+                Bridging the gap between South African street culture and the global fashion landscape.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
+      
+      {/* Category & Filter Bar */}
+      <motion.div 
+        initial={false}
+        animate={{ 
+          y: isBarVisible ? 0 : -100,
+          opacity: isBarVisible ? 1 : 0
+        }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="sticky top-0 z-40 py-2 md:py-3 px-4 md:px-10"
+      >
+        <div className="max-w-[1800px] mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-3">
+              <span className="text-[8px] font-black uppercase tracking-widest opacity-30">Category</span>
+              <select 
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none pr-4 text-black"
+              >
+                <option value="All">All</option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.name}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-[8px] font-black uppercase tracking-widest opacity-30">Sort</span>
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none pr-4 text-black"
+              >
+                <option value="default">Newest</option>
+                <option value="price-low">Price: Low-High</option>
+                <option value="price-high">Price: High-Low</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Brand Sections with Banners */}
       {brandNames.map(brandName => {
@@ -5682,21 +5665,26 @@ const HomePage = ({
         const brandInfo = brands.find(b => b.name === brandName || b.id === brandProducts[0]?.brandId);
         
         return (
-          <section key={brandName} className="pb-24">
+          <section key={brandName} className="pb-8">
             <BrandBanner 
               brand={brandName} 
               banner={brandInfo?.banner || brandProducts[0]?.brandBanner} 
               description={brandInfo?.description || brandProducts[0]?.brandDescription} 
+              logo={brandInfo?.logo || brandProducts[0]?.soldByLogo}
             />
-            <div className="max-w-7xl mx-auto px-6">
-              <div className="space-y-16">
+            <div className="max-w-[1800px] mx-auto px-4 md:px-10">
+              <div className="space-y-8">
                 {categories.filter(c => !c.parentId).map(cat => {
                   const catProducts = brandProducts.filter(p => (p.categories || []).includes(cat.name));
                   if (catProducts.length === 0) return null;
                   return (
                     <div key={cat.id}>
-                      <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30 mb-8 border-b border-gray-100 pb-2">{cat.name}</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10">
+                      <div className="flex items-center gap-6 mb-4">
+                        <h3 className="text-xs font-black uppercase tracking-[0.4em] text-black">{cat.name}</h3>
+                        <div className="flex-grow h-[1px] bg-gray-100" />
+                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{catProducts.length} Items</span>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-6">
                         {catProducts.map((product, idx) => (
                           <ProductCard 
                             key={product.id ? `brand-${brandName}-${product.id}` : `brand-${brandName}-${idx}`}
@@ -5762,6 +5750,9 @@ const HomePage = ({
           </button>
         </div>
       )}
+
+      <SocialProof testimonials={testimonials} />
+      <PartnershipHub partners={partners} />
     </main>
   );
 };
@@ -5774,7 +5765,8 @@ const ProductPage = ({
   searchQuery,
   wishlist,
   onToggleWishlist,
-  isCartLoading = false
+  isCartLoading = false,
+  categories
 }: { 
   products: Product[], 
   addToCart: (p: Product, v?: Record<string, string>, q?: number) => void, 
@@ -5783,11 +5775,12 @@ const ProductPage = ({
   searchQuery: string,
   wishlist: string[],
   onToggleWishlist: (productId: string) => void,
-  isCartLoading?: boolean
+  isCartLoading?: boolean,
+  categories: Category[]
 }) => {
   const { id } = useParams();
   const product = products.find(p => p.id === id);
-  return <ProductDetailContent product={product || null} allProducts={products} onAddToCart={addToCart} onBuyNow={handleBuyNow} onEmailDetails={onEmailDetails} searchQuery={searchQuery} wishlist={wishlist} onToggleWishlist={onToggleWishlist} isCartLoading={isCartLoading} />;
+  return <ProductDetailContent product={product || null} allProducts={products} onAddToCart={addToCart} onBuyNow={handleBuyNow} onEmailDetails={onEmailDetails} searchQuery={searchQuery} wishlist={wishlist} onToggleWishlist={onToggleWishlist} isCartLoading={isCartLoading} categories={categories} />;
 };
 
 export default function App() {
@@ -5819,7 +5812,9 @@ function AppContent() {
   const [isBrandsOpen, setIsBrandsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [isHowToOrderOpen, setIsHowToOrderOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'cancelled' | 'processing' | null>(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -5828,6 +5823,8 @@ function AppContent() {
   const [isCartLoading, setIsCartLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
   const productScrollRef = useRef<HTMLDivElement>(null);
 
   // --- Auth Check ---
@@ -5853,7 +5850,7 @@ function AppContent() {
             email: firebaseUser.email || '',
             firstName: nameParts[0] || 'User',
             lastName: nameParts.slice(1).join(' ') || 'Customer',
-            role: firebaseUser.email === 'cbrprints22@gmail.com' ? 'admin' : 'user'
+            role: 'user'
           });
         }
       } else {
@@ -5878,8 +5875,8 @@ function AppContent() {
     const fetchData = async () => {
       setIsDataLoading(true);
       try {
-        console.log("Fetching products, categories and brands...");
-        const [productsData, categoriesData, brandsData] = await Promise.all([
+        console.log("Fetching products, categories, brands, testimonials and partners...");
+        const [productsData, categoriesData, brandsData, testimonialsData, partnersData] = await Promise.all([
           productService.getProducts().catch(err => {
             console.error("Products fetch error:", err);
             return [];
@@ -5891,21 +5888,35 @@ function AppContent() {
           brandService.getBrands().catch(err => {
             console.error("Brands fetch error:", err);
             return [];
+          }),
+          testimonialService.getTestimonials().catch(err => {
+            console.error("Testimonials fetch error:", err);
+            return [];
+          }),
+          partnerService.getPartners().catch(err => {
+            console.error("Partners fetch error:", err);
+            return [];
           })
         ]);
         
         console.log("Products received:", productsData?.length || 0);
         console.log("Categories received:", categoriesData?.length || 0);
         console.log("Brands received:", brandsData?.length || 0);
+        console.log("Testimonials received:", testimonialsData?.length || 0);
+        console.log("Partners received:", partnersData?.length || 0);
         
         setProducts(Array.isArray(productsData) ? productsData : []);
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         setBrands(Array.isArray(brandsData) ? brandsData : []);
+        setTestimonials(Array.isArray(testimonialsData) ? testimonialsData : []);
+        setPartners(Array.isArray(partnersData) ? partnersData : []);
       } catch (error) {
         console.error("Critical error fetching data:", error);
         setProducts([]);
         setCategories([]);
         setBrands([]);
+        setTestimonials([]);
+        setPartners([]);
       } finally {
         setIsDataLoading(false);
       }
@@ -5945,15 +5956,21 @@ function AppContent() {
       setIsAuthOpen(true);
       return;
     }
-    const newWishlist = wishlist.includes(productId)
-      ? wishlist.filter(id => id !== productId)
-      : [...wishlist, productId];
+    const isAdding = !wishlist.includes(productId);
+    const newWishlist = isAdding
+      ? [...wishlist, productId]
+      : wishlist.filter(id => id !== productId);
     
     setWishlist(newWishlist);
     try {
       await authService.updateWishlist(newWishlist);
+      setToast({ 
+        message: isAdding ? "Added to wishlist" : "Removed from wishlist", 
+        type: 'success' 
+      });
     } catch (error) {
       console.error("Failed to update wishlist:", error);
+      setToast({ message: "Failed to update wishlist", type: 'error' });
     }
   };
 
@@ -6003,7 +6020,7 @@ function AppContent() {
       }
       
       setUser(null);
-      alert(message);
+      console.error(message);
     } finally {
       setIsProfileLoading(false);
     }
@@ -6089,24 +6106,8 @@ function AppContent() {
     if (status === 'success' || (orderId && window.location.pathname === '/order-success')) {
       setPaymentStatus('success');
       setIsCheckoutOpen(true);
-      
-      // Get pending order and process it
-      const pendingStr = localStorage.getItem('grab_and_go_pending_order');
-      if (pendingStr) {
-        const pending = JSON.parse(pendingStr);
-        
-        // Send confirmation email
-        fetch('/api/order-success', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order: pending }),
-        }).catch(err => console.error('Failed to send confirmation:', err));
-        
-        // Clear cart and pending order
-        setCart([]);
-        localStorage.removeItem('grab_and_go_cart');
-        localStorage.removeItem('grab_and_go_pending_order');
-      }
+      setCart([]);
+      localStorage.removeItem('grab_and_go_cart');
     } else if (status === 'cancelled') {
       setPaymentStatus('cancelled');
       setIsCheckoutOpen(true);
@@ -6180,9 +6181,8 @@ function AppContent() {
       }
       return [...prev, { ...product, quantity, selectedVariants }];
     });
-    setLastAdded(product.name);
+    setToast({ message: `Added ${product.name} to cart`, type: 'success' });
     setTimeout(() => {
-      setLastAdded(null);
       setIsCartLoading(false);
     }, 500);
     setIsCartOpen(true);
@@ -6237,6 +6237,7 @@ function AppContent() {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         products={products}
+        onOpenHowToOrder={() => setIsHowToOrderOpen(true)}
       />
       
       <Routes>
@@ -6269,6 +6270,8 @@ function AppContent() {
               isCartLoading={isCartLoading}
               brands={brands}
               categories={categories}
+              testimonials={testimonials}
+              partners={partners}
             />
           )
         } />
@@ -6285,6 +6288,7 @@ function AppContent() {
             wishlist={wishlist}
             onToggleWishlist={toggleWishlist}
             isCartLoading={isCartLoading}
+            categories={categories}
           />
         } />
         <Route path="/order-success" element={
@@ -6334,7 +6338,29 @@ function AppContent() {
         onOpenProducts={() => setIsProductsOpen(true)}
         cartCount={cart.length}
         user={user}
+        partners={partners}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
       />
+
+      <WishlistDrawer 
+        isOpen={isWishlistOpen}
+        onClose={() => setIsWishlistOpen(false)}
+        wishlist={wishlist}
+        products={products}
+        onAddToCart={(p) => addToCart(p)}
+        onToggleWishlist={toggleWishlist}
+      />
+
+      <AnimatePresence>
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </AnimatePresence>
 
       <CartDrawer 
         isOpen={isCartOpen} 
@@ -6376,7 +6402,6 @@ function AppContent() {
         products={products}
         onToggleWishlist={toggleWishlist}
         onAddToCart={(p) => addToCart(p)}
-        user={user}
       />
 
       <ProductManagementDrawer 
@@ -6412,6 +6437,21 @@ function AppContent() {
         onClose={() => setIsAuthOpen(false)}
         onSuccess={handleLoginSuccess}
       />
+
+      <AnimatePresence>
+        {isHowToOrderOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsHowToOrderOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90]"
+            />
+            <HowToOrderDrawer isOpen={isHowToOrderOpen} onClose={() => setIsHowToOrderOpen(false)} />
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

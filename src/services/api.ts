@@ -349,3 +349,28 @@ export const supportService = {
     return { success: true };
   },
 };
+export const testimonialService = {
+  getTestimonials: async (): Promise<any[]> => {
+    const path = 'testimonials';
+    try {
+      const querySnapshot = await getDocs(collection(db, path));
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return [];
+    }
+  }
+};
+
+export const partnerService = {
+  getPartners: async (): Promise<any[]> => {
+    const path = 'partners';
+    try {
+      const querySnapshot = await getDocs(collection(db, path));
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return [];
+    }
+  }
+};
