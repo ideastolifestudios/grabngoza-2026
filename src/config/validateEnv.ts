@@ -1,4 +1,5 @@
-// Validate required environment variables at startup
+// src/config/validateEnv.ts
+
 export function validateEnvironment() {
   const required = [
     'APP_URL',

@@ -1,9 +1,14 @@
-import { validateEnvironment } from './src/config/validateEnv';
-
-// Call immediately
-validateEnvironment();
 import express, { Request, Response } from 'express';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { validateEnvironment } from './src/config/validateEnv.js';
+
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Validate environment at startup
+validateEnvironment();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,10 +28,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// API Routes - All /api/* requests go to Vercel serverless functions
+// API Routes
 app.use('/api', (req, res) => {
-  // In development, route to local handler
-  // In production (Vercel), these are handled by serverless functions
   res.status(200).json({ 
     message: 'API endpoint',
     path: req.path,
@@ -34,18 +37,28 @@ app.use('/api', (req, res) => {
   });
 });
 
-// Serve React build
-const buildPath = path.join(__dirname, '../dist');
-app.use(express.static(buildPath));
-
-// Health check
+// Health check BEFORE static
 app.get('/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 
-// SPA fallback - MUST be last
-app.get('*', (req: Request, res: Response) => {
-  res.sendFile(path.join(buildPath, 'index.html'));
+// Serve static files from dist
+const buildPath = path.join(__dirname, 'dist');
+app.use(express.static(buildPath));
+
+// SPA fallback - serve index.html for all non-matched routes
+app.use((req: Request, res: Response) => {
+  const indexPath = path.join(buildPath, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error('Error serving index.html:', err);
+      res.status(500).json({ error: 'Could not serve application' });
+    }
+  });
 });
 
 // Error handling
@@ -57,8 +70,8 @@ app.use((err: any, req: Request, res: Response, next: any) => {
   });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
 
-export default app;
+export default server;
