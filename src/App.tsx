@@ -3909,29 +3909,7 @@ const ProductManagementDrawer = ({
         uploadedUrls.push(data.imageUrl);
       }
 
-      setEditingProduct(prev => {
-        if (!prev) return null;
-        const currentImages = prev.images || [];
-        return { ...prev, images: [...currentImages, ...uploadedUrls] };
-      });
-    } catch (err) {
-      console.error("Multiple upload failed:", err);
-    } finally {
-      setIsUploadingMultiple(false);
-    }
-  };
-
-      setEditingProduct(prev => {
-        if (!prev) return null;
-        const currentImages = prev.images || [];
-        return { ...prev, images: [...currentImages, ...uploadedUrls] };
-      });
-    } catch (err) {
-      console.error("Multiple upload failed:", err);
-    } finally {
-      setIsUploadingMultiple(false);
-    }
-  };
+      
 
   const removeGalleryImage = (url: string) => {
     setEditingProduct(prev => {
