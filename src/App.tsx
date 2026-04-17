@@ -2484,6 +2484,89 @@ const OurStoryPage = () => {
   );
 };
 
+const TrackingTimeline = ({ trackingNumber, trackingUrl }: { trackingNumber: string, trackingUrl?: string }) => {
+  const [events, setEvents] = useState<any[]>([]);
+  const [status, setStatus] = useState<string>('');
+  const [loadingEvents, setLoadingEvents] = useState(false);
+
+  useEffect(() => {
+    const fetchTracking = async () => {
+      setLoadingEvents(true);
+      try {
+        const res = await fetch(`/api/track-shipment?trackingNumber=${encodeURIComponent(trackingNumber)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setEvents(data.events || []);
+          setStatus(data.status || '');
+        }
+      } catch (err) {
+        console.error('Tracking fetch failed:', err);
+      } finally {
+        setLoadingEvents(false);
+      }
+    };
+    fetchTracking();
+  }, [trackingNumber]);
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-emerald-50 p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Truck className="text-emerald-600" size={20} />
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Tracking Number</p>
+            <p className="text-xs font-mono font-bold">{trackingNumber}</p>
+            {status && <p className="text-[10px] text-emerald-500 mt-1 uppercase">{status}</p>}
+          </div>
+        </div>
+        {trackingUrl && (
+          <a 
+            href={trackingUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-[10px] font-black uppercase tracking-widest underline hover:text-emerald-700"
+          >
+            Track Package
+          </a>
+        )}
+      </div>
+
+      {loadingEvents ? (
+        <div className="flex items-center gap-2 py-4 px-4 text-sm text-gray-400">
+          <Loader2 className="animate-spin" size={16} /> Loading tracking events...
+        </div>
+      ) : events.length > 0 ? (
+        <div className="pl-4 border-l-2 border-gray-100 space-y-4 ml-2">
+          {events.map((event: any, idx: number) => (
+            <div key={idx} className="relative pl-6">
+              <div className={`absolute -left-[9px] top-1.5 w-4 h-4 rounded-full border-2 ${
+                idx === 0 ? 'bg-emerald-500 border-emerald-500' : 'bg-white border-gray-300'
+              }`} />
+              <div>
+                <p className="text-xs font-bold text-black">{event.description}</p>
+                <div className="flex gap-3 mt-1">
+                  {event.location && (
+                    <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                      <MapPin size={10} /> {event.location}
+                    </p>
+                  )}
+                  {event.timestamp && (
+                    <p className="text-[10px] text-gray-400">
+                      {new Date(event.timestamp).toLocaleDateString('en-ZA', { 
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                      })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 const OrderTrackingPage = () => {
   const [orderId, setOrderId] = useState('');
   const [email, setEmail] = useState('');
@@ -2600,25 +2683,7 @@ const OrderTrackingPage = () => {
             </div>
 
             {order.trackingNumber && (
-              <div className="bg-emerald-50 p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Truck className="text-emerald-600" size={20} />
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Tracking Number</p>
-                    <p className="text-xs font-mono font-bold">{order.trackingNumber}</p>
-                  </div>
-                </div>
-                {order.trackingUrl && (
-                  <a 
-                    href={order.trackingUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-[10px] font-black uppercase tracking-widest underline hover:text-emerald-700"
-                  >
-                    Track Package
-                  </a>
-                )}
-              </div>
+              <TrackingTimeline trackingNumber={order.trackingNumber} trackingUrl={order.trackingUrl} />
             )}
 
             <div className="space-y-4">
