@@ -614,8 +614,6 @@ const Header = ({
         
         {/* Left: Navigation Links */}
         <div className="hidden lg:flex items-center gap-8 flex-1">
-          <Link to="/" className="text-[9px] font-bold uppercase tracking-[0.2em] hover:opacity-50 transition-opacity">Shop</Link>
-          <button onClick={onOpenHowToOrder} className="text-[9px] font-bold uppercase tracking-[0.2em] hover:opacity-50 transition-opacity">How to Order</button>
         </div>
 
         {/* Center: Logo */}
@@ -1676,6 +1674,7 @@ const Footer = () => {
           <h4 className="text-[9px] font-semibold uppercase tracking-wider opacity-20 text-black">Support</h4>
           <ul className="space-y-1 md:space-y-2 text-[9px] font-semibold uppercase tracking-wider text-black">
             <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
+                            <button onClick={() => window.dispatchEvent(new Event('open-how-to-order'))} className="hover:text-black transition-colors cursor-pointer">How to Order</button>
               <Link to="/track-order">Track Order</Link>
             </li>
             <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
