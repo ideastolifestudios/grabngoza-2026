@@ -3547,7 +3547,7 @@ const BrandManagementDrawer = ({
       throw new Error(data.error || 'Upload failed');
     }
 
-    setEditingCategory(prev =>
+    setEditingBrand(prev =>
       prev ? { ...prev, image: data.imageUrl } : null
     );
 
@@ -3845,30 +3845,43 @@ const ProductManagementDrawer = ({
     }
   };
 
-  const handleMultipleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+   const handleMultipleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     setIsUploadingMultiple(true);
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      formData.append('images', files[i]);
-    }
 
-    try {
-      const res = await fetch('/api/upload-multiple', {
-        method: 'POST',
-        body: formData
+    const toBase64 = (file: File) =>
+      new Promise<string | ArrayBuffer | null>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
       });
 
-      if (res.ok) {
-        const { imageUrls } = await res.json();
-        setEditingProduct(prev => {
-          if (!prev) return null;
-          const currentImages = prev.images || [];
-          return { ...prev, images: [...currentImages, ...imageUrls] };
+    try {
+      const uploadedUrls: string[] = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const base64 = await toBase64(files[i]);
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64 }),
         });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `Upload failed for file ${i + 1}`);
+
+        uploadedUrls.push(data.imageUrl);
       }
+
+      setEditingProduct(prev => {
+        if (!prev) return null;
+        const currentImages = prev.images || [];
+        return { ...prev, images: [...currentImages, ...uploadedUrls] };
+      });
     } catch (err) {
       console.error("Multiple upload failed:", err);
     } finally {
