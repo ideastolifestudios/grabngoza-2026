@@ -3201,24 +3201,33 @@ const CategoryManagementDrawer = ({
     setEditingCategory(null);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append('image', file);
 
     try {
+      const toBase64 = (file: File) =>
+        new Promise<string | ArrayBuffer | null>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+        });
+
+      const base64 = await toBase64(file);
+
       const res = await fetch('/api/upload', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64 }),
       });
 
-      if (res.ok) {
-        const { imageUrl } = await res.json();
-        setEditingCategory(prev => prev ? { ...prev, image: imageUrl } : null);
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+      setEditingCategory(prev => prev ? { ...prev, image: data.imageUrl } : null);
     } catch (err) {
       console.error("Upload failed:", err);
     } finally {
@@ -3807,19 +3816,28 @@ const ProductManagementDrawer = ({
     if (!file) return;
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append('image', file);
 
     try {
+      const toBase64 = (file: File) =>
+        new Promise<string | ArrayBuffer | null>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+        });
+
+      const base64 = await toBase64(file);
+
       const res = await fetch('/api/upload', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64 }),
       });
 
-      if (res.ok) {
-        const { imageUrl } = await res.json();
-        setEditingProduct(prev => prev ? { ...prev, [field]: imageUrl } : null);
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+      setEditingProduct(prev => prev ? { ...prev, [field]: data.imageUrl } : null);
     } catch (err) {
       console.error("Upload failed:", err);
     } finally {
