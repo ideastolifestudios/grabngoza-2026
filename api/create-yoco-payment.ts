@@ -48,7 +48,7 @@ export default async function handler(req: any, res: any) {
       body: JSON.stringify({
         amount: Math.round(Number(amount) * 100), // Convert to cents
         currency: currency.toUpperCase(),
-        cancelUrl: `${appUrl}/checkout`,
+        cancelUrl: `${appUrl}/?status=cancelled`,
         successUrl: `${appUrl}/order-success?id=${metadata?.orderId || 'unknown'}`,
         metadata: {
           orderId: metadata?.orderId,
