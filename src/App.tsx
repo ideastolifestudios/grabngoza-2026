@@ -3504,29 +3504,50 @@ const BrandManagementDrawer = ({
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append('image', file);
+  setIsUploading(true);
 
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
+  try {
+    // ✅ convert file → base64 (required for your API)
+    const toBase64 = (file: File) =>
+      new Promise<string | ArrayBuffer | null>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
       });
 
-      if (res.ok) {
-        const { imageUrl } = await res.json();
-        setEditingBrand(prev => prev ? { ...prev, logo: imageUrl } : null);
-      }
-    } catch (err) {
-      console.error("Upload failed:", err);
-    } finally {
-      setIsUploading(false);
+    const base64 = await toBase64(file);
+
+    // 🚀 send JSON (NOT FormData)
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        image: base64,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Upload failed');
     }
-  };
+
+    setEditingCategory(prev =>
+      prev ? { ...prev, image: data.imageUrl } : null
+    );
+
+  } catch (err) {
+    console.error("Upload failed:", err);
+  } finally {
+    setIsUploading(false);
+  }
+};
 
   return (
     <AnimatePresence>
