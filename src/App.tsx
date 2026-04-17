@@ -4873,13 +4873,48 @@ const HybridCheckoutModal = ({
   const [isPaying, setIsPaying] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [orderMessage, setOrderMessage] = useState<string | null>(null);
-  const [paymentGateway, setPaymentGateway] = useState<'yoco'>('yoco');
+   const [paymentGateway, setPaymentGateway] = useState<'yoco'>('yoco');
+  const [shippingRates, setShippingRates] = useState<any[]>([]);
+  const [selectedRate, setSelectedRate] = useState<any>(null);
+  const [loadingRates, setLoadingRates] = useState(false);
+
+  // Fetch live rates when address is complete
+  useEffect(() => {
+    if (deliveryMethod !== 'standard' || !address || !city || !province || !postalCode) {
+      setShippingRates([]);
+      setSelectedRate(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setLoadingRates(true);
+      try {
+        const res = await fetch('/api/get-shipping-rates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            deliveryAddress: { address, city, province, postalCode, country: 'ZA' },
+            items: cartItems.map(item => ({ name: item.name, weight: item.weight || 0.5, quantity: item.quantity })),
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setShippingRates(data.rates || []);
+          if (data.rates?.length > 0) setSelectedRate(data.rates[0]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch rates:', err);
+      } finally {
+        setLoadingRates(false);
+      }
+    }, 800); // debounce
+    return () => clearTimeout(timer);
+  }, [address, city, province, postalCode, deliveryMethod, cartItems]);
 
   const shippingCost = useMemo(() => {
     if (deliveryMethod === 'pickup') return 0;
-    if (deliveryMethod === 'international') return 450; // Flat rate for now
-    return 100; // standard
-  }, [deliveryMethod]);
+    if (deliveryMethod === 'international') return 450;
+    return selectedRate?.amount || 0;
+  }, [deliveryMethod, selectedRate]);
 
   const subtotal = total;
   const finalTotal = subtotal + shippingCost;
@@ -5298,6 +5333,45 @@ const HybridCheckoutModal = ({
                             required
                             className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
                           />
+                           {/* Shipping Rate Selector */}
+                          {deliveryMethod === 'standard' && (
+                            <div className="mt-4">
+                              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">Shipping Service</label>
+                              {loadingRates ? (
+                                <div className="flex items-center gap-2 py-4 text-sm text-gray-400">
+                                  <Loader2 className="animate-spin" size={16} /> Fetching live rates...
+                                </div>
+                              ) : shippingRates.length > 0 ? (
+                                <div className="space-y-2">
+                                  {shippingRates.map((rate: any, idx: number) => (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => setSelectedRate(rate)}
+                                      className={`w-full flex items-center justify-between p-3 rounded-md border text-left transition-all ${
+                                        selectedRate === rate 
+                                          ? 'border-black bg-gray-50 shadow-sm' 
+                                          : 'border-gray-200 hover:border-gray-300'
+                                      }`}
+                                    >
+                                      <div>
+                                        <p className="text-sm font-semibold">{rate.serviceLevel?.name || rate.serviceLevel}</p>
+                                        <p className="text-[10px] text-gray-400">
+                                          {rate.serviceLevel?.description || rate.carrier}
+                                          {rate.serviceLevel?.delivery_date_from && (
+                                            <> • Est. {new Date(rate.serviceLevel.delivery_date_from).toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' })}</>
+                                          )}
+                                        </p>
+                                      </div>
+                                      <span className="text-sm font-bold whitespace-nowrap">R{rate.amount?.toFixed(2)}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : address && city && province && postalCode ? (
+                                <p className="text-xs text-gray-400 py-2">No rates available for this address</p>
+                              ) : null}
+                            </div>
+                          )}
                         </>
                       ) : (
                         <div className="space-y-4">
@@ -5433,11 +5507,16 @@ const HybridCheckoutModal = ({
                       <span className="font-medium">{formatPrice(subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-xs md:text-sm">
-                      <div className="flex items-center gap-1 text-gray-600">
-                        Shipping <Info size={12} className="opacity-50" />
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1 text-gray-600">
+                          Shipping <Info size={12} className="opacity-50" />
+                        </div>
+                        {selectedRate?.serviceLevel?.name && deliveryMethod === 'standard' && (
+                          <span className="text-[10px] text-gray-400">{selectedRate.serviceLevel.name}</span>
+                        )}
                       </div>
                       <span className="text-gray-500">
-                        {shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}
+                        {loadingRates ? '...' : shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}
                       </span>
                     </div>
 
