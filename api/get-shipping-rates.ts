@@ -53,7 +53,7 @@ export default async function handler(req: any, res: any) {
           postal_code: deliveryAddress.postalCode,
           country_code: deliveryAddress.country || 'ZA',
         },
-        parcel,
+         parcels: [parcel],
       }),
     });
 
@@ -82,7 +82,7 @@ export default async function handler(req: any, res: any) {
             postal_code: deliveryAddress.postalCode,
             country_code: deliveryAddress.country || 'ZA',
           },
-          parcel,
+           parcels: [parcel],
         }),
       });
 
