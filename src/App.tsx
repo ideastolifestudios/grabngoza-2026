@@ -3201,7 +3201,7 @@ const CategoryManagementDrawer = ({
     setEditingCategory(null);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'image' | 'brandBanner' | 'soldByLogo' = 'image') => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -3221,49 +3221,11 @@ const CategoryManagementDrawer = ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error?.message || 'Upload failed');
 
-      setEditingProduct(prev => prev ? { ...prev, [field]: data.secure_url } : null);
+      setEditingCategory(prev => prev ? { ...prev, image: data.secure_url } : null);
     } catch (err) {
       console.error("Upload failed:", err);
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  const handleMultipleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setIsUploadingMultiple(true);
-
-    try {
-      const uploadedUrls: string[] = [];
-
-      for (let i = 0; i < files.length; i++) {
-        const formData = new FormData();
-        formData.append('file', files[i]);
-        formData.append('upload_preset', 'eigqziuu');
-        formData.append('folder', 'grab-go-za');
-
-        const res = await fetch('https://api.cloudinary.com/v1_1/dggitwduo/image/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error?.message || `Upload failed for file ${i + 1}`);
-
-        uploadedUrls.push(data.secure_url);
-      }
-
-      setEditingProduct(prev => {
-        if (!prev) return null;
-        const currentImages = prev.images || [];
-        return { ...prev, images: [...currentImages, ...uploadedUrls] };
-      });
-    } catch (err) {
-      console.error("Multiple upload failed:", err);
-    } finally {
-      setIsUploadingMultiple(false);
     }
   };
 
@@ -3545,50 +3507,34 @@ const BrandManagementDrawer = ({
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  setIsUploading(true);
+    setIsUploading(true);
 
-  try {
-    // ✅ convert file → base64 (required for your API)
-    const toBase64 = (file: File) =>
-      new Promise<string | ArrayBuffer | null>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'eigqziuu');
+      formData.append('folder', 'grab-go-za');
+
+      const res = await fetch('https://api.cloudinary.com/v1_1/dggitwduo/image/upload', {
+        method: 'POST',
+        body: formData,
       });
 
-    const base64 = await toBase64(file);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || 'Upload failed');
 
-    // 🚀 send JSON (NOT FormData)
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        image: base64,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || 'Upload failed');
+      setEditingBrand(prev =>
+        prev ? { ...prev, image: data.secure_url } : null
+      );
+    } catch (err) {
+      console.error("Upload failed:", err);
+    } finally {
+      setIsUploading(false);
     }
-
-    setEditingBrand(prev =>
-      prev ? { ...prev, image: data.imageUrl } : null
-    );
-
-  } catch (err) {
-    console.error("Upload failed:", err);
-  } finally {
-    setIsUploading(false);
-  }
-};
+  };
 
   return (
     <AnimatePresence>
@@ -3850,26 +3796,20 @@ const ProductManagementDrawer = ({
     setIsUploading(true);
 
     try {
-      const toBase64 = (file: File) =>
-        new Promise<string | ArrayBuffer | null>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-        });
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'eigqziuu');
+      formData.append('folder', 'grab-go-za');
 
-      const base64 = await toBase64(file);
-
-      const res = await fetch('/api/upload', {
+      const res = await fetch('https://api.cloudinary.com/v1_1/dggitwduo/image/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64 }),
+        body: formData,
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      if (!res.ok) throw new Error(data.error?.message || 'Upload failed');
 
-      setEditingProduct(prev => prev ? { ...prev, [field]: data.imageUrl } : null);
+      setEditingProduct(prev => prev ? { ...prev, [field]: data.secure_url } : null);
     } catch (err) {
       console.error("Upload failed:", err);
     } finally {
@@ -3877,39 +3817,45 @@ const ProductManagementDrawer = ({
     }
   };
 
-   const handleMultipleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMultipleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     setIsUploadingMultiple(true);
 
-    const toBase64 = (file: File) =>
-      new Promise<string | ArrayBuffer | null>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-      });
-
     try {
       const uploadedUrls: string[] = [];
 
       for (let i = 0; i < files.length; i++) {
-        const base64 = await toBase64(files[i]);
+        const formData = new FormData();
+        formData.append('file', files[i]);
+        formData.append('upload_preset', 'eigqziuu');
+        formData.append('folder', 'grab-go-za');
 
-        const res = await fetch('/api/upload', {
+        const res = await fetch('https://api.cloudinary.com/v1_1/dggitwduo/image/upload', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64 }),
+          body: formData,
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || `Upload failed for file ${i + 1}`);
+        if (!res.ok) throw new Error(data.error?.message || `Upload failed for file ${i + 1}`);
 
-        uploadedUrls.push(data.imageUrl);
+        uploadedUrls.push(data.secure_url);
       }
 
-      
+      setEditingProduct(prev => {
+        if (!prev) return null;
+        const currentImages = prev.images || [];
+        return { ...prev, images: [...currentImages, ...uploadedUrls] };
+      });
+    } catch (err) {
+      console.error("Multiple upload failed:", err);
+    } finally {
+      setIsUploadingMultiple(false);
+    }
+  };
+
+  
 
   const removeGalleryImage = (url: string) => {
     setEditingProduct(prev => {
