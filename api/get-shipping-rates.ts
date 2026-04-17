@@ -27,29 +27,32 @@ export default async function handler(req: any, res: any) {
     const totalItems = items.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0);
 
     const parcel = {
-      weight: Math.max(totalWeight, 0.5),
-      dimensions: {
-        length: Math.min(10 + (totalItems * 5), 60),
-        width: Math.min(10 + (totalItems * 3), 40),
-        height: Math.min(5 + (totalItems * 3), 30),
-      }
+      submitted_length_cm: Math.min(10 + (totalItems * 5), 60),
+      submitted_width_cm: Math.min(10 + (totalItems * 3), 40),
+      submitted_height_cm: Math.min(5 + (totalItems * 3), 30),
+      submitted_weight_kg: Math.max(totalWeight, 0.5),
     };
 
     const collectionAddress = {
-      street1: process.env.BUSINESS_ADDRESS || '123 Studio Lane',
-      city: process.env.BUSINESS_CITY || 'Cape Town',
-      state_province: process.env.BUSINESS_PROVINCE || 'Western Cape',
-      postal_code: process.env.BUSINESS_POSTAL_CODE || '7925',
-      country_code: 'ZA',
+      type: 'business',
+      company: 'IDEAS TO LIFE STUDIOS',
+      street_address: process.env.BUSINESS_ADDRESS || '1104 Tugela Street',
+      local_area: process.env.BUSINESS_CITY || 'Klipfontein View',
+      city: process.env.BUSINESS_CITY || 'Midrand',
+      zone: process.env.BUSINESS_PROVINCE || 'Gauteng',
+      country: 'ZA',
+      code: process.env.BUSINESS_POSTAL_CODE || '1685',
     };
 
     const destinationAddress = {
-      street1: deliveryAddress.address,
-      street2: deliveryAddress.address2 || '',
+      type: 'residential',
+      company: '',
+      street_address: deliveryAddress.address,
+      local_area: deliveryAddress.city,
       city: deliveryAddress.city,
-      state_province: deliveryAddress.province,
-      postal_code: deliveryAddress.postalCode,
-      country_code: deliveryAddress.country || 'ZA',
+      zone: deliveryAddress.province,
+      country: deliveryAddress.country || 'ZA',
+      code: deliveryAddress.postalCode,
     };
 
     const ratesResponse = await fetch(`${baseUrl}/rates`, {

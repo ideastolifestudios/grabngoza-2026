@@ -27,12 +27,10 @@ export default async function handler(req: any, res: any) {
       }, 0);
       const totalItems = (order.items || []).reduce((sum: number, item: any) => sum + (item.quantity || 1), 0);
       return {
-        weight: Math.max(totalWeight, 0.5),
-        dimensions: {
-          length: Math.min(10 + (totalItems * 5), 60),
-          width: Math.min(10 + (totalItems * 3), 40),
-          height: Math.min(5 + (totalItems * 3), 30),
-        }
+        submitted_length_cm: Math.min(10 + (totalItems * 5), 60),
+        submitted_width_cm: Math.min(10 + (totalItems * 3), 40),
+        submitted_height_cm: Math.min(5 + (totalItems * 3), 30),
+        submitted_weight_kg: Math.max(totalWeight, 0.5)
       };
     })();
 
@@ -43,19 +41,25 @@ export default async function handler(req: any, res: any) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        origin_address: {
-          street1: process.env.BUSINESS_ADDRESS || '123 Studio Lane',
-          city: process.env.BUSINESS_CITY || 'Cape Town',
-          state_province: process.env.BUSINESS_PROVINCE || 'Western Cape',
-          postal_code: process.env.BUSINESS_POSTAL_CODE || '7925',
-          country_code: 'ZA',
+        collection_address: {
+          type: 'business',
+          company: 'IDEAS TO LIFE STUDIOS',
+          street_address: process.env.BUSINESS_ADDRESS || '1104 Tugela Street',
+          local_area: process.env.BUSINESS_CITY || 'Klipfontein View',
+          city: process.env.BUSINESS_CITY || 'Midrand',
+          zone: process.env.BUSINESS_PROVINCE || 'Gauteng',
+          country: 'ZA',
+          code: process.env.BUSINESS_POSTAL_CODE || '1685',
         },
-        destination_address: {
-          street1: order.address,
+        delivery_address: {
+          type: 'residential',
+          company: `${order.firstName} ${order.lastName}`,
+          street_address: order.address,
+          local_area: order.city,
           city: order.city,
-          state_province: order.province,
-          postal_code: order.postalCode,
-          country_code: order.country || 'ZA',
+          zone: order.province,
+          country: order.country || 'ZA',
+          code: order.postalCode,
         },
         parcel,
         service_level: serviceLevel || 'standard',
