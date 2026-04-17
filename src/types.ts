@@ -27,6 +27,7 @@ export interface Product {
   gender?: 'Men' | 'Women' | 'Kids' | 'Unisex';
   subCategory?: string;
   variants?: ProductVariant[];
+  stock?: Record<string, number>;
 }
 
 export interface Brand {

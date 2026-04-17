@@ -4108,6 +4108,7 @@ const ProductManagementDrawer = ({
                         { id: 'general', label: 'General' },
                         { id: 'media', label: 'Media' },
                         { id: 'variants', label: 'Variants' },
+                        { id: 'stock', label: 'Stock' },
                         { id: 'brand', label: 'Brand & Tags' }
                       ].map(tab => (
                         <button
@@ -4515,6 +4516,62 @@ const ProductManagementDrawer = ({
                               </div>
                             )}
                           </div>
+                        </div>
+                      )}
+
+                      {activeTab === 'stock' && (
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="text-[10px] font-black uppercase tracking-widest">Inventory Management</h4>
+                              <p className="text-[8px] opacity-40 uppercase tracking-widest mt-1">Set stock levels per variant</p>
+                            </div>
+                          </div>
+                          
+                          {editingProduct.variants && editingProduct.variants.length > 0 ? (
+                            <div className="space-y-4">
+                              {editingProduct.variants.map((variant) => (
+                                <div key={variant.id} className="p-4 bg-gray-50 border border-gray-100 space-y-3">
+                                  <label className="text-[8px] font-black uppercase tracking-widest opacity-50">{variant.name} Stock</label>
+                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                    {variant.options.map((opt) => {
+                                      const stockKey = `${variant.name}:${opt}`;
+                                      return (
+                                        <div key={opt} className="flex items-center gap-2">
+                                          <span className="text-xs font-bold min-w-[40px]">{opt}</span>
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            value={editingProduct.stock?.[stockKey] ?? 0}
+                                            onChange={(e) => {
+                                              const newStock = { ...(editingProduct.stock || {}), [stockKey]: parseInt(e.target.value) || 0 };
+                                              setEditingProduct({ ...editingProduct, stock: newStock });
+                                            }}
+                                            className="w-20 bg-white border border-gray-200 px-3 py-2 text-sm text-center focus:border-black outline-none"
+                                          />
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="p-4 bg-gray-50 border border-gray-100 space-y-3">
+                              <label className="text-[8px] font-black uppercase tracking-widest opacity-50">Total Stock</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={editingProduct.stock?.['_default'] ?? 0}
+                                onChange={(e) => {
+                                  setEditingProduct({ ...editingProduct, stock: { _default: parseInt(e.target.value) || 0 } });
+                                }}
+                                className="w-32 bg-white border border-gray-200 px-4 py-3 text-sm focus:border-black outline-none"
+                                placeholder="0"
+                              />
+                              <p className="text-[8px] text-gray-400">Add variants in the Variants tab to track stock per size/color</p>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -6811,6 +6868,22 @@ function AppContent() {
   useEffect(() => {
     localStorage.setItem('grab_and_go_cart', JSON.stringify(cart));
   }, [cart]);
+
+  // Stock helper
+  const getStockForVariant = (product: Product, selectedVariants?: Record<string, string>): number => {
+    if (!product.stock) return Infinity; // No stock tracking = unlimited
+    if (!selectedVariants || Object.keys(selectedVariants).length === 0) {
+      return product.stock['_default'] ?? Infinity;
+    }
+    // Check stock for each selected variant
+    let minStock = Infinity;
+    for (const [variantName, option] of Object.entries(selectedVariants)) {
+      const key = `${variantName}:${option}`;
+      const level = product.stock[key];
+      if (level !== undefined && level < minStock) minStock = level;
+    }
+    return minStock;
+  };
 
   const addToCart = (product: Product, selectedVariants?: Record<string, string>, quantity: number = 1) => {
     setIsCartLoading(true);
