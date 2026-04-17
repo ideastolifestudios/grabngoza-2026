@@ -340,13 +340,68 @@ export const authService = {
 
 export const supportService = {
   subscribeNewsletter: async (email: string): Promise<any> => {
-    // For demo, just log it
-    console.log("Newsletter subscription:", email);
-    return { success: true };
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: email,
+          subject: "You're on the list! - Grab & Go ZA",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; background: #ffffff;">
+              <div style="background: #000; padding: 24px; text-align: center;">
+                <img src="https://res.cloudinary.com/dggitwduo/image/upload/v1774084848/GRAB_GO_WEB_LOGO_as09yx.png" alt="Grab & Go" style="height: 40px;" />
+              </div>
+              <div style="padding: 40px 24px; text-align: center;">
+                <h1 style="color: #000; text-transform: uppercase; letter-spacing: -1px; font-size: 28px; margin-bottom: 16px;">Welcome to the Fam!</h1>
+                <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">Thanks for joining the Grab & Go newsletter. You'll be the first to know about exclusive drops, fresh gear, and studio updates.</p>
+                <div style="background: #f9f9f9; padding: 20px; border-radius: 4px; margin: 24px 0;">
+                  <p style="font-size: 18px; font-weight: bold; color: #000; margin: 0;">🎁 10% OFF YOUR FIRST ORDER</p>
+                  <p style="font-size: 12px; color: #888; margin: 8px 0 0;">Use code <strong>WELCOME10</strong> at checkout</p>
+                </div>
+              </div>
+              <div style="background: #f5f5f5; padding: 20px 24px; text-align: center; font-size: 11px; color: #999;">
+                <p style="margin: 0;">© 2026 Grab & Go Studio. Stay fresh.</p>
+              </div>
+            </div>
+          `,
+          text: "Welcome to the Grab & Go Fam! You'll be the first to know about new drops. Use code WELCOME10 for 10% off your first order."
+        })
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      throw error;
+    }
   },
   submitHelpDesk: async (data: any): Promise<any> => {
-    console.log("Help desk submission:", data);
-    return { success: true };
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: data.email,
+          subject: `Help Desk: ${data.subject || 'New Inquiry'} - Grab & Go`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee;">
+              <h1 style="color: #000; text-transform: uppercase; letter-spacing: -1px;">We Got Your Message</h1>
+              <p>Hi ${data.name || 'there'},</p>
+              <p>We've received your inquiry and will get back to you within 24 hours.</p>
+              <div style="background: #f9f9f9; padding: 16px; margin: 20px 0; border-left: 4px solid #000;">
+                <p style="margin: 0; font-size: 13px;"><strong>Subject:</strong> ${data.subject}</p>
+                <p style="margin: 8px 0 0; font-size: 13px; color: #666;">${data.message}</p>
+              </div>
+              <p style="font-size: 12px; color: #888;">— The Grab & Go Team</p>
+            </div>
+          `,
+          text: `Hi ${data.name}, we received your inquiry: "${data.subject}". We'll get back to you within 24 hours.`
+        })
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Help desk submission error:', error);
+      throw error;
+    }
   },
 };
 export const testimonialService = {
