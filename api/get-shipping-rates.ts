@@ -19,25 +19,39 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'deliveryAddress and items are required' });
     }
 
-    // Calculate total weight and determine parcel size from cart items
     const totalWeight = items.reduce((sum: number, item: any) => {
-      const weight = item.weight || 0.5; // default 0.5kg per item
+      const weight = item.weight || 0.5;
       return sum + (weight * (item.quantity || 1));
     }, 0);
 
     const totalItems = items.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0);
 
-    // Dynamic parcel sizing based on item count
     const parcel = {
       weight: Math.max(totalWeight, 0.5),
       dimensions: {
-        length: Math.min(10 + (totalItems * 5), 60), // 10-60cm
-        width: Math.min(10 + (totalItems * 3), 40),   // 10-40cm
-        height: Math.min(5 + (totalItems * 3), 30),    // 5-30cm
+        length: Math.min(10 + (totalItems * 5), 60),
+        width: Math.min(10 + (totalItems * 3), 40),
+        height: Math.min(5 + (totalItems * 3), 30),
       }
     };
 
-    // Get standard rates
+    const collectionAddress = {
+      street1: process.env.BUSINESS_ADDRESS || '123 Studio Lane',
+      city: process.env.BUSINESS_CITY || 'Cape Town',
+      state_province: process.env.BUSINESS_PROVINCE || 'Western Cape',
+      postal_code: process.env.BUSINESS_POSTAL_CODE || '7925',
+      country_code: 'ZA',
+    };
+
+    const destinationAddress = {
+      street1: deliveryAddress.address,
+      street2: deliveryAddress.address2 || '',
+      city: deliveryAddress.city,
+      state_province: deliveryAddress.province,
+      postal_code: deliveryAddress.postalCode,
+      country_code: deliveryAddress.country || 'ZA',
+    };
+
     const ratesResponse = await fetch(`${baseUrl}/rates`, {
       method: 'POST',
       headers: {
@@ -45,26 +59,21 @@ export default async function handler(req: any, res: any) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        destination_address: {
-          street1: deliveryAddress.address,
-          street2: deliveryAddress.address2 || '',
-          city: deliveryAddress.city,
-          state_province: deliveryAddress.province,
-          postal_code: deliveryAddress.postalCode,
-          country_code: deliveryAddress.country || 'ZA',
-        },
-         parcels: [parcel],
+        collection_address: collectionAddress,
+        destination_address: destinationAddress,
+        parcels: [parcel],
       }),
     });
 
-    const ratesData = await ratesResponse.json() as any;
+    const ratesText = await ratesResponse.text();
+    let ratesData: any;
+    try { ratesData = JSON.parse(ratesText); } catch { ratesData = { error: ratesText }; }
 
     if (!ratesResponse.ok) {
-      console.error('ShipLogic rates error:', JSON.stringify(ratesData));
+      console.error('ShipLogic rates error:', ratesText);
       return res.status(500).json({ error: 'Failed to get shipping rates', details: ratesData });
     }
 
-    // Also try opt-in rates (Pargo lockers, etc.)
     let optInRates: any[] = [];
     try {
       const optInResponse = await fetch(`${baseUrl}/rates/opt-in`, {
@@ -74,28 +83,23 @@ export default async function handler(req: any, res: any) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          destination_address: {
-            street1: deliveryAddress.address,
-            street2: deliveryAddress.address2 || '',
-            city: deliveryAddress.city,
-            state_province: deliveryAddress.province,
-            postal_code: deliveryAddress.postalCode,
-            country_code: deliveryAddress.country || 'ZA',
-          },
-           parcels: [parcel],
+          collection_address: collectionAddress,
+          destination_address: destinationAddress,
+          parcels: [parcel],
         }),
       });
 
       if (optInResponse.ok) {
-        const optInData = await optInResponse.json() as any;
-        optInRates = optInData.rates || [];
+        const optInText = await optInResponse.text();
+        try {
+          const optInData = JSON.parse(optInText);
+          optInRates = optInData.rates || [];
+        } catch {}
       }
     } catch (err) {
-      // Opt-in rates are optional, don't fail the whole request
       console.warn('Opt-in rates failed:', err);
     }
 
-    // Format rates for frontend
     const rates = (ratesData.rates || []).map((rate: any) => ({
       serviceLevel: rate.service_level,
       estimatedDelivery: rate.estimated_delivery,
