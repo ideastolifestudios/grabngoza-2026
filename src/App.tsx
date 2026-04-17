@@ -1,21 +1,63 @@
-
 import React, { useState, useEffect, useRef, useMemo, Component } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-
 import { 
-  ShoppingBag, Zap, MessageSquare, Instagram, ArrowRight, X, Check,
-  CheckCircle2, Truck, CreditCard, Facebook, Phone, MapPin, Menu,
-  ChevronRight, ChevronLeft, ChevronDown, Heart, Plus, Minus, Trash2,
-  Mail, Send, Loader2, Info, Star, RotateCcw, User as UserIcon,
-  LogOut, Settings, Clock, Package, AlertCircle, AlertTriangle,
-  Activity, ShieldAlert, RefreshCw, Search, Edit3, Database,
-  Upload, Filter, ExternalLink, Globe, Ruler, ShieldCheck,
-    Shirt, Watch, Sparkles
+  ShoppingBag,
+  ShoppingCart, 
+  Zap, 
+  MessageSquare, 
+  Instagram, 
+  ArrowRight, 
+  X, 
+  Check,
+  CheckCircle2,
+  Truck,
+  CreditCard,
+  Facebook,
+  Phone,
+  MapPin,
+  Menu,
+  ChevronRight,
+  ChevronLeft,
+  ChevronDown,
+  Heart,
+  Plus,
+  Minus,
+  Trash2,
+  Mail,
+  Send,
+  Loader2,
+  Info,
+  HelpCircle,
+  Star,
+  RotateCcw,
+  User as UserIcon,
+  LogOut,
+  Settings,
+  Clock,
+  Package,
+  AlertCircle,
+  AlertTriangle,
+  Activity,
+  ShieldAlert,
+  RefreshCw,
+  Search,
+  Edit3,
+  Database,
+  Upload,
+  Filter,
+  ExternalLink,
+  Globe,
+  Ruler,
+  ShieldCheck,
+  Shirt,
+  Watch,
+  Footprints,
+  Grid,
+  Sparkles,
+  Tag
 } from 'lucide-react';
-
 import { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod, Category, Brand, Testimonial, Partner } from './types';
-
 import { 
   productService, 
   orderService, 
@@ -26,10 +68,9 @@ import {
   testimonialService,
   partnerService
 } from './services/api';
-
 import { emailService } from './services/emailService';
+import SEO from './components/SEO';
 import { auth, googleProvider, facebookProvider } from './firebase';
-
 import { 
   onAuthStateChanged, 
   signInWithPopup, 
@@ -335,7 +376,7 @@ const WelcomePopup = () => {
                   placeholder="Email address" 
                   required
                   value={email}
-                  onChange={async(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full border border-gray-100 rounded-sm px-4 py-3 text-xs focus:ring-1 focus:ring-black focus:outline-none transition-all"
                 />
                 <button 
@@ -421,7 +462,7 @@ const HowToOrderDrawer = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
           <section className="space-y-4">
             <h3 className="text-lg font-black uppercase tracking-widest border-b-2 border-black pb-2 inline-block">2. Secure Checkout</h3>
             <p className="text-gray-600 leading-relaxed">
-              Once you're ready, click the shopping bag icon to review your cart and proceed to checkout. We offer multiple secure payment options:
+              Once you're ready, click the shopping cart icon to review your cart and proceed to checkout. We offer multiple secure payment options via Yoco:
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
@@ -430,14 +471,10 @@ const HowToOrderDrawer = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
               </div>
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
                 <span className="text-[10px] font-black uppercase tracking-widest block mb-2">Digital</span>
-                <p className="text-[10px] text-gray-400">Apple Pay, Google Pay, and PayPal supported.</p>
+                <p className="text-[10px] text-gray-400">Apple Pay and Google Pay supported.</p>
               </div>
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                <span className="text-[10px] font-black uppercase tracking-widest block mb-2">Installments</span>
-                <p className="text-[10px] text-gray-400">PayFlex: Buy now, pay later in 4 interest-free payments.</p>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                <span className="text-[10px] font-black uppercase tracking-widest block mb-2">EFT</span>
+                <span className="text-[10px] font-black uppercase tracking-widest block mb-1">EFT</span>
                 <p className="text-[10px] text-gray-400">Direct Bank Transfer (EFT) available on request.</p>
               </div>
             </div>
@@ -490,6 +527,7 @@ const HowToOrderDrawer = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
 const Header = ({ 
   cartCount, 
   onOpenCart, 
+  onOpenWishlist,
   onOpenOrders, 
   onOpenProducts,
   onOpenMenu,
@@ -503,6 +541,7 @@ const Header = ({
 }: { 
   cartCount: number, 
   onOpenCart: () => void, 
+  onOpenWishlist: () => void,
   onOpenOrders: () => void,
   onOpenProducts: () => void,
   onOpenMenu: () => void,
@@ -562,21 +601,21 @@ const Header = ({
   }, [products, localSearch]);
 
   return (
-    <motion.header 
-      initial={false}
-      animate={{ 
-        y: isVisible ? 0 : -100,
-        opacity: isVisible ? 1 : 0
-      }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 ${scrolled ? 'bg-white/95 backdrop-blur-md py-1 border-b border-gray-100' : 'bg-white py-2'}`}
-    >
+      <motion.header 
+        initial={false}
+        animate={{ 
+          y: isVisible ? 0 : -100,
+          opacity: isVisible ? 1 : 0
+        }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className={`fixed top-0 left-0 right-0 z-50 ${scrolled ? 'bg-white/95 backdrop-blur-md py-1 border-b border-gray-100 shadow-sm' : 'bg-white py-2'}`}
+      >
       <div className="max-w-[1800px] mx-auto px-4 md:px-10 flex items-center justify-between">
         
         {/* Left: Navigation Links */}
         <div className="hidden lg:flex items-center gap-8 flex-1">
-          <Link to="/" className="text-[10px] font-black uppercase tracking-[0.2em] hover:opacity-50 transition-opacity">Shop</Link>
-          <button onClick={onOpenHowToOrder} className="text-[10px] font-black uppercase tracking-[0.2em] hover:opacity-50 transition-opacity">How to Order</button>
+          <Link to="/" className="text-[9px] font-bold uppercase tracking-[0.2em] hover:opacity-50 transition-opacity">Shop</Link>
+          <button onClick={onOpenHowToOrder} className="text-[9px] font-bold uppercase tracking-[0.2em] hover:opacity-50 transition-opacity">How to Order</button>
         </div>
 
         {/* Center: Logo */}
@@ -588,12 +627,27 @@ const Header = ({
 
         {/* Right: Actions */}
         <div className="flex items-center justify-end gap-2 md:gap-6 flex-1">
-          <button onClick={onOpenCart} className="relative p-2 hover:bg-black/5 rounded-full transition-colors text-black">
-            <ShoppingBag size={20} />
+          <button 
+            onClick={onOpenWishlist}
+            className="p-2 hover:bg-black/5 rounded-full transition-colors text-black hidden sm:block"
+            title="Wishlist"
+          >
+            <Heart size={20} />
+          </button>
+          <button 
+            onClick={onOpenCart} 
+            className="relative p-2 hover:bg-black/5 rounded-full transition-colors text-black active:scale-90" 
+            title="Cart"
+          >
+            <ShoppingCart size={22} />
             {cartCount > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-black text-white text-[8px] font-black rounded-full flex items-center justify-center">
+              <motion.span 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-[#e34234] text-white text-[8px] font-bold rounded-full flex items-center justify-center px-1 shadow-[0_2px_10px_rgba(227,66,52,0.4)]"
+              >
                 {cartCount}
-              </span>
+              </motion.span>
             )}
           </button>
 
@@ -601,7 +655,7 @@ const Header = ({
             <>
               <button onClick={onOpenAuth} className="p-2 hover:bg-black/5 rounded-full transition-colors text-black hidden sm:flex items-center gap-2">
                 <UserIcon size={20} />
-                <span className="text-[10px] font-black uppercase tracking-widest">Login</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest">Login</span>
               </button>
               <button onClick={onOpenMenu} className="p-2 hover:bg-black/5 rounded-full transition-colors flex items-center gap-2 group text-black">
                 <Menu size={24} />
@@ -609,7 +663,7 @@ const Header = ({
             </>
           ) : (
             <button onClick={onOpenMenu} className="p-2 hover:bg-black/5 rounded-full transition-colors text-black flex items-center gap-2">
-              <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-[10px] font-black uppercase ring-2 ring-offset-2 ring-black/5">
+              <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-[9px] font-bold uppercase ring-2 ring-offset-2 ring-black/5">
                 {user.firstName[0]}{user.lastName[0]}
               </div>
             </button>
@@ -633,7 +687,8 @@ const Sidebar = ({
   user,
   partners = [],
   searchQuery,
-  setSearchQuery
+  setSearchQuery,
+  setFilterCategory
 }: { 
   isOpen: boolean, 
   onClose: () => void, 
@@ -647,17 +702,20 @@ const Sidebar = ({
   user: User | null,
   partners?: Partner[],
   searchQuery: string,
-  setSearchQuery: (q: string) => void
+  setSearchQuery: (q: string) => void,
+  setFilterCategory: (c: string) => void
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isShopOpen, setIsShopOpen] = useState(true);
 
   const navLinks = [
-    { name: 'MEN', id: 'drops', filter: 'Men' },
-    { name: 'WOMEN', id: 'drops', filter: 'Women' },
-    { name: 'KIDS', id: 'drops', filter: 'Kids' },
-    { name: 'NEW ARRIVALS', id: 'drops', filter: 'New' },
-    { name: 'ACCESSORIES', id: 'drops', filter: 'Accessories' }
+    { name: 'New Arrivals', filter: 'New' },
+    { name: 'Men', filter: 'Men' },
+    { name: 'Women', filter: 'Women' },
+    { name: 'Kids', filter: 'Kids' },
+    { name: 'Sport', filter: 'Sport' },
+    { name: 'Accessories', filter: 'Accessories' }
   ];
 
   return (
@@ -676,140 +734,168 @@ const Sidebar = ({
             animate={{ x: 0 }} 
             exit={{ x: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-black text-white border-l border-white/10 z-[190] flex flex-col"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-white text-black z-[190] flex flex-col shadow-2xl"
           >
-            <div className="p-8 md:p-12 pb-6 flex justify-between items-center">
-              <Logo className="h-6" light />
-              <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                <X size={24} className="text-white" />
+            {/* Header: Logo and Close */}
+            <div className="p-6 flex justify-between items-center border-b border-gray-50">
+              <Logo className="w-[170px] h-[65px]" dark />
+              <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <X size={24} className="text-black" />
               </button>
             </div>
 
-            <div className="px-8 md:px-12 mb-8">
+            <nav className="flex-grow overflow-y-auto px-8 custom-scrollbar space-y-10 pb-12 pt-6">
+              {/* Search Bar */}
               <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-white transition-colors" size={16} />
+                <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={18} />
                 <input 
                   type="text" 
-                  placeholder="SEARCH THE STUDIO..."
+                  placeholder="Search products..."
                   value={searchQuery}
-                  onChange={async (e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 focus:border-white/30 px-10 py-4 text-[10px] font-black uppercase tracking-widest outline-none transition-all rounded-sm"
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-transparent border-b border-gray-100 focus:border-black py-4 pl-8 text-sm font-bold placeholder:text-gray-300 outline-none transition-all"
                 />
               </div>
-            </div>
 
-            <nav className="flex-grow overflow-y-auto px-8 md:px-12 custom-scrollbar space-y-12 pb-12">
               {/* Main Navigation */}
-              <div className="flex flex-col gap-6">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-2">Collections</p>
-                {navLinks.map((link) => (
+              <div className="flex flex-col">
+                {/* Shop Dropdown */}
+                <div className="border-b border-gray-50 last:border-0 mb-2">
                   <button 
-                    key={link.name}
-                    onClick={() => {
-                      onClose();
-                      if (location.pathname !== '/') {
-                        navigate('/');
-                        setTimeout(() => {
-                          const el = document.getElementById(link.id);
-                          if (el) el.scrollIntoView({ behavior: 'smooth' });
-                        }, 100);
-                      } else {
-                        const el = document.getElementById(link.id);
-                        if (el) el.scrollIntoView({ behavior: 'smooth' });
-                      }
-                    }}
-                    className="text-3xl font-black uppercase tracking-tighter text-left hover:text-white/60 transition-all flex items-center justify-between group"
+                    onClick={() => setIsShopOpen(!isShopOpen)}
+                    className="w-full py-4 flex items-center justify-between text-2xl font-bold tracking-tight hover:opacity-100 transition-all"
                   >
-                    <span>{link.name}</span>
-                    <ChevronRight size={20} className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                    <span>Shop</span>
+                    <ChevronDown size={20} className={`text-gray-300 transition-transform duration-300 ${isShopOpen ? 'rotate-180 text-black' : ''}`} />
                   </button>
-                ))}
-              </div>
-
-              {/* Account Section */}
-              <div className="flex flex-col gap-4 pt-8 border-t border-white/10">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-2">Account</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <button 
-                    onClick={() => { onClose(); onOpenOrders(); }}
-                    className="p-4 bg-white/5 hover:bg-white/10 rounded-xl flex flex-col items-center justify-center gap-2 transition-colors border border-white/5"
-                  >
-                    <Package size={20} />
-                    <span className="text-[8px] font-black uppercase tracking-widest">Orders</span>
-                  </button>
-                  <button 
-                    onClick={() => { onClose(); onOpenWishlist(); }}
-                    className="p-4 bg-white/5 hover:bg-white/10 rounded-xl flex flex-col items-center justify-center gap-2 transition-colors border border-white/5"
-                  >
-                    <Heart size={20} />
-                    <span className="text-[8px] font-black uppercase tracking-widest">Wishlist</span>
-                  </button>
+                  
+                  <AnimatePresence>
+                    {isShopOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden flex flex-col pl-4 pb-4"
+                      >
+                        {navLinks.map((link) => (
+                          <button 
+                            key={link.name}
+                            onClick={() => {
+                              onClose();
+                              setFilterCategory(link.filter);
+                              if (location.pathname !== '/') {
+                                navigate('/');
+                              }
+                            }}
+                            className="group py-3 flex items-center justify-between text-lg font-medium text-gray-500 hover:text-black transition-all"
+                          >
+                            <span>{link.name}</span>
+                            <ChevronRight size={16} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
-                {user ? (
-                  <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between">
+                {/* Direct Links */}
+                <button onClick={() => { onClose(); navigate('/story'); }} className="py-4 text-left text-2xl font-bold tracking-tight border-b border-gray-50 last:border-0">
+                  Our Story
+                </button>
+              </div>
+
+              {/* Membership / Account */}
+              <div className="pt-4">
+                {!user ? (
+                  <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 space-y-6">
+                    <p className="text-xs text-gray-500 font-medium leading-relaxed">
+                      Become a Studio Member for the best products and inspiration.
+                    </p>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center text-[10px] font-black uppercase">
-                        {user.firstName[0]}{user.lastName[0]}
+                      <button 
+                        onClick={() => { onClose(); onOpenAuth(); }}
+                        className="flex-1 py-3 bg-black text-white text-[9px] font-bold uppercase tracking-widest rounded-full hover:shadow-lg transition-all"
+                      >
+                        Join Us
+                      </button>
+                      <button 
+                        onClick={() => { onClose(); onOpenAuth(); }}
+                        className="flex-1 py-3 bg-white text-black text-[9px] font-bold uppercase tracking-widest rounded-full border border-gray-200 hover:border-black transition-all"
+                      >
+                        Sign In
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center text-[11px] font-bold uppercase overflow-hidden border-2 border-white shadow-sm">
+                        {user.photoURL ? (
+                          <img src={user.photoURL} alt={user.firstName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        ) : (
+                          `${user.firstName[0]}${user.lastName[0]}`
+                        )}
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-black uppercase tracking-widest">{user.firstName}</span>
-                        <span className="text-[8px] opacity-40 uppercase tracking-widest">{user.role}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{user.firstName} {user.lastName}</span>
+                        <span className="text-[8px] opacity-40 uppercase tracking-widest mt-1">Studio Member</span>
                       </div>
                     </div>
                     <button 
                       onClick={() => { onClose(); onLogout(); }}
-                      className="p-2 hover:bg-red-500/20 text-red-400 rounded-full transition-colors"
+                      className="p-2.5 hover:bg-gray-100 text-black rounded-full transition-colors border border-gray-100"
+                      title="Logout"
                     >
                       <LogOut size={16} />
                     </button>
                   </div>
-                ) : (
-                  <button 
-                    onClick={() => { onClose(); onOpenAuth(); }}
-                    className="w-full py-4 bg-white text-black font-black uppercase text-[10px] tracking-widest rounded-sm hover:bg-white/90 transition-all mt-2"
-                  >
-                    Login / Sign Up
-                  </button>
                 )}
               </div>
 
-              {/* Partners Section */}
-              {partners.length > 0 && (
-                <div className="pt-8 border-t border-white/10">
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-6">Official Partners</p>
-                  <div className="flex flex-wrap gap-6 items-center opacity-40 hover:opacity-100 transition-opacity">
-                    {partners.slice(0, 4).map(p => (
-                      <img 
-                        key={p.id} 
-                        src={p.logo} 
-                        alt={p.name} 
-                        className="h-4 md:h-5 w-auto object-contain brightness-0 invert" 
-                        referrerPolicy="no-referrer" 
-                      />
-                    ))}
+              {/* Quick Actions */}
+              <div className="pt-6 space-y-5 pb-8 border-t border-gray-50">
+                <button onClick={() => { onClose(); onOpenCart(); }} className="flex items-center gap-4 text-sm font-bold text-gray-500 hover:text-black transition-all">
+                  <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center">
+                    <ShoppingCart size={20} />
                   </div>
-                </div>
-              )}
-
-              {/* Info Links */}
-              <div className="flex flex-col gap-3 pt-8 border-t border-white/10">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-2">Information</p>
-                <div className="grid grid-cols-2 gap-y-3">
-                  <Link to="/faq" onClick={onClose} className="text-[9px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">FAQ</Link>
-                  <Link to="/story" onClick={onClose} className="text-[9px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">Our Story</Link>
-                  <Link to="/shipping" onClick={onClose} className="text-[9px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">Shipping</Link>
-                  <Link to="/refunds" onClick={onClose} className="text-[9px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors">Returns</Link>
-                </div>
+                  <span>Cart ({cartCount})</span>
+                </button>
+                <button onClick={() => { onClose(); onOpenWishlist(); }} className="flex items-center gap-4 text-sm font-bold text-gray-500 hover:text-black transition-all">
+                  <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center">
+                    <Heart size={20} />
+                  </div>
+                  <span>Wishlist</span>
+                </button>
+                <button onClick={() => { onClose(); onOpenOrders(); }} className="flex items-center gap-4 text-sm font-bold text-gray-500 hover:text-black transition-all">
+                  <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center">
+                    <Package size={20} />
+                  </div>
+                  <span>Orders</span>
+                </button>
+                <button onClick={() => { onClose(); navigate('/faq'); }} className="flex items-center gap-4 text-sm font-bold text-gray-500 hover:text-black transition-all">
+                  <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center">
+                    <HelpCircle size={20} />
+                  </div>
+                  <span>Support</span>
+                </button>
+                
+                {user?.role === 'admin' && (
+                  <button onClick={() => { onClose(); onOpenProducts(); }} className="flex items-center gap-4 text-sm font-bold text-red-500 hover:text-red-700 transition-all">
+                    <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
+                      <Settings size={20} />
+                    </div>
+                    <span>Manage Studio</span>
+                  </button>
+                )}
               </div>
             </nav>
 
-            <div className="mt-auto p-8 md:p-12 pt-6 border-t border-white/10 flex justify-between items-center bg-black/50 backdrop-blur-md">
-              <div className="flex gap-6 text-white/40">
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Instagram size={18} /></a>
-                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Facebook size={18} /></a>
+            <div className="mt-auto p-8 border-t border-gray-50 flex justify-between items-center bg-gray-50/50">
+              <div className="flex gap-6 text-gray-300">
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-black transition-colors"><Instagram size={18} /></a>
+                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-black transition-colors"><Facebook size={18} /></a>
               </div>
-              <p className="text-[8px] font-mono uppercase tracking-widest opacity-20">Grab & Go Studio © 2026</p>
+              <p className="text-[8px] font-mono uppercase tracking-widest opacity-20">© 2026 GRAB & GO</p>
             </div>
           </motion.div>
         </>
@@ -819,47 +905,18 @@ const Sidebar = ({
 };
 
 const Hero = () => (
-  <section className="relative h-[60vh] md:h-[70vh] flex items-center overflow-hidden bg-white">
+  <section className="relative h-[60vh] md:h-[80vh] flex items-center overflow-hidden bg-white">
     <div className="absolute inset-0 z-0">
       <img 
-        src="https://picsum.photos/seed/streetwear/1920/1080" 
-        alt="Hero" 
+        src="https://picsum.photos/seed/streetwear-hero/1920/1080" 
+        alt="HeroBackground" 
         className="w-full h-full object-cover"
         referrerPolicy="no-referrer"
       />
-      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute inset-0 bg-black/10" />
     </div>
     
-    <div className="relative z-10 w-full max-w-[1800px] mx-auto px-4 md:px-10">
-      <motion.div 
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="max-w-2xl text-white"
-      >
-        <span className="text-[10px] font-black uppercase tracking-[0.5em] mb-3 block">New Arrival</span>
-        <h1 className="text-5xl md:text-8xl font-display font-bold uppercase tracking-tighter mb-4 leading-[0.9]">
-          Urban<br />Elite
-        </h1>
-        <div className="flex flex-col md:flex-row items-start gap-4">
-          <button 
-            onClick={() => document.getElementById('drops')?.scrollIntoView({ behavior: 'smooth' })}
-            className="px-8 py-3 bg-white text-black font-black uppercase text-[10px] tracking-[0.2em] hover:bg-black hover:text-white transition-all"
-          >
-            Explore Drops
-          </button>
-          <div className="flex items-center gap-4 py-4">
-            <div className="w-12 h-[1px] bg-white/30" />
-            <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">
-              Limited Edition Collection
-            </p>
-          </div>
-        </div>
-      </motion.div>
-    </div>
-
     <div className="absolute bottom-10 right-10 hidden lg:flex flex-col items-end gap-2 opacity-50 text-white">
-      <span className="text-[8px] font-black uppercase tracking-[0.5em] rotate-90 origin-right translate-y-20">Scroll to Explore</span>
       <div className="w-[1px] h-24 bg-white/30 relative overflow-hidden">
         <motion.div 
           animate={{ y: [0, 96] }}
@@ -876,7 +933,7 @@ const PAYMENT_LOGOS = {
   visa: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882816/3840px-Visa_Inc._logo__282005_E2_80_932014_29.svg_l80vse.png",
   mastercard: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882837/mastercard_r4oo9o.svg",
   applepay: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882908/Apple_Pay_logo_mrpbqh.svg",
-  googlepay: "https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg",
+  googlepay: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882943/HArtbyi53u0jnqhnnxkQnMx9dHOERNcprZyKnInd2nrfM7Wd9ivMNTiz7IJP6-mSpwk_iiugzg.png",
   yoco: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882870/yoco_ekl84d.svg"
 };
 
@@ -890,7 +947,8 @@ const ProductDetailContent = ({
   wishlist,
   onToggleWishlist,
   isCartLoading = false,
-  categories = []
+  categories = [],
+  brands = []
 }: { 
   product: Product | null; 
   allProducts: Product[];
@@ -902,6 +960,7 @@ const ProductDetailContent = ({
   onToggleWishlist: (productId: string) => void;
   isCartLoading?: boolean;
   categories?: Category[];
+  brands?: Brand[];
 }) => {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [activeImage, setActiveImage] = useState(0);
@@ -953,34 +1012,7 @@ const ProductDetailContent = ({
     setOpenAccordion(openAccordion === id ? null : id);
   };
 
-  const AccordionItem = ({ id, title, icon: Icon, children }: { id: string, title: string, icon: any, children: React.ReactNode }) => (
-    <div className="border-b border-gray-100">
-      <button 
-        onClick={() => toggleAccordion(id)}
-        className="w-full py-4 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] hover:opacity-100 transition-opacity"
-      >
-        <div className="flex items-center gap-3 opacity-60">
-          <Icon size={14} />
-          <span>{title}</span>
-        </div>
-        <Plus size={14} className={`transition-transform duration-300 ${openAccordion === id ? 'rotate-45' : ''}`} />
-      </button>
-      <AnimatePresence>
-        {openAccordion === id && (
-          <motion.div 
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="pb-6 text-[10px] leading-relaxed opacity-50 uppercase tracking-widest">
-              {children}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+  const brandInfo = (brands || []).find(b => b.name === product.brand || b.id === product.brandId);
 
   return (
     <div className="pt-16 md:pt-20 pb-12">
@@ -998,16 +1030,27 @@ const ProductDetailContent = ({
 
             <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden group">
               {/* Wishlist Button */}
-              <button 
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (product) onToggleWishlist(product.id);
                 }}
-                className={`absolute top-6 right-6 z-30 w-12 h-12 flex items-center justify-center rounded-full shadow-xl transition-all duration-300 ${wishlist.includes(product?.id || '') ? 'bg-red-500 text-white' : 'bg-white text-black hover:bg-red-50 text-red-500'}`}
+                className={`absolute top-6 right-6 z-30 w-14 h-14 flex items-center justify-center rounded-full shadow-2xl transition-all duration-300 border ${
+                  wishlist.includes(product?.id || '') 
+                    ? 'bg-black text-white border-black' 
+                    : 'bg-white/90 text-black border-transparent hover:bg-black hover:text-white'
+                }`}
                 title={wishlist.includes(product?.id || '') ? "Remove from Wishlist" : "Add to Wishlist"}
               >
-                <Heart size={20} fill={wishlist.includes(product?.id || '') ? "currentColor" : "none"} />
-              </button>
+                <motion.div
+                  animate={{ scale: wishlist.includes(product?.id || '') ? [1, 1.4, 1] : 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Heart size={24} fill={wishlist.includes(product?.id || '') ? "currentColor" : "none"} strokeWidth={2.5} />
+                </motion.div>
+              </motion.button>
 
               <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full">
                 {allImages.map((img, idx) => (
@@ -1078,7 +1121,6 @@ const ProductDetailContent = ({
                 </div>
                 <div className="flex gap-4 text-[10px] font-black uppercase tracking-widest">
                   <span className="text-green-600 border-b-2 border-green-600 pb-1">In stock</span>
-                  <span className="text-green-600/50 flex items-center gap-1"><Clock size={12} /> Limited stock</span>
                 </div>
               </div>
 
@@ -1104,11 +1146,6 @@ const ProductDetailContent = ({
                     <label className="text-[10px] font-black uppercase tracking-widest opacity-40">
                       {v.name} <span className="text-black font-black ml-2">{selectedVariants[v.name]}</span>
                     </label>
-                    {v.name.toLowerCase() === 'size' && (
-                      <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest underline decoration-gray-300 hover:decoration-black transition-all">
-                        <Ruler size={14} /> View size guide
-                      </button>
-                    )}
                   </div>
                   
                   <div className="flex flex-wrap gap-2">
@@ -1138,71 +1175,104 @@ const ProductDetailContent = ({
             </div>
 
             {/* Actions */}
-            <div className="space-y-2 mb-6">
+            <div className="space-y-3 mb-6">
               <button 
                 onClick={() => {
                   onAddToCart(product, selectedVariants, quantity);
                 }}
-                className="w-full h-12 md:h-14 bg-black text-white font-bold uppercase text-[10px] tracking-[0.3em] hover:bg-zinc-800 transition-all flex items-center justify-center gap-3"
+                disabled={isCartLoading}
+                className="w-full h-14 bg-black text-white font-black uppercase text-[11px] tracking-[0.3em] hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-3 relative overflow-hidden"
               >
-                Add to cart
+                {isCartLoading ? (
+                  <Loader2 className="animate-spin" size={20} />
+                ) : (
+                  <>Add to cart <ShoppingBag size={16} /></>
+                )}
               </button>
               <button 
                 onClick={() => {
                   onBuyNow(product, selectedVariants);
                 }}
-                className="w-full h-12 md:h-14 border-2 border-black text-black font-bold uppercase text-[10px] tracking-[0.3em] hover:bg-black hover:text-white transition-all flex items-center justify-center gap-3"
+                className="w-full h-14 border-2 border-black text-black font-black uppercase text-[11px] tracking-[0.3em] hover:bg-black hover:text-white active:scale-[0.98] transition-all flex items-center justify-center gap-3"
               >
                 Buy it now
               </button>
             </div>
+
+            {/* Mobile Sticky Bar */}
+            <motion.div 
+              initial={{ y: 100 }}
+              animate={{ y: 0 }}
+              className="fixed bottom-0 left-0 right-0 z-40 p-4 md:hidden bg-white/90 backdrop-blur-md border-t border-gray-100 flex gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]"
+            >
+              <button 
+                onClick={() => onAddToCart(product, selectedVariants, 1)}
+                className="flex-[1] h-12 bg-black text-white font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-transform"
+              >
+                Add <Plus size={14} />
+              </button>
+              <button 
+                onClick={() => onBuyNow(product, selectedVariants)}
+                className="flex-[2] h-12 bg-white border-2 border-black text-black font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-transform"
+              >
+                Checkout <ArrowRight size={14} />
+              </button>
+            </motion.div>
+
 
             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest opacity-40 mb-6">
               <Truck size={14} />
               <span>Ships in 5-10 Business days</span>
             </div>
 
+            {/* Description & Details */}
+            <div className="space-y-8 mb-10">
+              <div className="space-y-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Product Description</p>
+                <div className="text-xs leading-relaxed text-black uppercase tracking-widest opacity-80 whitespace-pre-wrap">
+                  {product.description || "Premium heavyweight garment designed for longevity and timeless style. Studio-born quality guaranteed."}
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-8 border-t border-gray-100">
+                <div className="flex items-center gap-3">
+                  <Truck size={14} className="opacity-40" />
+                  <div className="flex flex-col">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Estimated Delivery</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-black">2-4 Business Days Nationwide</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Payment Icons */}
             <div className="mb-8 p-4 bg-gray-50/50 border border-gray-100 rounded-sm">
-              <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Secure Checkout via Paystack</p>
+              <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Secure Checkout via Yoco</p>
               <div className="flex flex-wrap items-center gap-6">
                 <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-4 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
                 <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
                 <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
                 <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
-                <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-4 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-4 object-contain" referrerPolicy="no-referrer" />
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-3 text-[9px] font-bold uppercase tracking-widest text-black/60">
-                <ShieldCheck size={14} className="text-green-600" />
-                <span>6 Interest-free installments available</span>
-              </div>
-            </div>
-
-            {/* Accordions */}
-            <div className="space-y-1 mb-10">
-              <AccordionItem id="features" title="Features & Care" icon={Star}>
-                Premium heavyweight cotton. Hand wash cold. Hang dry only. Studio-born quality guaranteed.
-              </AccordionItem>
-              <AccordionItem id="size" title="Size & Fit" icon={Info}>
-                True to size. Oversized boxy fit. Model is 185cm wearing size L.
-              </AccordionItem>
-              <AccordionItem id="shipping" title="Shipping & Pickup" icon={Truck}>
-                Nationwide delivery. Free shipping on orders over {formatPrice(1500)}.
-              </AccordionItem>
-              <AccordionItem id="returns" title="Returns" icon={RotateCcw}>
-                14-day return policy. Items must be unworn and in original packaging.
-              </AccordionItem>
             </div>
 
             {/* Sold By */}
             <div className="space-y-4 pt-8 border-t border-gray-100">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Sold by</p>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                <div className="h-14 px-6 border border-gray-100 flex items-center justify-center rounded-sm bg-white shadow-sm">
-                  {product.soldByLogo ? (
-                    <img src={product.soldByLogo || undefined} alt={product.soldBy} className="h-8 w-auto object-contain" referrerPolicy="no-referrer" />
+                <div className="h-16 px-8 border border-gray-100 flex items-center justify-center rounded-sm bg-white shadow-sm">
+                  {(product.soldByLogo || product.brandLogo || brandInfo?.logo) ? (
+                    <img 
+                      src={product.soldByLogo || product.brandLogo || brandInfo?.logo || undefined} 
+                      alt={product.soldBy || product.brand} 
+                      className="h-10 w-auto object-contain" 
+                      referrerPolicy="no-referrer" 
+                    />
                   ) : (
-                    <span className="font-bold text-xs uppercase tracking-widest">{product.soldBy || 'Studio'}</span>
+                    <span className="font-black text-sm uppercase tracking-[0.3em] text-black">
+                      {product.soldBy || product.brand || 'The Studio'}
+                    </span>
                   )}
                 </div>
               </div>
@@ -1297,7 +1367,7 @@ const ProductCard = ({
       viewport={{ once: true }}
       className="group cursor-pointer relative bg-white"
     >
-      <div className="aspect-[4/5] overflow-hidden bg-white mb-2 relative group-hover:shadow-2xl transition-all duration-700">
+      <div className="aspect-[4/5] overflow-hidden bg-white mb-2 relative group-hover:shadow-lg transition-all duration-700">
         {isLoading && (
           <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-40 flex items-center justify-center">
             <Loader2 className="animate-spin text-black" size={24} />
@@ -1305,16 +1375,31 @@ const ProductCard = ({
         )}
 
         {/* Action Icons */}
-        <div className="absolute right-4 top-4 flex flex-col gap-2 z-30 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
-          <button 
+        <div className="absolute right-3 top-3 flex flex-col gap-2 z-30 transition-all duration-300">
+          <motion.button 
+            key={isWishlisted ? 'wishlisted' : 'not-wishlisted'}
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={(e) => {
               e.stopPropagation();
               onToggleWishlist(product.id);
             }}
-            className={`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-all duration-300 ${isWishlisted ? 'bg-black text-white' : 'bg-white text-black hover:bg-black hover:text-white'}`}
+            className={`w-9 h-9 flex items-center justify-center rounded-full shadow-lg backdrop-blur-md transition-all duration-300 ${
+              isWishlisted 
+                ? 'bg-black text-white border-black' 
+                : 'bg-white/90 text-black border-transparent hover:bg-black hover:text-white md:opacity-0 md:group-hover:opacity-100'
+            } border`}
           >
-            <Heart size={16} fill={isWishlisted ? "currentColor" : "none"} />
-          </button>
+            <motion.div
+              initial={false}
+              animate={{ scale: isWishlisted ? [1, 1.3, 1] : 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Heart size={14} fill={isWishlisted ? "currentColor" : "none"} strokeWidth={2.5} />
+            </motion.div>
+          </motion.button>
         </div>
 
         {/* Primary Image */}
@@ -1323,7 +1408,7 @@ const ProductCard = ({
           alt={product.name} 
           onClick={() => navigate(`/product/${product.id}`)}
           onError={(e) => {
-            e.currentTarget.src = `https://picsum.photos/seed/${product.id}/800/1000?grayscale`;
+            e.currentTarget.src = `https://picsum.photos/seed/${product.id}/800/1000`;
           }}
           className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-1000 ease-out ${allImages.length > 1 ? 'group-hover:opacity-0' : ''}`}
           referrerPolicy="no-referrer"
@@ -1336,32 +1421,26 @@ const ProductCard = ({
             alt={`${product.name} alternate`} 
             onClick={() => navigate(`/product/${product.id}`)}
             onError={(e) => {
-              e.currentTarget.src = `https://picsum.photos/seed/${product.id}-alt/800/1000?grayscale`;
+              e.currentTarget.src = `https://picsum.photos/seed/${product.id}-alt/800/1000`;
             }}
             className="absolute inset-0 w-full h-full object-cover scale-105 opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-1000 ease-out"
             referrerPolicy="no-referrer"
           />
         )}
 
-        {product.isDrop && (
-          <div className="absolute bottom-4 left-4 px-3 py-1 bg-black text-white text-[8px] font-black uppercase tracking-[0.2em] z-20">
-            Limited Drop
-          </div>
-        )}
-
         {discount > 0 && (
-          <div className="absolute top-4 left-4 px-2 py-1 bg-red-500 text-white text-[8px] font-black uppercase tracking-widest z-20">
+          <div className="absolute top-4 left-4 px-2 py-1 bg-red-500 text-white text-[7px] font-bold uppercase tracking-widest z-20">
             -{discount}%
           </div>
         )}
 
-        {/* Quick Add Button */}
+        {/* Quick Add Button (Mobile Persistent, Desktop Hover) */}
         <button 
           onClick={(e) => {
             e.stopPropagation();
             onAddToCart(product, selectedVariants);
           }}
-          className="absolute bottom-0 left-0 right-0 py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] translate-y-full group-hover:translate-y-0 transition-transform duration-500 z-30"
+          className={`absolute bottom-0 left-0 right-0 py-4 bg-black text-white text-[9px] font-bold uppercase tracking-[0.2em] z-30 transition-transform duration-300 active:scale-95 md:translate-y-full md:group-hover:translate-y-0 translate-y-0`}
         >
           Quick Add
         </button>
@@ -1369,20 +1448,20 @@ const ProductCard = ({
 
       <div className="space-y-1 px-1" onClick={() => navigate(`/product/${product.id}`)}>
         <div className="flex justify-between items-start gap-2">
-          <div className="min-w-0">
-            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 mb-0 truncate">{product.brand}</p>
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-black truncate group-hover:text-gray-600 transition-colors">
+          <div className="min-w-0 flex-grow">
+            <p className="text-[7px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-0 truncate">{product.brand}</p>
+            <h3 className="text-[9px] font-medium uppercase tracking-widest text-black truncate">
               <Highlight text={product.name} query={searchQuery} />
             </h3>
           </div>
-          <p className="text-[10px] font-black text-black whitespace-nowrap">R{product.price}</p>
+          <p className="text-[9px] font-bold text-black whitespace-nowrap">R{product.price}</p>
         </div>
         <div className="flex items-center justify-between">
           <p className="text-[8px] font-bold uppercase tracking-widest text-gray-300">
             {(product.categories || []).join(' / ')}
           </p>
           {product.soldByLogo && (
-            <img src={product.soldByLogo} alt="" className="h-3 w-auto object-contain opacity-20 grayscale" referrerPolicy="no-referrer" />
+            <img src={product.soldByLogo} alt="" className="h-3 w-auto object-contain" referrerPolicy="no-referrer" />
           )}
         </div>
       </div>
@@ -1543,7 +1622,7 @@ const Footer = () => {
                   placeholder="Email address" 
                   required
                   value={email}
-                  onChange={async(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="flex-grow border-b border-gray-100 py-2 text-[10px] md:text-xs focus:border-black outline-none transition-all uppercase tracking-wider font-semibold"
                 />
                 <button 
@@ -1635,7 +1714,7 @@ const Footer = () => {
     </div>
     
       <div className="max-w-7xl mx-auto mt-12 md:mt-20 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8 border-t border-gray-50 pt-6 md:pt-8">
-        <p className="text-[7px] font-semibold uppercase tracking-widest opacity-20 text-black">© 2026 Grab & Go Studio</p>
+        <p className="text-[7px] font-semibold uppercase tracking-widest opacity-20 text-black">© 2026 Grab & Go</p>
         <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6 transition-all duration-500">
           <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-5 object-contain" referrerPolicy="no-referrer" />
           <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-7 object-contain" referrerPolicy="no-referrer" />
@@ -1749,7 +1828,7 @@ const SystemHealthDashboard = () => {
 };
 
 const SystemAlertBanner = ({ user }: { user: User | null }) => {
-  return [];
+  return null;
 };
 
 const HelpDeskPage = () => {
@@ -1792,6 +1871,11 @@ const HelpDeskPage = () => {
 
   return (
     <div className="min-h-screen pt-32 pb-20 px-6 bg-white">
+      <SEO 
+        title="Help Desk | Customer Support" 
+        description="Need help? Contact Grab & Go's customer support for any inquiries regarding orders, shipping, or products."
+        url="https://grabandgo.co.za/helpdesk"
+      />
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-tighter mb-4">Help Desk</h1>
@@ -1831,7 +1915,7 @@ const HelpDeskPage = () => {
                         type="text" 
                         required
                         value={formData.name}
-                        onChange={async(e) => setFormData({...formData, name: e.target.value})}
+                        onChange={(e) => setFormData({...formData, name: e.target.value})}
                         className="w-full bg-white border border-gray-200 rounded-md px-4 py-3 text-xs focus:ring-1 focus:ring-black outline-none transition-all"
                       />
                     </div>
@@ -1841,7 +1925,7 @@ const HelpDeskPage = () => {
                         type="email" 
                         required
                         value={formData.email}
-                        onChange={async(e) => setFormData({...formData, email: e.target.value})}
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
                         className="w-full bg-white border border-gray-200 rounded-md px-4 py-3 text-xs focus:ring-1 focus:ring-black outline-none transition-all"
                       />
                     </div>
@@ -1852,7 +1936,7 @@ const HelpDeskPage = () => {
                       type="text" 
                       required
                       value={formData.subject}
-                      onChange={async(e) => setFormData({...formData, subject: e.target.value})}
+                      onChange={(e) => setFormData({...formData, subject: e.target.value})}
                       className="w-full bg-white border border-gray-200 rounded-md px-4 py-3 text-xs focus:ring-1 focus:ring-black outline-none transition-all"
                     />
                   </div>
@@ -1862,7 +1946,7 @@ const HelpDeskPage = () => {
                       required
                       rows={5}
                       value={formData.message}
-                      onChange={async(e) => setFormData({...formData, message: e.target.value})}
+                      onChange={(e) => setFormData({...formData, message: e.target.value})}
                       className="w-full bg-white border border-gray-200 rounded-md px-4 py-3 text-xs focus:ring-1 focus:ring-black outline-none transition-all resize-none"
                     />
                   </div>
@@ -2031,6 +2115,11 @@ const FAQPage = () => {
 
   return (
     <div className="pt-24 pb-16 px-6 md:px-12 max-w-3xl mx-auto">
+      <SEO 
+        title="FAQ | Frequently Asked Questions" 
+        description="Find answers to common questions about orders, shipping, payments, and returns at Grab & Go."
+        url="https://grabandgo.co.za/faq"
+      />
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -2077,6 +2166,11 @@ const ShippingPolicyPage = () => {
 
   return (
     <div className="pt-24 pb-16 px-6 md:px-12 max-w-3xl mx-auto">
+      <SEO 
+        title="Shipping Policy | Delivery Information" 
+        description="Detailed information about shipping methods, costs, and delivery times for Grab & Go orders across South Africa."
+        url="https://grabandgo.co.za/shipping"
+      />
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -2148,6 +2242,11 @@ const RefundPolicyPage = () => {
 
   return (
     <div className="pt-24 pb-16 px-6 md:px-12 max-w-3xl mx-auto">
+      <SEO 
+        title="Refund Policy | Returns & Exchanges" 
+        description="Learn about our returns and refund policy. We offer easy exchanges and returns within 14 days of delivery."
+        url="https://grabandgo.co.za/refunds"
+      />
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -2232,6 +2331,11 @@ const LegalPage = () => {
 
   return (
     <div className="pt-24 pb-16 px-6 md:px-12 max-w-3xl mx-auto">
+      <SEO 
+        title="Legal | Terms & Conditions" 
+        description="Terms of service, privacy policy, and other legal information for the Grab & Go website."
+        url="https://grabandgo.co.za/legal"
+      />
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -2318,6 +2422,11 @@ const OurStoryPage = () => {
 
   return (
     <div className="pt-24 pb-16 px-6 md:px-12 max-w-3xl mx-auto">
+      <SEO 
+        title="Our Story | About Grab & Go" 
+        description="Discover the vision and journey behind Grab & Go. Premium streetwear curation for the modern South African landscape."
+        url="https://grabandgo.co.za/story"
+      />
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -2409,6 +2518,11 @@ const OrderTrackingPage = () => {
 
   return (
     <div className="min-h-screen bg-white pt-32 pb-20 px-6">
+      <SEO 
+        title="Track Order | Real-time Updates" 
+        description="Track your Grab & Go order in real-time. Enter your order number to see the current status and location."
+        url="https://grabandgo.co.za/track-order"
+      />
       <div className="max-w-xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-4 text-black">Track Your Order</h1>
@@ -2423,7 +2537,7 @@ const OrderTrackingPage = () => {
                 type="text" 
                 placeholder="e.g. #ABC12345" 
                 value={orderId}
-                onChange={async(e) => setOrderId(e.target.value)}
+                onChange={(e) => setOrderId(e.target.value)}
                 required
                 className="w-full border border-gray-100 rounded-sm px-4 py-3 text-sm focus:border-black outline-none transition-all uppercase tracking-widest font-bold text-black"
               />
@@ -2434,7 +2548,7 @@ const OrderTrackingPage = () => {
                 type="email" 
                 placeholder="The email used at checkout" 
                 value={email}
-                onChange={async(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full border border-gray-100 rounded-sm px-4 py-3 text-sm focus:border-black outline-none transition-all uppercase tracking-widest font-bold text-black"
               />
@@ -2535,6 +2649,10 @@ const NotFoundPage = () => {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+      <SEO 
+        title="404 | Page Not Found" 
+        description="The page you are looking for doesn't exist. Head back to Grab & Go home for the latest streetwear."
+      />
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -2699,7 +2817,7 @@ const AuthModal = ({
                         type="email"
                         placeholder="Email Address"
                         value={email}
-                        onChange={async(e) => setEmail(e.target.value)}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
                       />
@@ -2746,7 +2864,7 @@ const AuthModal = ({
                         type="text"
                         placeholder="Full Name"
                         value={name}
-                        onChange={async(e) => setName(e.target.value)}
+                        onChange={(e) => setName(e.target.value)}
                         required
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
                       />
@@ -2755,7 +2873,7 @@ const AuthModal = ({
                       type="email"
                       placeholder="Email Address"
                       value={email}
-                      onChange={async(e) => setEmail(e.target.value)}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
                     />
@@ -2763,7 +2881,7 @@ const AuthModal = ({
                       type="password"
                       placeholder="Password"
                       value={password}
-                      onChange={async(e) => setPassword(e.target.value)}
+                      onChange={(e) => setPassword(e.target.value)}
                       required
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
                     />
@@ -3023,14 +3141,14 @@ const OrdersDrawer = ({
                             type="text" 
                             placeholder="Tracking #"
                             value={trackingInputs[order.id]?.number ?? order.trackingNumber ?? ''}
-                            onChange={async(e) => setTrackingInputs(prev => ({ ...prev, [order.id]: { ...prev[order.id], number: e.target.value, url: prev[order.id]?.url ?? order.trackingUrl ?? '' } }))}
+                            onChange={(e) => setTrackingInputs(prev => ({ ...prev, [order.id]: { ...prev[order.id], number: e.target.value, url: prev[order.id]?.url ?? order.trackingUrl ?? '' } }))}
                             className="text-[10px] p-2 border border-gray-200 focus:border-black outline-none transition-colors"
                           />
                           <input 
                             type="text" 
                             placeholder="Tracking URL"
                             value={trackingInputs[order.id]?.url ?? order.trackingUrl ?? ''}
-                            onChange={async(e) => setTrackingInputs(prev => ({ ...prev, [order.id]: { ...prev[order.id], url: e.target.value, number: prev[order.id]?.number ?? order.trackingNumber ?? '' } }))}
+                            onChange={(e) => setTrackingInputs(prev => ({ ...prev, [order.id]: { ...prev[order.id], url: e.target.value, number: prev[order.id]?.number ?? order.trackingNumber ?? '' } }))}
                             className="text-[10px] p-2 border border-gray-200 focus:border-black outline-none transition-colors"
                           />
                           <button 
@@ -3084,32 +3202,31 @@ const CategoryManagementDrawer = ({
     setEditingCategory(null);
   };
 
-const handleImageUpload = async (file: File) => {
-  try {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     setIsUploading(true);
-
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('image', file);
 
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
 
-    if (res.ok) {
-      const { imageUrl } = await res.json();
-      setEditingCategory(prev =>
-        prev ? { ...prev, image: imageUrl } : null
-      );
+      if (res.ok) {
+        const { imageUrl } = await res.json();
+        setEditingCategory(prev => prev ? { ...prev, image: imageUrl } : null);
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
+    } finally {
+      setIsUploading(false);
     }
+  };
 
-    setIsUploading(false);
-
-  } catch (err) {
-    console.error("Upload failed:", err);
-    setIsUploading(false);
-  }
-};
   return (
     <AnimatePresence>
       {isOpen && (
@@ -3246,7 +3363,7 @@ const handleImageUpload = async (file: File) => {
                           type="text" 
                           required
                           value={editingCategory.name}
-                          onChange={async(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                          onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
                           className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none"
                         />
                       </div>
@@ -3254,7 +3371,7 @@ const handleImageUpload = async (file: File) => {
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Description</label>
                         <textarea 
                           value={editingCategory.description || ''}
-                          onChange={async(e) => setEditingCategory({ ...editingCategory, description: e.target.value })}
+                          onChange={(e) => setEditingCategory({ ...editingCategory, description: e.target.value })}
                           className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none h-20 resize-none"
                         />
                       </div>
@@ -3271,7 +3388,7 @@ const handleImageUpload = async (file: File) => {
                             type="text"
                             placeholder="Image URL"
                             value={editingCategory.image || ''}
-                            onChange={async(e) => setEditingCategory({ ...editingCategory, image: e.target.value })}
+                            onChange={(e) => setEditingCategory({ ...editingCategory, image: e.target.value })}
                             className="flex-grow bg-gray-50 border border-gray-100 px-4 py-2 text-[10px] focus:border-black outline-none"
                           />
                           <input 
@@ -3286,7 +3403,7 @@ const handleImageUpload = async (file: File) => {
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Parent Category</label>
                         <select 
                           value={editingCategory.parentId || ''}
-                          onChange={async(e) => setEditingCategory({ ...editingCategory, parentId: e.target.value || undefined })}
+                          onChange={(e) => setEditingCategory({ ...editingCategory, parentId: e.target.value || undefined })}
                           className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none appearance-none"
                         >
                           <option value="">None (Main Category)</option>
@@ -3500,7 +3617,7 @@ const BrandManagementDrawer = ({
                           type="text" 
                           required
                           value={editingBrand.name}
-                          onChange={async(e) => setEditingBrand({ ...editingBrand, name: e.target.value })}
+                          onChange={(e) => setEditingBrand({ ...editingBrand, name: e.target.value })}
                           className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none"
                         />
                       </div>
@@ -3508,7 +3625,7 @@ const BrandManagementDrawer = ({
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Description</label>
                         <textarea 
                           value={editingBrand.description || ''}
-                          onChange={async(e) => setEditingBrand({ ...editingBrand, description: e.target.value })}
+                          onChange={(e) => setEditingBrand({ ...editingBrand, description: e.target.value })}
                           className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none h-20 resize-none"
                         />
                       </div>
@@ -3525,7 +3642,7 @@ const BrandManagementDrawer = ({
                             type="text"
                             placeholder="Logo URL"
                             value={editingBrand.logo || ''}
-                            onChange={async(e) => setEditingBrand({ ...editingBrand, logo: e.target.value })}
+                            onChange={(e) => setEditingBrand({ ...editingBrand, logo: e.target.value })}
                             className="flex-grow bg-gray-50 border border-gray-100 px-4 py-2 text-[10px] focus:border-black outline-none"
                           />
                           <input 
@@ -3628,9 +3745,17 @@ const ProductManagementDrawer = ({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('All');
+  const [filterGender, setFilterGender] = useState<string>('All');
+  const [filterSubCategory, setFilterSubCategory] = useState<string>('All');
   const [activeTab, setActiveTab] = useState<'general' | 'media' | 'variants' | 'brand'>('general');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const multipleFileInputRef = useRef<HTMLInputElement>(null);
+
+  const subCategories = useMemo(() => {
+    const subs = new Set<string>();
+    products.forEach(p => { if (p.subCategory) subs.add(p.subCategory); });
+    return Array.from(subs);
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     if (!Array.isArray(products)) return [];
@@ -3641,10 +3766,12 @@ const ProductManagementDrawer = ({
         p.brand?.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesCategory = filterCategory === 'All' || (p.categories || []).includes(filterCategory);
+      const matchesGender = filterGender === 'All' || p.gender === filterGender;
+      const matchesSub = filterSubCategory === 'All' || p.subCategory === filterSubCategory;
       
-      return matchesSearch && matchesCategory;
+      return matchesSearch && matchesCategory && matchesGender && matchesSub;
     });
-  }, [products, searchQuery, filterCategory]);
+  }, [products, searchQuery, filterCategory, filterGender, filterSubCategory]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3699,7 +3826,7 @@ const ProductManagementDrawer = ({
       if (res.ok) {
         const { imageUrls } = await res.json();
         setEditingProduct(prev => {
-          if (!prev) return [];
+          if (!prev) return null;
           const currentImages = prev.images || [];
           return { ...prev, images: [...currentImages, ...imageUrls] };
         });
@@ -3713,7 +3840,7 @@ const ProductManagementDrawer = ({
 
   const removeGalleryImage = (url: string) => {
     setEditingProduct(prev => {
-      if (!prev) return [];
+      if (!prev) return null;
       return { ...prev, images: (prev.images || []).filter(img => img !== url) };
     });
   };
@@ -3790,27 +3917,52 @@ const ProductManagementDrawer = ({
             </div>
 
             <div className="mb-8 space-y-4">
-              <div className="flex gap-2">
-                <div className="relative flex-grow">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-black/30" size={16} />
-                  <input 
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChange={async(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-100 pl-12 pr-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-black outline-none transition-all text-black"
-                  />
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <div className="relative flex-grow">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-black/30" size={16} />
+                    <input 
+                      type="text"
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-100 pl-12 pr-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-black outline-none transition-all text-black"
+                    />
+                  </div>
+                  <select 
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                    className="bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-bold uppercase tracking-widest focus:border-black outline-none appearance-none text-black min-w-[120px]"
+                  >
+                    <option value="All">All Categories</option>
+                    {categories.map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
                 </div>
-                <select 
-                  value={filterCategory}
-                  onChange={async(e) => setFilterCategory(e.target.value)}
-                  className="bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-bold uppercase tracking-widest focus:border-black outline-none appearance-none text-black min-w-[120px]"
-                >
-                  <option value="All">All Categories</option>
-                  {categories.map(c => (
-                    <option key={c.id} value={c.name}>{c.name}</option>
-                  ))}
-                </select>
+                <div className="flex gap-2">
+                  <select 
+                    value={filterGender}
+                    onChange={(e) => setFilterGender(e.target.value)}
+                    className="flex-1 bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-bold uppercase tracking-widest focus:border-black outline-none appearance-none text-black"
+                  >
+                    <option value="All">All Genders</option>
+                    <option value="Men">Men</option>
+                    <option value="Women">Women</option>
+                    <option value="Kids">Kids</option>
+                    <option value="Unisex">Unisex</option>
+                  </select>
+                  <select 
+                    value={filterSubCategory}
+                    onChange={(e) => setFilterSubCategory(e.target.value)}
+                    className="flex-1 bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-bold uppercase tracking-widest focus:border-black outline-none appearance-none text-black"
+                  >
+                    <option value="All">Sub-Categories</option>
+                    {subCategories.map(sub => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <button 
@@ -3959,7 +4111,7 @@ const ProductManagementDrawer = ({
                                 type="text" 
                                 required
                                 value={editingProduct.name}
-                                onChange={async(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                                 placeholder="e.g. Classic Street Tee"
                               />
@@ -4024,6 +4176,33 @@ const ProductManagementDrawer = ({
                             </div>
                           </div>
 
+                          {/* New Fields: Gender and Sub-category */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Gender / Target</label>
+                              <select 
+                                value={editingProduct.gender || 'Unisex'}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, gender: e.target.value as any })}
+                                className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all text-black"
+                              >
+                                <option value="Men">Men</option>
+                                <option value="Women">Women</option>
+                                <option value="Kids">Kids</option>
+                                <option value="Unisex">Unisex</option>
+                              </select>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sub-category</label>
+                              <input 
+                                type="text" 
+                                value={editingProduct.subCategory || ''}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, subCategory: e.target.value })}
+                                className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all text-black"
+                                placeholder="e.g. Sneakers, Accessories, Tees"
+                              />
+                            </div>
+                          </div>
+
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sale Price (R)</label>
@@ -4031,7 +4210,7 @@ const ProductManagementDrawer = ({
                                 type="number" 
                                 required
                                 value={editingProduct.price}
-                                onChange={async(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                               />
                             </div>
@@ -4040,7 +4219,7 @@ const ProductManagementDrawer = ({
                               <input 
                                 type="number" 
                                 value={editingProduct.originalPrice || ''}
-                                onChange={async(e) => setEditingProduct({ ...editingProduct, originalPrice: Number(e.target.value) })}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, originalPrice: Number(e.target.value) })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                                 placeholder="Optional"
                               />
@@ -4052,7 +4231,7 @@ const ProductManagementDrawer = ({
                             <textarea 
                               required
                               value={editingProduct.description}
-                              onChange={async(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                              onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
                               className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none h-32 resize-none text-black transition-all"
                               placeholder="Describe your product..."
                             />
@@ -4065,7 +4244,7 @@ const ProductManagementDrawer = ({
                                 type="number" 
                                 step="0.1"
                                 value={editingProduct.weight || ''}
-                                onChange={async(e) => setEditingProduct({ ...editingProduct, weight: Number(e.target.value) })}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, weight: Number(e.target.value) })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                               />
                             </div>
@@ -4074,7 +4253,7 @@ const ProductManagementDrawer = ({
                                 <input 
                                   type="checkbox"
                                   checked={editingProduct.isDrop}
-                                  onChange={async(e) => setEditingProduct({ ...editingProduct, isDrop: e.target.checked })}
+                                  onChange={(e) => setEditingProduct({ ...editingProduct, isDrop: e.target.checked })}
                                   className="w-4 h-4 border-gray-200 rounded text-black focus:ring-black"
                                 />
                                 <span className="text-[10px] font-bold uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity">Featured Drop</span>
@@ -4091,13 +4270,13 @@ const ProductManagementDrawer = ({
                             <div 
                               onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-black'); }}
                               onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-black'); }}
-                              onDrop={async(e) => {
+                              onDrop={(e) => {
                                 e.preventDefault();
                                 e.currentTarget.classList.remove('border-black');
                                 const file = e.dataTransfer.files?.[0];
                                 if (file) {
                                   const event = { target: { files: [file] } } as any;
-                                  await handleFileUpload(event);
+                                  handleFileUpload(event);
                                 }
                               }}
                               className={`relative border-2 border-dashed border-gray-200 p-12 transition-all flex flex-col items-center justify-center gap-4 group/drop ${isUploading ? 'opacity-50 pointer-events-none' : 'hover:border-black/20 cursor-pointer'}`}
@@ -4143,7 +4322,7 @@ const ProductManagementDrawer = ({
                                 type="text" 
                                 placeholder="https://image-url.com/photo.jpg"
                                 value={editingProduct.image}
-                                onChange={async(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-mono focus:border-black outline-none mt-1 transition-all"
                               />
                             </div>
@@ -4157,15 +4336,9 @@ const ProductManagementDrawer = ({
                                 </span>
                               </div>
                               <div 
-                                onDragOver={async (e) => {
-                                  e.preventDefault();
-                                  e.currentTarget.classList.add('border-black');
-                                }}
-                                onDragLeave={async (e) => {
-                                  e.preventDefault();
-                                  e.currentTarget.classList.remove('border-black');
-                                }}
-                                onDrop={async (e) => {
+                                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-black'); }}
+                                onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-black'); }}
+                                onDrop={(e) => {
                                   e.preventDefault();
                                   e.currentTarget.classList.remove('border-black');
                                   const files = e.dataTransfer.files;
@@ -4231,7 +4404,7 @@ const ProductManagementDrawer = ({
                               multiple
                               accept="image/*"
                               ref={multipleFileInputRef}
-                              onChange={async (e) => await handleMultipleFileUpload(e)}
+                              onChange={handleMultipleFileUpload}
                               className="hidden"
                             />
                             
@@ -4240,7 +4413,7 @@ const ProductManagementDrawer = ({
                               <textarea 
                                 placeholder="https://image1.jpg, https://image2.jpg"
                                 value={editingProduct.images?.join(', ') || ''}
-                                onChange={async(e) => setEditingProduct({ ...editingProduct, images: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, images: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-mono focus:border-black outline-none h-24 resize-none text-black transition-all mt-1"
                               />
                             </div>
@@ -4281,7 +4454,7 @@ const ProductManagementDrawer = ({
                                     type="text"
                                     placeholder="e.g. Size or Color"
                                     value={variant.name}
-                                    onChange={async(e) => updateVariant(variant.id, { name: e.target.value })}
+                                    onChange={(e) => updateVariant(variant.id, { name: e.target.value })}
                                     className="w-full bg-white border border-gray-100 px-4 py-2 text-xs font-bold focus:border-black outline-none text-black transition-all"
                                   />
                                 </div>
@@ -4334,7 +4507,7 @@ const ProductManagementDrawer = ({
                               <div className="flex gap-2">
                                 <select 
                                   value={editingProduct.brandId || ''}
-                                  onChange={async(e) => {
+                                  onChange={(e) => {
                                     if (e.target.value === 'new') {
                                       onOpenBrands();
                                       return;
@@ -4376,7 +4549,7 @@ const ProductManagementDrawer = ({
                                 type="text" 
                                 placeholder="e.g. Anatomy"
                                 value={editingProduct.brand || ''}
-                                onChange={async(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                               />
                             </div>
@@ -4403,7 +4576,7 @@ const ProductManagementDrawer = ({
                                   type="text" 
                                   placeholder="Banner Image URL"
                                   value={editingProduct.brandBanner || ''}
-                                  onChange={async(e) => setEditingProduct({ ...editingProduct, brandBanner: e.target.value })}
+                                  onChange={(e) => setEditingProduct({ ...editingProduct, brandBanner: e.target.value })}
                                   className="flex-grow bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                                 />
                               </div>
@@ -4414,7 +4587,7 @@ const ProductManagementDrawer = ({
                                 type="text" 
                                 placeholder="e.g. Sportscene"
                                 value={editingProduct.soldBy || ''}
-                                onChange={async(e) => setEditingProduct({ ...editingProduct, soldBy: e.target.value })}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, soldBy: e.target.value })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                               />
                             </div>
@@ -4425,7 +4598,7 @@ const ProductManagementDrawer = ({
                             <textarea 
                               placeholder="Briefly introduce the brand..."
                               value={editingProduct.brandDescription || ''}
-                              onChange={async(e) => setEditingProduct({ ...editingProduct, brandDescription: e.target.value })}
+                              onChange={(e) => setEditingProduct({ ...editingProduct, brandDescription: e.target.value })}
                               className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none h-24 resize-none text-black transition-all"
                             />
                           </div>
@@ -4451,7 +4624,7 @@ const ProductManagementDrawer = ({
                                   type="text" 
                                   placeholder="Logo URL"
                                   value={editingProduct.soldByLogo || ''}
-                                  onChange={async(e) => setEditingProduct({ ...editingProduct, soldByLogo: e.target.value })}
+                                  onChange={(e) => setEditingProduct({ ...editingProduct, soldByLogo: e.target.value })}
                                   className="flex-grow bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                                 />
                               </div>
@@ -4462,7 +4635,7 @@ const ProductManagementDrawer = ({
                                 type="text" 
                                 placeholder="Summer, Streetwear, Limited"
                                 value={editingProduct.tags?.join(', ') || ''}
-                                onChange={async(e) => setEditingProduct({ ...editingProduct, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                               />
                             </div>
@@ -4553,7 +4726,7 @@ const CartDrawer = ({
             {cartItems.length === 0 ? (
               <div className="text-center py-20 opacity-30 text-black">
                 <ShoppingBag size={48} className="mx-auto mb-4" />
-                <p className="uppercase tracking-widest text-sm font-bold">Your bag is empty</p>
+                <p className="uppercase tracking-widest text-sm font-bold">Your cart is empty</p>
               </div>
             ) : (
               cartItems.map((item) => (
@@ -4595,16 +4768,16 @@ const CartDrawer = ({
                       <div className="flex items-center border border-gray-100 rounded-sm">
                         <button 
                           onClick={() => onUpdateQuantity(item.id, -1, item.selectedVariants)}
-                          className="p-1 hover:bg-gray-50 transition-colors"
+                          className="p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                         >
-                          <Minus size={12} />
+                          <Minus size={14} />
                         </button>
-                        <span className="w-8 text-center text-xs font-mono font-bold">{item.quantity}</span>
+                        <span className="w-10 text-center text-sm font-mono font-bold">{item.quantity}</span>
                         <button 
                           onClick={() => onUpdateQuantity(item.id, 1, item.selectedVariants)}
-                          className="p-1 hover:bg-gray-50 transition-colors"
+                          className="p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                         >
-                          <Plus size={12} />
+                          <Plus size={14} />
                         </button>
                       </div>
                       <span className="font-mono font-bold">{formatPrice(item.price * item.quantity)}</span>
@@ -4700,7 +4873,7 @@ const HybridCheckoutModal = ({
     }
   }, [user]);
 
-const handleFinalize = async () => {
+  const handleFinalize = async () => {
     setIsPaying(true);
     setPaymentError(null);
 
@@ -4717,6 +4890,7 @@ const handleFinalize = async () => {
     }
 
     try {
+      // Save pending order details
       const orderData: any = {
         userId: user?.id || null,
         email,
@@ -4735,44 +4909,51 @@ const handleFinalize = async () => {
         paymentGateway
       };
 
+      // In a production environment, this would integrate with a payment gateway
+      // For now, we save the order to Firestore to finalize the purchase
+      
+      // Set to processing state for better UX
       onPaymentStatusChange('processing');
-
-      // 1. Save order to Firestore with payment_pending status
-      const savedOrder = await orderService.createOrder({
-        ...orderData,
-        status: 'payment_pending'
-      });
-
-      // 2. Store order ID for post-payment processing
+      
+      const savedOrder = await orderService.createOrder(orderData);
+      
+      // Store order data in localStorage key grab_go_pending_order
       localStorage.setItem('grab_go_pending_order', JSON.stringify({
-        orderId: savedOrder.id,
-        orderData: { ...orderData, id: savedOrder.id }
+        ...orderData,
+        id: savedOrder.id
       }));
 
-      // 3. Create Yoco checkout session
-      const paymentRes = await fetch('/api/create-yoco-payment', {
+      // Call Yoco checkout API
+      const response = await fetch('/api/create-yoco-payment', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           amount: finalTotal,
           currency: 'ZAR',
-          metadata: { orderId: savedOrder.id }
-        })
+          metadata: {
+            orderId: savedOrder.id
+          }
+        }),
       });
 
-      const paymentData = await paymentRes.json();
+      const paymentData = await response.json();
 
-      if (!paymentRes.ok || !paymentData.redirectUrl) {
-        // Payment creation failed — clean up
-        throw new Error(paymentData.details || paymentData.error || 'Failed to create payment session');
+      if (!response.ok) {
+        throw new Error(paymentData.error || 'Failed to initialize payment');
       }
 
-      // 4. Redirect to Yoco payment page
-      window.location.href = paymentData.redirectUrl;
-
+      if (paymentData.redirectUrl) {
+        window.location.href = paymentData.redirectUrl;
+      } else {
+        throw new Error('Payment initialization failed: No redirect URL');
+      }
+      
     } catch (err: any) {
       onPaymentStatusChange(null);
       setPaymentError(err.message || 'Failed to place order');
+    } finally {
       setIsPaying(false);
     }
   };
@@ -4885,6 +5066,7 @@ const handleFinalize = async () => {
                 <button 
                   onClick={() => {
                     window.history.replaceState({}, document.title, "/");
+                    onPaymentStatusChange(null);
                   }}
                   className="w-full md:w-auto px-8 py-4 bg-black text-white font-bold uppercase tracking-widest hover:opacity-90 transition-opacity"
                 >
@@ -4952,7 +5134,7 @@ const handleFinalize = async () => {
                             type="email" 
                             placeholder="Email Address" 
                             value={email}
-                            onChange={async(e) => setEmail(e.target.value)}
+                            onChange={(e) => setEmail(e.target.value)}
                             required
                             className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                           />
@@ -5003,7 +5185,7 @@ const handleFinalize = async () => {
                           <div className="relative">
                             <select 
                               value={country}
-                              onChange={async(e) => setCountry(e.target.value)}
+                              onChange={(e) => setCountry(e.target.value)}
                               disabled={deliveryMethod === 'standard'}
                               className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm appearance-none bg-white focus:ring-2 focus:ring-black focus:outline-none transition-all disabled:opacity-50"
                             >
@@ -5022,72 +5204,87 @@ const handleFinalize = async () => {
                           <div className="grid grid-cols-2 gap-4">
                             <input 
                               type="text" 
+                              name="fname"
+                              autoComplete="given-name"
                               placeholder="First name" 
                               value={firstName}
-                              onChange={async(e) => setFirstName(e.target.value)}
+                              onChange={(e) => setFirstName(e.target.value)}
                               required
-                              className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                              className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
                             />
                             <input 
                               type="text" 
+                              name="lname"
+                              autoComplete="family-name"
                               placeholder="Last name" 
                               value={lastName}
-                              onChange={async(e) => setLastName(e.target.value)}
+                              onChange={(e) => setLastName(e.target.value)}
                               required
-                              className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                              className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
                             />
                           </div>
 
                           <input 
                             type="text" 
+                            name="address"
+                            autoComplete="street-address"
                             placeholder="Address" 
                             value={address}
-                            onChange={async(e) => setAddress(e.target.value)}
+                            onChange={(e) => setAddress(e.target.value)}
                             required
-                            className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                            className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
                           />
                           
                           <div className="grid grid-cols-3 gap-4">
                             <input 
                               type="text" 
+                              name="city"
+                              autoComplete="address-level2"
                               placeholder="City" 
                               value={city}
-                              onChange={async(e) => setCity(e.target.value)}
+                              onChange={(e) => setCity(e.target.value)}
                               required
-                              className="col-span-1 w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                              className="col-span-1 w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
                             />
                             <input 
                               type="text" 
+                              name="province"
+                              autoComplete="address-level1"
                               placeholder="Province" 
                               value={province}
                               onChange={(e) => setProvince(e.target.value)}
                               required
-                              className="col-span-1 w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                              className="col-span-1 w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
                             />
                             <input 
                               type="text" 
+                              name="postal"
+                              autoComplete="postal-code"
+                              inputMode="numeric"
                               placeholder="Postal code" 
                               value={postalCode}
-                              onChange={async(e) => setPostalCode(e.target.value)}
+                              onChange={(e) => setPostalCode(e.target.value)}
                               required
-                              className="col-span-1 w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                              className="col-span-1 w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
                             />
                           </div>
 
                           <input 
                             type="tel" 
+                            name="tel"
+                            autoComplete="tel"
                             placeholder="Phone number" 
                             value={phone}
-                            onChange={async(e) => setPhone(e.target.value)}
+                            onChange={(e) => setPhone(e.target.value)}
                             required
-                            className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                            className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
                           />
                         </>
                       ) : (
                         <div className="space-y-4">
                           <p className="text-xs text-gray-500 mb-2">Pickup your order directly from our studio in Cape Town (No shipping fee).</p>
                           <div className="p-4 border border-gray-200 rounded-md bg-gray-50">
-                            <p className="text-sm font-bold mb-1">Grab & Go Studio</p>
+                            <p className="text-sm font-bold mb-1">Grab & Go</p>
                             <p className="text-[10px] text-gray-500 uppercase tracking-widest">123 Studio Lane, Woodstock, Cape Town</p>
                           </div>
                           <div className="grid grid-cols-2 gap-4">
@@ -5095,7 +5292,7 @@ const handleFinalize = async () => {
                               type="text" 
                               placeholder="First name" 
                               value={firstName}
-                              onChange={async(e) => setFirstName(e.target.value)}
+                              onChange={(e) => setFirstName(e.target.value)}
                               required
                               className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
                             />
@@ -5103,7 +5300,7 @@ const handleFinalize = async () => {
                               type="text" 
                               placeholder="Last name" 
                               value={lastName}
-                              onChange={async(e) => setLastName(e.target.value)}
+                              onChange={(e) => setLastName(e.target.value)}
                               required
                               className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
                             />
@@ -5112,7 +5309,7 @@ const handleFinalize = async () => {
                             type="tel" 
                             placeholder="Phone number" 
                             value={phone}
-                            onChange={async(e) => setPhone(e.target.value)}
+                            onChange={(e) => setPhone(e.target.value)}
                             required
                             className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
                           />
@@ -5203,7 +5400,7 @@ const handleFinalize = async () => {
                       type="text" 
                       placeholder="Discount code" 
                       value={discountCode}
-                      onChange={async(e) => setDiscountCode(e.target.value)}
+                      onChange={(e) => setDiscountCode(e.target.value)}
                       className="flex-grow border border-gray-200 rounded-md px-3 md:px-4 py-3 text-xs md:text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all bg-white"
                     />
                     <button className="px-4 md:px-6 bg-gray-200 text-gray-500 font-bold text-xs md:text-sm rounded-md hover:bg-gray-300 transition-colors">
@@ -5258,7 +5455,7 @@ const EmailProductModal = ({
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
 
-  if (!product) return [];
+  if (!product) return null;
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -5321,7 +5518,7 @@ const EmailProductModal = ({
                   type="email" 
                   required
                   value={email}
-                  onChange={async(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="enter@email.com"
                   className="w-full bg-gray-50 border border-gray-100 px-4 py-4 text-sm font-mono focus:outline-none focus:border-black transition-colors text-black"
                 />
@@ -5362,37 +5559,43 @@ const EmailProductModal = ({
 // --- Main App ---
 
 const BrandBanner = ({ brand, banner, description, logo }: { brand: string, banner?: string, description?: string, logo?: string }) => (
-  <div className="relative w-full h-[20vh] md:h-[25vh] overflow-hidden mb-4 group">
-    <div className="absolute inset-0 bg-black/40 z-10 group-hover:bg-black/30 transition-all duration-700" />
-    <img 
-      src={banner || `https://picsum.photos/seed/${brand}/1920/1080?grayscale`} 
-      alt={brand} 
-      className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-1000"
-      referrerPolicy="no-referrer"
-    />
+  <div className="relative w-full h-[30vh] md:h-[40vh] mb-12 group overflow-visible">
+    <motion.div 
+      initial={{ clipPath: 'inset(10% 0% 10% 0%)' }}
+      whileInView={{ clipPath: 'inset(0% 0% 0% 0%)' }}
+      transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+      className="absolute inset-0 bg-gray-50 overflow-hidden shadow-2xl skew-y-1 md:skew-y-2"
+    >
+      <div className="absolute inset-0 bg-black/40 z-10 group-hover:bg-black/30 transition-all duration-700" />
+      <img 
+        src={banner || `https://picsum.photos/seed/${brand}/1920/1080?grayscale`} 
+        alt={brand} 
+        className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000 -skew-y-1 md:-skew-y-2"
+        referrerPolicy="no-referrer"
+      />
+    </motion.div>
+    
     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
         className="flex flex-col items-center"
       >
-        <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/60 mb-4">Official Brand Partner</p>
-        
         {logo ? (
           <img 
             src={logo} 
             alt={brand} 
-            className="h-12 md:h-20 w-auto object-contain mb-6 brightness-0 invert" 
+            className="h-16 md:h-24 w-auto object-contain mb-8 brightness-0 invert drop-shadow-2xl" 
             referrerPolicy="no-referrer"
           />
         ) : (
-          <h2 className="text-3xl md:text-6xl font-display font-bold uppercase tracking-tighter text-white mb-4 leading-none">{brand}</h2>
+          <h2 className="text-4xl md:text-7xl font-display font-bold uppercase tracking-tighter text-white mb-6 leading-none drop-shadow-2xl">{brand}</h2>
         )}
-
+        
         {description && (
-          <p className="max-w-xl mx-auto text-xs md:text-sm text-white/80 uppercase tracking-widest leading-relaxed font-medium">
+          <p className="max-w-xl text-white/80 text-[10px] md:text-xs uppercase tracking-widest font-bold leading-relaxed hidden md:block border-l border-white/20 pl-6">
             {description}
           </p>
         )}
@@ -5485,13 +5688,222 @@ const CategoryPanel = ({
   activeCategory: string, 
   onSelect: (c: string) => void 
 }) => {
-  return [];
+  return null;
+};
+
+const PromoGrid = () => {
+  const promos = [
+    {
+      id: 1,
+      title: "Price Drops Up To",
+      discount: "80% Off",
+      category: "Clothing & More",
+      image: "https://picsum.photos/seed/promo1/1000/1000",
+      label: "Big Deal Energy",
+      ends: "Ends 18 Apr (Sat)",
+      color: "bg-[#e34234]",
+      shape: "rounded-tl-[100px] rounded-bl-[40px]" // Top-left heavy curve
+    },
+    {
+      id: 2,
+      title: "Price Drops Up To",
+      discount: "60% Off",
+      category: "Sneakers & More",
+      image: "https://picsum.photos/seed/promo2/1000/1000",
+      label: "Sneaker Scoop",
+      ends: "Ends 18 Apr (Sat)",
+      color: "bg-black",
+      shape: "rounded-tr-[100px] rounded-br-[40px]" // Top-right heavy curve
+    },
+    {
+      id: 3,
+      brands: "Superga • Vans",
+      title: "Up To 60% Off",
+      image: "https://picsum.photos/seed/promo3/1000/1000",
+      label: "Vans & Superga",
+      ends: "Ends 17 Apr (Fri)",
+      color: "bg-black",
+      shape: "rounded-bl-[100px]" // Bottom-left heavy curve
+    },
+    {
+      id: 4,
+      brands: "Studio Label & Co",
+      title: "Up To 60% Off",
+      image: "https://picsum.photos/seed/promo4/1000/1000",
+      label: "Superbalist & Co",
+      ends: "Ends 17 Apr (Fri)",
+      color: "bg-[#e34234]",
+      shape: "rounded-br-[100px] rounded-tl-[40px]" // Bottom-right + top-left accent
+    }
+  ];
+
+  return (
+    <section className="max-w-[1800px] mx-auto px-4 md:px-10 py-12 md:py-24 overflow-hidden">
+      <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-4">
+        <div>
+          <h2 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-tighter text-black leading-none">Seasonal<br />Price Drops</h2>
+          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-black/30 mt-4">Limited Availability</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+        {promos.map((promo) => (
+          <motion.div 
+            key={promo.id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -5 }}
+            className="group cursor-pointer"
+          >
+            <div className={`relative aspect-square md:aspect-[16/9] flex items-stretch overflow-hidden shadow-2xl ${promo.shape} transition-all duration-500 group-hover:shadow-black/20`}>
+              {/* Image Side */}
+              <div className="relative w-1/2 h-full bg-gray-100 overflow-hidden">
+                <img 
+                  src={promo.image} 
+                  alt={promo.label} 
+                  className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
+              </div>
+
+              {/* Info Side */}
+              <div className={`w-1/2 h-full flex flex-col justify-center p-6 md:p-12 ${promo.color} text-white relative`}>
+                {/* Background Shapes (Image 2 style) */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                
+                <div className="relative z-10">
+                  {promo.brands && (
+                    <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mb-3 text-white/60">{promo.brands}</p>
+                  )}
+                  {promo.discount && (
+                    <p className="text-6xl md:text-[min(8vw,100px)] font-black uppercase tracking-tighter leading-[0.85] mb-4 drop-shadow-xl">
+                      {promo.discount}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="w-[1px] h-6 md:h-12 bg-white/30" />
+                    <p className="font-black uppercase tracking-tighter leading-none text-sm md:text-xl">
+                      {promo.title}
+                    </p>
+                  </div>
+                  {promo.category && (
+                    <p className="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] opacity-60 mt-6 pt-4 border-t border-white/10">
+                      {promo.category}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-between items-end border-b border-gray-100 pb-4">
+              <div>
+                <h4 className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-black transition-colors group-hover:text-[#e34234]">{promo.label}</h4>
+                <p className="text-[8px] md:text-[9px] font-medium uppercase tracking-widest text-black/30 mt-1">{promo.ends}</p>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100 translate-x-4 group-hover:translate-x-0">
+                <ChevronRight size={14} />
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const FilterDropdown = ({ 
+  label, 
+  value, 
+  options, 
+  onChange, 
+  onClear,
+  displayValue,
+  isOpen,
+  onToggle
+}: { 
+  label: string, 
+  value: any, 
+  options: { value: any, label: string | React.ReactNode }[], 
+  onChange: (v: any) => void, 
+  onClear: () => void,
+  displayValue?: string | React.ReactNode,
+  isOpen: boolean,
+  onToggle: () => void
+}) => {
+  const selectedCount = (value === 'All' || value === Infinity) ? 0 : 1;
+
+  return (
+    <div className="relative">
+      <button 
+        onClick={(e) => { e.stopPropagation(); onToggle(); }}
+        className={`group flex items-center justify-between gap-4 py-2 border-b-2 transition-all duration-300 w-full md:w-56 text-left ${isOpen ? 'border-[#e34234]' : 'border-gray-200 hover:border-black'}`}
+      >
+        <span className="text-[9px] font-medium uppercase tracking-[0.2em] text-black">
+          {label}
+        </span>
+        <ChevronDown size={14} className={`transition-transform duration-500 ease-out ${isOpen ? 'rotate-180 text-[#e34234]' : 'text-black'}`} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 15, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 15, scale: 0.98 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="absolute top-full left-0 mt-3 w-[320px] bg-white shadow-[0_30px_60px_-12px_rgba(0,0,0,0.25)] z-[100] p-8 border border-gray-100 rounded-sm"
+          >
+            <div className="flex items-center justify-between mb-8 pb-8 border-b border-gray-100">
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] font-medium uppercase tracking-[0.2em] text-black">
+                  {selectedCount} Selected
+                </span>
+                <span className="text-[11px] text-gray-400 font-medium">
+                  {displayValue || 'All'}
+                </span>
+              </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onClear(); }}
+                className="px-5 py-2.5 border-2 border-black text-[9px] font-medium uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-all transform active:scale-95"
+              >
+                Clear All
+              </button>
+            </div>
+
+            <div className="space-y-1 max-h-[340px] overflow-y-auto no-scrollbar pr-2">
+              {options.map((option) => {
+                const isSelected = value === option.value;
+                return (
+                  <button
+                    key={JSON.stringify(option.value)}
+                    onClick={(e) => { e.stopPropagation(); onChange(option.value); onToggle(); }}
+                    className="flex items-center gap-5 w-full group text-left py-4 border-b border-gray-50 last:border-0 last:pb-0"
+                  >
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${isSelected ? 'border-[#e34234]' : 'border-gray-200 group-hover:border-black'}`}>
+                      {isSelected && <div className="w-3 h-3 rounded-full bg-[#e34234] animate-in fade-in zoom-in duration-300" />}
+                    </div>
+                    <span className={`text-[12px] font-bold uppercase tracking-wide transition-all duration-300 ${isSelected ? 'text-black translate-x-1' : 'text-gray-400 group-hover:text-black group-hover:translate-x-1'}`}>
+                      {option.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 };
 
 const HomePage = ({ 
   filteredAndSortedProducts, 
   filterCategory, 
   setFilterCategory, 
+  maxPrice,
+  setMaxPrice,
   sortBy, 
   setSortBy, 
   scrollProducts, 
@@ -5511,6 +5923,8 @@ const HomePage = ({
   filteredAndSortedProducts: Product[],
   filterCategory: string,
   setFilterCategory: (c: string) => void,
+  maxPrice: number,
+  setMaxPrice: (p: number) => void,
   sortBy: string,
   setSortBy: (s: any) => void,
   scrollProducts: (d: 'left' | 'right') => void,
@@ -5529,11 +5943,11 @@ const HomePage = ({
 }) => {
   const [isBarVisible, setIsBarVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      // Hide bar when scrolling down, show when scrolling up
       if (currentScrollY > lastScrollY && currentScrollY > 400) {
         setIsBarVisible(false);
       } else {
@@ -5545,6 +5959,15 @@ const HomePage = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = () => setActiveDropdown(null);
+    if (activeDropdown) {
+      window.addEventListener('click', handleClickOutside);
+    }
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, [activeDropdown]);
+
   const brandNames = useMemo(() => {
     const b = new Set<string>();
     filteredAndSortedProducts.forEach(p => {
@@ -5553,45 +5976,55 @@ const HomePage = ({
     return Array.from(b);
   }, [filteredAndSortedProducts]);
 
+  const sortOptions = [
+    { value: 'default', label: 'Recommended' },
+    { value: 'price-high', label: 'Price: High — Low' },
+    { value: 'price-low', label: 'Price: Low — High' },
+  ];
+
+  const priceOptions = [
+    { value: Infinity, label: 'All Prices' },
+    { value: 100, label: <span>Under <span className="text-[#e34234]">R100</span></span> },
+    { value: 200, label: <span>Under <span className="text-[#e34234]">R200</span></span> },
+    { value: 400, label: <span>Under <span className="text-[#e34234]">R400</span></span> },
+    { value: 600, label: <span>Under <span className="text-[#e34234]">R600</span></span> },
+    { value: 800, label: <span>Under <span className="text-[#e34234]">R800</span></span> },
+  ];
+
+  const catOptions = [
+    { value: 'All', label: 'All Items' },
+    ...categories.map(c => ({ value: c.name, label: c.name }))
+  ];
+
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Grab & Go",
+    "url": "https://grabandgo.co.za",
+    "logo": "https://grabandgo.co.za/logo.png",
+    "description": "Premium Streetwear & Lifestyle Store. Shop exclusive brands, sneakers, and high-quality gear in South Africa.",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+27-00-000-0000",
+      "contactType": "customer service",
+      "areaServed": "ZA",
+      "availableLanguage": "English"
+    },
+    "sameAs": [
+      "https://facebook.com/grabandgo",
+      "https://instagram.com/grabandgo"
+    ]
+  };
+
   return (
     <main className="bg-white text-black">
+      <SEO 
+        title="Home | Premium Streetwear & Lifestyle Store" 
+        description="Grab & Go is your destination for premium streetwear, sneakers, and lifestyle essentials in South Africa. Exclusive brands, fast delivery, and high-quality gear."
+        schema={organizationSchema}
+      />
       <Hero />
 
-      {/* Studio Experience Section (Separator) */}
-      <section className="py-20 bg-white border-y border-gray-50">
-        <div className="max-w-[1800px] mx-auto px-4 md:px-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mb-6">
-                <Sparkles size={24} />
-              </div>
-              <h3 className="text-xl font-display font-bold uppercase tracking-tighter">Curated Drops</h3>
-              <p className="text-xs text-gray-400 uppercase tracking-widest leading-relaxed">
-                Exclusive limited edition streetwear sourced from the most innovative local and international creators.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mb-6">
-                <ShieldCheck size={24} />
-              </div>
-              <h3 className="text-xl font-display font-bold uppercase tracking-tighter">Verified Quality</h3>
-              <p className="text-xs text-gray-400 uppercase tracking-widest leading-relaxed">
-                Every piece in our studio undergoes a rigorous authentication and quality check process.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mb-6">
-                <Globe size={24} />
-              </div>
-              <h3 className="text-xl font-display font-bold uppercase tracking-tighter">Global Vision</h3>
-              <p className="text-xs text-gray-400 uppercase tracking-widest leading-relaxed">
-                Bridging the gap between South African street culture and the global fashion landscape.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-      
       {/* Category & Filter Bar */}
       <motion.div 
         initial={false}
@@ -5600,39 +6033,56 @@ const HomePage = ({
           opacity: isBarVisible ? 1 : 0
         }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="sticky top-0 z-40 py-2 md:py-3 px-4 md:px-10"
+        className="sticky top-0 z-40 py-4 md:py-6 px-4 md:px-10 bg-white/90 backdrop-blur-xl border-b border-gray-100"
       >
-        <div className="max-w-[1800px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-3">
-              <span className="text-[8px] font-black uppercase tracking-widest opacity-30">Category</span>
-              <select 
-                value={filterCategory}
-                onChange={async(e) => setFilterCategory(e.target.value)}
-                className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none pr-4 text-black"
-              >
-                <option value="All">All</option>
-                {categories.map(c => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
-                ))}
-              </select>
-            </div>
+        <div className="max-w-[1800px] mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+          <div className="flex flex-wrap items-center gap-6 md:gap-12 w-full md:w-auto" onClick={e => e.stopPropagation()}>
+            <FilterDropdown 
+              label="Sort"
+              value={sortBy}
+              options={sortOptions}
+              onChange={setSortBy}
+              onClear={() => setSortBy('default')}
+              displayValue={sortOptions.find(o => o.value === sortBy)?.label as string}
+              isOpen={activeDropdown === 'sort'}
+              onToggle={() => setActiveDropdown(activeDropdown === 'sort' ? null : 'sort')}
+            />
 
-            <div className="flex items-center gap-3">
-              <span className="text-[8px] font-black uppercase tracking-widest opacity-30">Sort</span>
-              <select 
-                value={sortBy}
-                onChange={async(e) => setSortBy(e.target.value as any)}
-                className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none pr-4 text-black"
-              >
-                <option value="default">Newest</option>
-                <option value="price-low">Price: Low-High</option>
-                <option value="price-high">Price: High-Low</option>
-              </select>
-            </div>
+            <FilterDropdown 
+              label="Categories"
+              value={filterCategory}
+              options={catOptions}
+              onChange={setFilterCategory}
+              onClear={() => setFilterCategory('All')}
+              displayValue={filterCategory}
+              isOpen={activeDropdown === 'categories'}
+              onToggle={() => setActiveDropdown(activeDropdown === 'categories' ? null : 'categories')}
+            />
+
+            <FilterDropdown 
+              label="Price"
+              value={maxPrice}
+              options={priceOptions}
+              onChange={setMaxPrice}
+              onClear={() => setMaxPrice(Infinity)}
+              displayValue={maxPrice === Infinity ? 'All' : `Under R${maxPrice}`}
+              isOpen={activeDropdown === 'price'}
+              onToggle={() => setActiveDropdown(activeDropdown === 'price' ? null : 'price')}
+            />
           </div>
+          
+          {searchQuery && (
+            <div className="flex items-center gap-3">
+              <Search size={12} className="opacity-30" />
+              <p className="text-[9px] font-medium uppercase tracking-widest opacity-30">
+                Results for: "{searchQuery}"
+              </p>
+            </div>
+          )}
         </div>
       </motion.div>
+
+      <PromoGrid />
 
       {/* Brand Sections with Banners */}
       {brandNames.map(brandName => {
@@ -5651,13 +6101,13 @@ const HomePage = ({
               <div className="space-y-8">
                 {categories.filter(c => !c.parentId).map(cat => {
                   const catProducts = brandProducts.filter(p => (p.categories || []).includes(cat.name));
-                  if (catProducts.length === 0) return [];
+                  if (catProducts.length === 0) return null;
                   return (
                     <div key={cat.id}>
                       <div className="flex items-center gap-6 mb-4">
-                        <h3 className="text-xs font-black uppercase tracking-[0.4em] text-black">{cat.name}</h3>
+                        <h3 className="text-[10px] font-bold uppercase tracking-[0.4em] text-black">{cat.name}</h3>
                         <div className="flex-grow h-[1px] bg-gray-100" />
-                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{catProducts.length} Items</span>
+                        <span className="text-[9px] font-medium text-gray-300 uppercase tracking-widest">{catProducts.length} Items</span>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-6">
                         {catProducts.map((product, idx) => (
@@ -5741,7 +6191,8 @@ const ProductPage = ({
   wishlist,
   onToggleWishlist,
   isCartLoading = false,
-  categories
+  categories,
+  brands
 }: { 
   products: Product[], 
   addToCart: (p: Product, v?: Record<string, string>, q?: number) => void, 
@@ -5751,11 +6202,91 @@ const ProductPage = ({
   wishlist: string[],
   onToggleWishlist: (productId: string) => void,
   isCartLoading?: boolean,
-  categories: Category[]
+  categories: Category[],
+  brands: Brand[]
 }) => {
   const { id } = useParams();
   const product = products.find(p => p.id === id);
-  return <ProductDetailContent product={product || null} allProducts={products} onAddToCart={addToCart} onBuyNow={handleBuyNow} onEmailDetails={onEmailDetails} searchQuery={searchQuery} wishlist={wishlist} onToggleWishlist={onToggleWishlist} isCartLoading={isCartLoading} categories={categories} />;
+
+  if (!product) {
+    return <NotFoundPage />;
+  }
+
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.image,
+    "description": product.description,
+    "brand": {
+      "@type": "Brand",
+      "name": product.brand || "Grab & Go"
+    },
+    "sku": product.id,
+    "offers": {
+      "@type": "Offer",
+      "url": `https://grabandgo.co.za/product/${product.id}`,
+      "priceCurrency": "ZAR",
+      "price": product.price,
+      "itemCondition": "https://schema.org/NewCondition",
+      "availability": "https://schema.org/InStock",
+      "seller": {
+        "@type": "Organization",
+        "name": "Grab & Go"
+      }
+    }
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://grabandgo.co.za/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": product.categories?.[0] || "Products",
+        "item": `https://grabandgo.co.za/?category=${product.categories?.[0] || ""}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": product.name,
+        "item": `https://grabandgo.co.za/product/${product.id}`
+      }
+    ]
+  };
+
+  return (
+    <main>
+      <SEO 
+        title={product.name}
+        description={product.description.substring(0, 160)}
+        image={product.image}
+        url={`https://grabandgo.co.za/product/${product.id}`}
+        type="product"
+        schema={[productSchema, breadcrumbSchema]}
+      />
+      <ProductDetailContent 
+        product={product} 
+        allProducts={products} 
+        onAddToCart={addToCart} 
+        onBuyNow={handleBuyNow} 
+        onEmailDetails={onEmailDetails} 
+        searchQuery={searchQuery} 
+        wishlist={wishlist} 
+        onToggleWishlist={onToggleWishlist} 
+        isCartLoading={isCartLoading} 
+        categories={categories} 
+        brands={brands} 
+      />
+    </main>
+  );
 };
 
 export default function App() {
@@ -6078,40 +6609,53 @@ function AppContent() {
     const status = params.get('status');
     const orderId = params.get('id');
 
-   if (status === 'success' || (orderId && window.location.pathname === '/order-success')) {
+    const finalizePayment = async (id: string) => {
+      try {
+        const pendingOrderStr = localStorage.getItem('grab_go_pending_order');
+        if (!pendingOrderStr) return;
+
+        const orderData = JSON.parse(pendingOrderStr);
+        if (orderData.id !== id) return;
+
+        // 1. Update status from payment_pending to pending in Firestore
+        await orderService.updateOrder(id, { status: 'pending' });
+
+        // 2. Call /api/order-success with the order data to send email + WhatsApp confirmations
+        await fetch('/api/order-success', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
+        });
+
+        // 3. Clear cart and localStorage
+        setCart([]);
+        localStorage.removeItem('grab_and_go_cart');
+        localStorage.removeItem('grab_go_pending_order');
+
+        // 4. Update UI to success state
+        setPaymentStatus('success');
+        setIsCheckoutOpen(true);
+        
+        // Clean up URL
+        window.history.replaceState({}, '', '/');
+      } catch (err) {
+        console.error("Error finalizing payment:", err);
+      }
+    };
+
+    if (window.location.pathname === '/order-success' && orderId) {
+      finalizePayment(orderId);
+    } else if (status === 'success') {
+      // Legacy or fallback success param
       setPaymentStatus('success');
       setIsCheckoutOpen(true);
       setCart([]);
       localStorage.removeItem('grab_and_go_cart');
-
-      // Process post-payment: update order status + send confirmations
-      const pendingRaw = localStorage.getItem('grab_go_pending_order');
-      if (pendingRaw) {
-        try {
-          const { orderId: pendingId, orderData } = JSON.parse(pendingRaw);
-          const finalOrderId = orderId || pendingId;
-
-          // Update order status from payment_pending to pending (paid)
-          if (finalOrderId) {
-            orderService.updateOrder(finalOrderId, { status: 'pending' }).catch(console.error);
-          }
-
-          // Send confirmation email + WhatsApp
-          emailService.sendOrderConfirmation({
-            ...orderData,
-            id: finalOrderId,
-            status: 'pending',
-            date: new Date().toISOString()
-          }).catch(console.error);
-
-          localStorage.removeItem('grab_go_pending_order');
-        } catch (e) {
-          console.error('Post-payment processing error:', e);
-        }
-      }
     } else if (status === 'cancelled') {
       setPaymentStatus('cancelled');
       setIsCheckoutOpen(true);
+      // Clean up URL
+      window.history.replaceState({}, '', '/');
     }
 
     const handleOpenOrders = () => setIsOrdersOpen(true);
@@ -6134,12 +6678,17 @@ function AppContent() {
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'price-low' | 'price-high' | 'default'>('default');
   const [filterCategory, setFilterCategory] = useState<string>('All');
+  const [maxPrice, setMaxPrice] = useState<number>(Infinity);
 
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];
     
     if (filterCategory !== 'All') {
       result = result.filter(p => (p.categories || []).includes(filterCategory));
+    }
+
+    if (maxPrice !== Infinity) {
+      result = result.filter(p => p.price <= maxPrice);
     }
 
     if (searchQuery) {
@@ -6229,6 +6778,7 @@ function AppContent() {
       <Header 
         cartCount={cartCount} 
         onOpenCart={() => setIsCartOpen(true)} 
+        onOpenWishlist={() => setIsWishlistOpen(true)}
         onOpenOrders={() => setIsOrdersOpen(true)}
         onOpenProducts={() => setIsProductsOpen(true)}
         onOpenMenu={() => setIsMenuOpen(true)}
@@ -6255,6 +6805,8 @@ function AppContent() {
               filteredAndSortedProducts={filteredAndSortedProducts}
               filterCategory={filterCategory}
               setFilterCategory={setFilterCategory}
+              maxPrice={maxPrice}
+              setMaxPrice={setMaxPrice}
               sortBy={sortBy}
               setSortBy={setSortBy}
               scrollProducts={scrollProducts}
@@ -6290,6 +6842,7 @@ function AppContent() {
             onToggleWishlist={toggleWishlist}
             isCartLoading={isCartLoading}
             categories={categories}
+            brands={brands}
           />
         } />
         <Route path="/order-success" element={
@@ -6342,6 +6895,7 @@ function AppContent() {
         partners={partners}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        setFilterCategory={setFilterCategory}
       />
 
       <WishlistDrawer 

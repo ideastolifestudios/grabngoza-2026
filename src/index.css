@@ -4,6 +4,8 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+  
+  --animate-spin-slow: spin 8s linear infinite;
 }
 
 @layer base {

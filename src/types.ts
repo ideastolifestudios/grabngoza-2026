@@ -16,6 +16,7 @@ export interface Product {
   brand?: string; // Keep for backward compatibility or display
   brandBanner?: string;
   brandDescription?: string;
+  brandLogo?: string;
   soldBy?: string;
   soldByLogo?: string;
   tags?: string[];
@@ -23,6 +24,8 @@ export interface Product {
   isBundle?: boolean;
   description: string;
   weight?: number; // in kg
+  gender?: 'Men' | 'Women' | 'Kids' | 'Unisex';
+  subCategory?: string;
   variants?: ProductVariant[];
 }
 
@@ -56,7 +59,7 @@ export interface CartItem extends Product {
   selectedVariants?: Record<string, string>;
 }
 
-export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled' | 'returned';
+export type OrderStatus = 'payment_pending' | 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled' | 'returned';
 
 export type ShippingMethod = 'standard' | 'pickup' | 'international';
 
@@ -98,6 +101,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  photoURL?: string;
   role: 'user' | 'admin';
   wishlist?: string[];
 }
