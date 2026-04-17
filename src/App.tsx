@@ -3527,7 +3527,7 @@ const BrandManagementDrawer = ({
       if (!res.ok) throw new Error(data.error?.message || 'Upload failed');
 
       setEditingBrand(prev =>
-        prev ? { ...prev, image: data.secure_url } : null
+        prev ? { ...prev, logo: data.secure_url } : null
       );
     } catch (err) {
       console.error("Upload failed:", err);
