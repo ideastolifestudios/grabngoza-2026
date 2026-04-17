@@ -63,7 +63,7 @@ export default async function handler(req: any, res: any) {
       },
       body: JSON.stringify({
         collection_address: collectionAddress,
-        destination_address: destinationAddress,
+        delivery_address: destinationAddress,
         parcels: [parcel],
       }),
     });
@@ -87,7 +87,7 @@ export default async function handler(req: any, res: any) {
         },
         body: JSON.stringify({
           collection_address: collectionAddress,
-          destination_address: destinationAddress,
+          delivery_address: destinationAddress,
           parcels: [parcel],
         }),
       });
