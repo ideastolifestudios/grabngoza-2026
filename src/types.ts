@@ -105,3 +105,53 @@ export interface User {
   role: 'user' | 'admin';
   wishlist?: string[];
 }
+
+// ===== SHIPPING TYPES =====
+
+export interface ShippingRate {
+  serviceLevel: string;
+  estimatedDelivery: string;
+  amount: number;
+  currency: string;
+  carrier: string;
+  type: 'standard' | 'opt-in';
+}
+
+export interface ShipmentDetails {
+  shipmentId: string;
+  trackingNumber: string;
+  status: string;
+  serviceLevel: string;
+  carrier: string;
+  labelUrl?: string;
+  createdAt: string;
+}
+
+export interface TrackingEvent {
+  timestamp: string;
+  location: string;
+  description: string;
+}
+
+export interface TrackingInfo {
+  trackingNumber: string;
+  status: string;
+  events: TrackingEvent[];
+}
+
+// ===== STOCK TYPES =====
+
+export interface StockLevel {
+  [variantKey: string]: number; // e.g. { "S": 10, "M": 5, "L": 0, "_default": 25 }
+}
+
+export interface StockHistoryEntry {
+  id: string;
+  productId: string;
+  variant: string;
+  change: number; // positive = restock, negative = sale
+  reason: 'sale' | 'restock' | 'adjustment' | 'return';
+  orderId?: string;
+  timestamp: string;
+  newLevel: number;
+}
