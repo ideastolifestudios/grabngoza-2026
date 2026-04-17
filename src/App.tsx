@@ -5375,10 +5375,10 @@ const HybridCheckoutModal = ({
                         </>
                       ) : (
                         <div className="space-y-4">
-                          <p className="text-xs text-gray-500 mb-2">Pickup your order directly from our studio in Cape Town (No shipping fee).</p>
+                          <p className="text-xs text-gray-500 mb-2">Pickup your order directly from our studio in Midrand (No shipping fee).</p>
                           <div className="p-4 border border-gray-200 rounded-md bg-gray-50">
-                            <p className="text-sm font-bold mb-1">Grab & Go</p>
-                            <p className="text-[10px] text-gray-500 uppercase tracking-widest">123 Studio Lane, Woodstock, Cape Town</p>
+                            <p className="text-sm font-bold mb-1">IDEAS TO LIFE STUDIOS</p>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-widest">1104 Tugela Street, Klipfontein view, Midrand</p>
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <input 
