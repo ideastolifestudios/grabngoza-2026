@@ -72,7 +72,7 @@ export default async function handler(req: any, res: any) {
           email: order.email || '',
         },
         parcels: [parcel],
-        service_level_code: serviceLevel || 'ECO',
+          service_level_id: 184277,
         reference: `GNG-${order.id || Date.now()}`,
       }),
     });
