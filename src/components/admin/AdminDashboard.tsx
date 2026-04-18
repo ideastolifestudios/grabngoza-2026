@@ -78,12 +78,31 @@ export default function AdminDashboard() {
     window.open(`${API_BASE}/api/shipment-actions?action=label&shipmentId=${shipmentId}`, '_blank');
   };
 
-  // Bulk print labels
+ // Bulk print labels
   const bulkPrintLabels = () => {
-    const withShipments = filtered.filter(o => selected.has(o.id) && o.shiplogicShipmentId);
+    const selectedOrders = filtered.filter(o => selected.has(o.id));
+    const withShipments = selectedOrders.filter(o => o.shiplogicShipmentId);
+
+    if (withShipments.length === 0) {
+      alert(
+        selectedOrders.length === 0
+          ? 'No orders selected.'
+          : `${selectedOrders.length} order(s) selected but none have been dispatched via ShipLogic yet.\n\nDispatch orders first to generate waybill labels.`
+      );
+      return;
+    }
+
+    // Open each label PDF in a new tab (browser prints it)
     withShipments.forEach(o => {
-      window.open(`${API_BASE}/api/shipment-actions?action=label&shipmentId=${o.shiplogicShipmentId}`, '_blank');
+      window.open(
+        `${API_BASE}/api/shipment-actions?action=label&shipmentId=${o.shiplogicShipmentId}&type=label`,
+        '_blank'
+      );
     });
+
+    if (withShipments.length < selectedOrders.length) {
+      alert(`Opened ${withShipments.length} label(s).\n${selectedOrders.length - withShipments.length} order(s) skipped (not yet dispatched).`);
+    }
   };
 
   // Bulk dispatch (placeholder — triggers create-shipment for pending orders)
