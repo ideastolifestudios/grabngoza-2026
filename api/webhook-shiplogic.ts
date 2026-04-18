@@ -2,21 +2,20 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import fetch from 'node-fetch';
 
-// ---- Firebase Admin init ----
+// ---- Firebase Admin ----
 if (!getApps().length) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}');
   initializeApp({
-    credential: cert(serviceAccount),
+    credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}')),
     projectId: process.env.FIREBASE_PROJECT_ID,
   });
 }
 const db = getFirestore();
 
-// ---- Status mapping: ShipLogic → friendly ----
+// ---- Status map: ShipLogic → Firebase ----
 const STATUS_MAP: Record<string, { label: string; emoji: string; fbStatus: string }> = {
   'submitted':           { label: 'Order Placed',       emoji: '📋', fbStatus: 'confirmed' },
   'collection-assigned': { label: 'Pickup Scheduled',   emoji: '📅', fbStatus: 'pickup-scheduled' },
-  'collected':           { label: 'Collected',          emoji: '📦', fbStatus: 'collected' },
+  'collected':           { label: 'Collected by Courier', emoji: '📦', fbStatus: 'collected' },
   'at-hub':              { label: 'At Sorting Hub',     emoji: '🏭', fbStatus: 'in-transit' },
   'in-transit':          { label: 'In Transit',         emoji: '🚚', fbStatus: 'in-transit' },
   'out-for-delivery':    { label: 'Out for Delivery',   emoji: '🛵', fbStatus: 'out-for-delivery' },
@@ -24,223 +23,171 @@ const STATUS_MAP: Record<string, { label: string; emoji: string; fbStatus: strin
   'failed-delivery':     { label: 'Delivery Failed',    emoji: '❌', fbStatus: 'failed-delivery' },
   'returned':            { label: 'Returned',           emoji: '↩️', fbStatus: 'returned' },
 };
-
-function mapStatus(slStatus: string) {
-  return STATUS_MAP[slStatus] || {
-    label: slStatus.replace(/-/g, ' '),
-    emoji: '📍',
-    fbStatus: slStatus,
-  };
+function mapStatus(s: string) {
+  return STATUS_MAP[s] || { label: s.replace(/-/g, ' '), emoji: '📍', fbStatus: s };
 }
 
-// ---- Main handler ----
+// ---- Handler ----
 export default async function handler(req: any, res: any) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
   try {
     const payload = req.body;
-    console.log('[ShipLogic Webhook] received:', JSON.stringify(payload).slice(0, 500));
+    console.log('[ShipLogic Webhook]', JSON.stringify(payload).slice(0, 400));
 
-    // ---- TRACKING EVENT webhook ----
+    // Tracking event webhook
     if (payload.custom_tracking_reference && payload.status && payload.tracking_events) {
-      return await handleTrackingEvent(payload, res);
+      return await handleTracking(payload, res);
     }
-
-    // ---- ADMIN webhook (full shipment object) ----
+    // Admin webhook (full shipment)
     if (payload.custom_tracking_reference && payload.parcels) {
-      return await handleAdminWebhook(payload, res);
+      return await handleAdmin(payload, res);
     }
-
-    // ---- SHIPMENT NOTE webhook ----
-    if (payload.shipment_id && payload.message && payload.type) {
-      console.log(`[ShipLogic Note] shipment=${payload.shipment_id}: ${payload.message}`);
+    // Shipment note
+    if (payload.shipment_id && payload.message) {
+      console.log(`[Note] shipment=${payload.shipment_id}: ${payload.message}`);
       return res.json({ received: true, type: 'note' });
     }
 
-    console.warn('[ShipLogic] Unknown webhook shape:', Object.keys(payload));
     return res.json({ received: true });
   } catch (err: any) {
-    console.error('[ShipLogic Webhook Error]', err);
-    // Return 200 so ShipLogic doesn't retry endlessly
-    return res.status(200).json({ error: 'Processing failed', message: err.message });
+    console.error('[Webhook Error]', err);
+    return res.status(200).json({ error: 'Failed', message: err.message });
   }
 }
 
-// ---- Handle tracking event ----
-async function handleTrackingEvent(event: any, res: any) {
-  const trackingRef = event.custom_tracking_reference;
+async function handleTracking(event: any, res: any) {
+  const ref = event.custom_tracking_reference;
   const { label, emoji, fbStatus } = mapStatus(event.status);
+  console.log(`[Tracking] ${ref} → ${emoji} ${label}`);
 
-  console.log(`[Tracking] ${trackingRef} → ${emoji} ${label}`);
+  // Find order
+  const snap = await db.collection('orders')
+    .where('trackingReference', '==', ref).limit(1).get();
 
-  // 1. Find order in Firebase by trackingReference
-  const snapshot = await db
-    .collection('orders')
-    .where('trackingReference', '==', trackingRef)
-    .limit(1)
-    .get();
-
-  if (snapshot.empty) {
-    console.warn(`[Tracking] No order for ref: ${trackingRef}`);
+  if (snap.empty) {
+    console.warn(`[Tracking] No order for: ${ref}`);
     return res.json({ received: true, matched: false });
   }
 
-  const orderDoc = snapshot.docs[0];
-  const order = orderDoc.data();
-  const orderId = orderDoc.id;
+  const doc = snap.docs[0];
+  const order = doc.data();
+  const latest = event.tracking_events?.[0];
 
-  // 2. Update order status + append tracking history
-  const latestEvent = event.tracking_events?.[0];
-  await orderDoc.ref.update({
+  // Update Firebase
+  await doc.ref.update({
     status: fbStatus,
     lastTrackingUpdate: new Date().toISOString(),
     trackingHistory: FieldValue.arrayUnion({
       slStatus: event.status,
-      message: latestEvent?.message || label,
-      location: latestEvent?.location || '',
+      message: latest?.message || label,
+      location: latest?.location || '',
       timestamp: event.event_time || new Date().toISOString(),
     }),
   });
 
-  console.log(`[Tracking] Updated order ${orderId} → ${fbStatus}`);
-
-  // 3. Send notifications (fire-and-forget)
-  const baseUrl = process.env.VERCEL_URL
+  // Notifications (fire-and-forget)
+  const base = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
-    : process.env.NEXT_PUBLIC_SITE_URL || 'https://grabngoza-2026.vercel.app';
+    : process.env.APP_URL || 'https://grabngoza-2026.vercel.app';
 
-  const customerName = `${order.firstName} ${order.lastName}`;
-  const estimatedDelivery = event.shipment_estimated_delivery_from
+  const estDate = event.shipment_estimated_delivery_from
     ? new Date(event.shipment_estimated_delivery_from).toLocaleDateString('en-ZA', {
-        weekday: 'long', day: 'numeric', month: 'long',
-      })
+        weekday: 'long', day: 'numeric', month: 'long' })
     : null;
 
-  // Email notification
+  // Email
   if (order.email) {
-    sendNotification(`${baseUrl}/api/send-email`, {
+    fire(`${base}/api/notifications?action=email`, {
       to: order.email,
-      subject: `${emoji} ${label} — Order #${orderId}`,
-      html: buildEmailHtml({
-        customerName,
-        orderId,
-        trackingRef,
-        statusLabel: label,
-        emoji,
-        estimatedDelivery,
-        location: latestEvent?.location,
-        message: latestEvent?.message,
+      subject: `${emoji} ${label} — Order #${doc.id.toUpperCase()}`,
+      html: statusEmailHtml({
+        name: order.firstName, orderId: doc.id, ref, label, emoji, estDate,
+        location: latest?.location, msg: latest?.message, base,
       }),
     });
   }
-
-  // WhatsApp notification
+  // WhatsApp
   if (order.phone) {
-    sendNotification(`${baseUrl}/api/send-whatsapp`, {
+    fire(`${base}/api/notifications?action=whatsapp`, {
       phone: order.phone,
       message: [
         `${emoji} *${label}*`,
-        ``,
-        `Hi ${order.firstName}! Your Grab & Go order #${orderId} is now *${label.toLowerCase()}*.`,
-        latestEvent?.location ? `📍 Location: ${latestEvent.location}` : '',
-        estimatedDelivery ? `📅 Estimated delivery: ${estimatedDelivery}` : '',
-        ``,
-        `Track: ${baseUrl}/track?ref=${trackingRef}`,
+        '',
+        `Hi ${order.firstName}! Your Grab & Go order #${doc.id.toUpperCase()} is now *${label.toLowerCase()}*.`,
+        latest?.location ? `📍 Location: ${latest.location}` : '',
+        estDate ? `📅 Est. delivery: ${estDate}` : '',
+        '',
+        `Track: ${base}/track?ref=${ref}`,
       ].filter(Boolean).join('\n'),
     });
   }
 
-  return res.json({ received: true, matched: true, orderId, newStatus: fbStatus });
+  return res.json({ received: true, matched: true, orderId: doc.id, status: fbStatus });
 }
 
-// ---- Handle admin webhook (full shipment) ----
-async function handleAdminWebhook(payload: any, res: any) {
-  const trackingRef = payload.custom_tracking_reference;
-  const status = payload.status;
-  console.log(`[Admin Webhook] ${trackingRef} status=${status}`);
+async function handleAdmin(payload: any, res: any) {
+  const ref = payload.custom_tracking_reference;
+  const { fbStatus } = mapStatus(payload.status);
 
-  const { fbStatus } = mapStatus(status);
+  const snap = await db.collection('orders')
+    .where('trackingReference', '==', ref).limit(1).get();
 
-  const snapshot = await db
-    .collection('orders')
-    .where('trackingReference', '==', trackingRef)
-    .limit(1)
-    .get();
-
-  if (!snapshot.empty) {
-    await snapshot.docs[0].ref.update({
+  if (!snap.empty) {
+    await snap.docs[0].ref.update({
       status: fbStatus,
       lastTrackingUpdate: new Date().toISOString(),
       shiplogicShipmentId: payload.id,
       trackingHistory: FieldValue.arrayUnion({
-        slStatus: status,
-        message: `Admin update: ${status}`,
+        slStatus: payload.status,
+        message: `Admin: ${payload.status}`,
         timestamp: payload.time_modified || new Date().toISOString(),
       }),
     });
   }
-
   return res.json({ received: true, type: 'admin' });
 }
 
-// ---- Helper: fire-and-forget notification ----
-function sendNotification(url: string, body: any) {
+function fire(url: string, body: any) {
   fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-  }).catch((err) => console.error('[Notification Error]', url, err.message));
+  }).catch(e => console.error('[Notify Error]', e.message));
 }
 
-// ---- Helper: email HTML template ----
-function buildEmailHtml(data: {
-  customerName: string;
-  orderId: string;
-  trackingRef: string;
-  statusLabel: string;
-  emoji: string;
-  estimatedDelivery: string | null;
-  location?: string;
-  message?: string;
-}) {
-  return `
-    <div style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px;">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <h1 style="font-size: 28px; margin: 0;">Grab & Go</h1>
-        <p style="color: #666; font-size: 14px;">Shipping Update</p>
-      </div>
-
-      <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; text-align: center;">
-        <div style="font-size: 48px; margin-bottom: 8px;">${data.emoji}</div>
-        <h2 style="margin: 0 0 8px 0; font-size: 22px;">${data.statusLabel}</h2>
-        <p style="color: #666; margin: 0;">Order #${data.orderId}</p>
-      </div>
-
-      <div style="padding: 24px 0;">
-        <p>Hi ${data.customerName},</p>
-        <p>Your order is now <strong>${data.statusLabel.toLowerCase()}</strong>.</p>
-        ${data.location ? `<p>📍 Location: <strong>${data.location}</strong></p>` : ''}
-        ${data.message ? `<p>💬 ${data.message}</p>` : ''}
-        ${data.estimatedDelivery ? `<p>📅 Estimated delivery: <strong>${data.estimatedDelivery}</strong></p>` : ''}
-      </div>
-
-      <div style="text-align: center; padding: 16px 0;">
-        <a href="https://grabngoza-2026.vercel.app/track?ref=${data.trackingRef}"
-           style="background: #000; color: #fff; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600;">
-          Track Your Order
-        </a>
-      </div>
-
-      <div style="text-align: center; padding-top: 24px; border-top: 1px solid #eee; color: #999; font-size: 12px;">
-        <p>Tracking ref: ${data.trackingRef}</p>
-        <p>Grab & Go • Premium Streetwear</p>
-      </div>
-    </div>
-  `;
+function statusEmailHtml(d: any) {
+  const logo = 'https://res.cloudinary.com/dggitwduo/image/upload/v1774084848/GRAB_GO_WEB_LOGO_as09yx.png';
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px;"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#111;max-width:600px;width:100%;border:1px solid #222;">
+<tr><td style="padding:30px 40px;text-align:center;border-bottom:1px solid #222;">
+<img src="${logo}" alt="Grab & Go" style="height:40px;filter:brightness(0) invert(1);" />
+</td></tr>
+<tr><td style="padding:40px;text-align:center;">
+<div style="font-size:48px;margin-bottom:8px;">${d.emoji}</div>
+<h2 style="color:#fff;margin:0 0 6px;font-size:20px;text-transform:uppercase;letter-spacing:2px;">${d.label}</h2>
+<p style="color:#444;font-size:10px;letter-spacing:3px;text-transform:uppercase;">Order #${d.orderId.toUpperCase()}</p>
+</td></tr>
+<tr><td style="padding:0 40px 40px;">
+<p style="color:#ccc;font-size:14px;">Hi ${d.name},</p>
+<p style="color:#999;font-size:13px;line-height:1.7;">Your order is now <strong style="color:#fff;">${d.label.toLowerCase()}</strong>.</p>
+${d.location ? `<p style="color:#999;font-size:13px;">📍 Location: <strong style="color:#fff;">${d.location}</strong></p>` : ''}
+${d.msg ? `<p style="color:#999;font-size:13px;">💬 ${d.msg}</p>` : ''}
+${d.estDate ? `<p style="color:#999;font-size:13px;">📅 Est. delivery: <strong style="color:#fff;">${d.estDate}</strong></p>` : ''}
+<div style="text-align:center;margin-top:24px;">
+<a href="${d.base}/track?ref=${d.ref}" style="display:inline-block;background:#fff;color:#000;text-decoration:none;padding:14px 40px;font-size:10px;font-weight:900;letter-spacing:3px;text-transform:uppercase;">Track Order</a>
+</div>
+</td></tr>
+<tr><td style="padding:20px 40px;text-align:center;border-top:1px solid #222;">
+<p style="color:#333;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Tracking: ${d.ref}</p>
+<p style="color:#333;font-size:9px;">© 2026 Grab & Go Studio • South Africa</p>
+</td></tr>
+</table></td></tr></table>
+</body></html>`;
 }
