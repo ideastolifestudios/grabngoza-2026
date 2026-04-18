@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, where, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { RefreshCw, Search, Package, Truck, CheckCircle2, Clock, Loader2 } from 'lucide-react';
 import StatusFilter, { StatusTab } from './StatusFilter';
@@ -105,19 +105,52 @@ export default function AdminDashboard() {
     }
   };
 
-  // Bulk dispatch (placeholder — triggers create-shipment for pending orders)
+    // Bulk dispatch — creates ShipLogic shipments for selected pending orders
   const bulkDispatch = async () => {
     const pending = filtered.filter(o => selected.has(o.id) && o.status === 'confirmed');
     if (pending.length === 0) {
       alert('No pending orders selected to dispatch.');
       return;
     }
-    const confirmed = window.confirm(`Dispatch ${pending.length} order(s)? This will create ShipLogic shipments.`);
-    if (!confirmed) return;
+    const yes = window.confirm(`Dispatch ${pending.length} order(s)? This will create ShipLogic shipments.`);
+    if (!yes) return;
 
-    // TODO: Call /api/create-shipment for each pending order
-    // For now, show a message
-    alert(`Ready to dispatch ${pending.length} orders.\n\nConnect this to your /api/create-shipment endpoint.\nEach order needs collection/delivery addresses to create a shipment.`);
+    let success = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    for (const order of pending) {
+      try {
+        const res = await fetch(`${API_BASE}/api/create-shipment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order, serviceLevel: 'standard' }),
+        });
+        const data = await res.json();
+
+        if (data.success && data.shipmentId) {
+          // Save shipment details to Firestore so webhook can match later
+          const trackingRef = `GNG-${order.id}`;
+          await updateDoc(doc(db, 'orders', order.id), {
+            status: 'confirmed',
+            trackingReference: trackingRef,
+            trackingNumber: data.trackingNumber || '',
+            shiplogicShipmentId: data.shipmentId,
+          });
+          success++;
+        } else {
+          failed++;
+          errors.push(`#${order.id.slice(0, 8)}: ${data.error || data.details?.message || 'Unknown error'}`);
+        }
+      } catch (err: any) {
+        failed++;
+        errors.push(`#${order.id.slice(0, 8)}: ${err.message}`);
+      }
+    }
+
+    let msg = `✅ ${success} shipment(s) created successfully.`;
+    if (failed > 0) msg += `\n❌ ${failed} failed:\n${errors.join('\n')}`;
+    alert(msg);
     await fetchOrders();
     setSelected(new Set());
   };
