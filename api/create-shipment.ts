@@ -67,7 +67,14 @@ export default async function handler(req: any, res: any) {
       }),
     });
 
-    const data = await response.json() as any;
+   const responseText = await response.text();
+    let data: any;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      console.error('ShipLogic non-JSON response:', responseText);
+      return res.status(500).json({ error: 'ShipLogic error', details: responseText });
+    }
 
     if (!response.ok) {
       console.error('ShipLogic shipment error:', JSON.stringify(data));
