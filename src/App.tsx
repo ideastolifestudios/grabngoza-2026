@@ -878,13 +878,21 @@ const Sidebar = ({
                   <span>Support</span>
                 </button>
                 
-                {user?.role === 'admin' && (
-                  <button onClick={() => { onClose(); onOpenProducts(); }} className="flex items-center gap-4 text-sm font-bold text-red-500 hover:text-red-700 transition-all">
-                    <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
-                      <Settings size={20} />
-                    </div>
-                    <span>Manage Studio</span>
-                  </button>
+  {user?.role === 'admin' && (
+                  <>
+                    <button onClick={() => { onClose(); onOpenProducts(); }} className="flex items-center gap-4 text-sm font-bold text-red-500 hover:text-red-700 transition-all">
+                      <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
+                        <Settings size={20} />
+                      </div>
+                      <span>Manage Studio</span>
+                    </button>
+                    <Link to="/admin" onClick={onClose} className="flex items-center gap-4 text-sm font-bold text-gray-500 hover:text-black transition-all" style={{ textDecoration: 'none' }}>
+                      <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center">
+                        <Truck size={20} style={{ color: '#3b82f6' }} />
+                      </div>
+                      <span>Dispatch Dashboard</span>
+                    </Link>
+                  </>
                 )}
               </div>
             </nav>
