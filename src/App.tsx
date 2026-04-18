@@ -2585,6 +2585,17 @@ const OrderTrackingPage = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    const params = new URLSearchParams(window.location.search);
+    const refId = params.get('id') || params.get('ref') || '';
+    const refEmail = params.get('email') || '';
+    if (refId) setOrderId(refId);
+    if (refEmail) setEmail(refEmail);
+    if (refId && refEmail) {
+      orderService.lookupOrder(refId, refEmail).then(result => {
+        if (result) setOrder(result);
+        else setError('Order not found. Check your Order ID and email.');
+      }).catch(() => setError('Failed to load order.')).finally(() => setLoading(false));
+    }
   }, []);
 
   const handleTrack = async (e: React.FormEvent) => {

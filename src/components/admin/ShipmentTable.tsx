@@ -122,7 +122,7 @@ export default function ShipmentTable({ orders, selected, onToggle, onToggleAll,
                       </button>
                     )}
                     {o.trackingReference && (
-                      <a href={`/track-order?ref=${o.trackingReference}`} target="_blank"
+                      <a href={`/track-order?id=${o.id}&email=${encodeURIComponent(o.email)}`} target="_blank"
                         title="Track"
                         style={{ ...actionBtnStyle, textDecoration: 'none' }}>
                         <ExternalLink size={13} />
