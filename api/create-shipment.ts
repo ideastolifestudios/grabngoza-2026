@@ -51,7 +51,7 @@ export default async function handler(req: any, res: any) {
           country: 'ZA',
           code: process.env.BUSINESS_POSTAL_CODE || '1685',
         },
-        delivery_address: {
+               delivery_address: {
           type: 'residential',
           company: `${order.firstName} ${order.lastName}`,
           street_address: order.address,
@@ -61,8 +61,18 @@ export default async function handler(req: any, res: any) {
           country: order.country || 'ZA',
           code: order.postalCode,
         },
-        parcel,
-        service_level: serviceLevel || 'standard',
+        collection_contact: {
+          name: 'Ideas to Life Studios',
+          mobile_number: process.env.BUSINESS_PHONE || '',
+          email: process.env.BUSINESS_EMAIL || '',
+        },
+        delivery_contact: {
+          name: `${order.firstName} ${order.lastName}`,
+          mobile_number: order.phone || '',
+          email: order.email || '',
+        },
+        parcels: [parcel],
+        service_level_code: serviceLevel || 'ECO',
         reference: `GNG-${order.id || Date.now()}`,
       }),
     });

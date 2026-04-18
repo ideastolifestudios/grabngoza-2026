@@ -140,7 +140,8 @@ export default function AdminDashboard() {
           success++;
         } else {
           failed++;
-          errors.push(`#${order.id.slice(0, 8)}: ${data.error || data.details?.message || 'Unknown error'}`);
+          const detail = typeof data.details === 'string' ? data.details : data.details?.message || '';
+          errors.push(`#${order.id.slice(0, 8)}: ${data.error}${detail ? ' — ' + detail : ''}`);
         }
       } catch (err: any) {
         failed++;
