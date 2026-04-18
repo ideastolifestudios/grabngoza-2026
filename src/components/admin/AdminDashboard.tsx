@@ -14,6 +14,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<StatusTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [dispatchStatus, setDispatchStatus] = useState<string | null>(null);
 
   // Fetch all orders from Firebase
   const fetchOrders = async () => {
@@ -108,7 +109,6 @@ export default function AdminDashboard() {
   };
 
     // Bulk dispatch — creates ShipLogic shipments for selected pending orders
-  const [dispatchStatus, setDispatchStatus] = useState<string | null>(null);
 
    const bulkDispatch = async () => {
     const pending = filtered.filter(o => selected.has(o.id) && o.status === 'confirmed');
