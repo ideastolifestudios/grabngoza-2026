@@ -164,15 +164,7 @@ export default function AdminDashboard() {
     await fetchOrders();
     setSelected(new Set());
   };
-    const pending = filtered.filter(o => selected.has(o.id) && o.status === 'confirmed');
-    if (pending.length === 0) {
-      alert('No pending orders selected to dispatch.');
-      return;
-    }
-    const yes = window.confirm(`Dispatch ${pending.length} order(s)? This will create ShipLogic shipments.`);
-    if (!yes) return;
 
-    let success = 0;
     let failed = 0;
     const errors: string[] = [];
 
