@@ -17,7 +17,7 @@ export default async function handler(req: any, res: any) {
       if (!shipmentId) return res.status(400).json({ error: 'shipmentId required' });
 
       const labelType = type === 'sticker' ? 'sticker' : 'label';
-      const response = await fetch(`${baseUrl}/shipments/${shipmentId}/${labelType}`, {
+     const response = await fetch(`${baseUrl}/v2/shipments/${shipmentId}/${labelType}`, {
         method: 'GET',
         headers: { 'Authorization': `Bearer ${apiKey}` },
       });
