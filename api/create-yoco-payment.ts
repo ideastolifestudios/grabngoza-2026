@@ -58,16 +58,17 @@ export default async function handler(req: any, res: any) {
       }),
     });
 
-    const data = await response.json() as any;
+    const responseText = await response.text();
+    let data: any;
+    try { data = JSON.parse(responseText); } catch { data = { raw: responseText }; }
 
     if (!response.ok) {
-      console.error('Yoco API error:', data);
+      console.error('Yoco API error:', JSON.stringify(data));
       return res.status(response.status).json({ 
         error: 'Payment checkout failed',
-        details: data.message || data.error || 'Unknown error'
+        details: data.message || data.errorMessage || data.error || JSON.stringify(data)
       });
     }
-
     // Success
     return res.status(200).json({ 
       success: true, 
