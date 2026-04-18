@@ -110,7 +110,7 @@ export default function AdminDashboard() {
     // Bulk dispatch — creates ShipLogic shipments for selected pending orders
   const [dispatchStatus, setDispatchStatus] = useState<string | null>(null);
 
-  const bulkDispatch = async () => {
+   const bulkDispatch = async () => {
     const pending = filtered.filter(o => selected.has(o.id) && o.status === 'confirmed');
     if (pending.length === 0) {
       setDispatchStatus('⚠️ No pending orders selected to dispatch.');
