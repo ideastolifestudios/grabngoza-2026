@@ -210,7 +210,8 @@ export default function AdminDashboard() {
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '8px 16px', borderRadius: 8,
-            background: '#f8f9fa', border: 'border: '1px solid #e5e7eb'',
+            background: '#f8f9fa', border: '1px solid #e5e7eb'
+,
             color: '#999', cursor: 'pointer', fontSize: 11, fontWeight: 700,
           }}>
           <RefreshCw size={13} /> Refresh
@@ -226,7 +227,8 @@ export default function AdminDashboard() {
           { label: 'Total Orders', value: orders.length, icon: Package, color: '#999' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} style={{
-            background: '#f8f9fa', border: 'border: '1px solid #e5e7eb'', borderRadius: 10, padding: '16px 20px',
+            background: '#f8f9fa', border: '1px solid #e5e7eb'
+, borderRadius: 10, padding: '16px 20px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
@@ -250,7 +252,8 @@ export default function AdminDashboard() {
             type="text" placeholder="Search orders..."
             value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
             style={{
-              background: '#f8f9fa', border: 'border: '1px solid #e5e7eb'', borderRadius: 8,
+              background: '#f8f9fa', border: '1px solid #e5e7eb'
+, borderRadius: 8,
               padding: '8px 12px 8px 32px', color: '#111', fontSize: 12, width: 220,
               outline: 'none',
             }}
@@ -273,7 +276,8 @@ export default function AdminDashboard() {
           <div style={{ marginTop: 8 }}>Loading orders...</div>
         </div>
       ) : (
-        <div style={{ background: '#f8f9fa', border: 'border: '1px solid #e5e7eb'', borderRadius: 10, overflow: 'hidden' }}>
+        <div style={{ background: '#f8f9fa', border: '1px solid #e5e7eb'
+, borderRadius: 10, overflow: 'hidden' }}>
           <ShipmentTable
             orders={filtered}
             selected={selected}
