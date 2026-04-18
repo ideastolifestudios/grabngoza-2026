@@ -3067,15 +3067,42 @@ const OrdersDrawer = ({
 }) => {
   const [trackingInputs, setTrackingInputs] = useState<Record<string, { number: string, url: string }>>({});
 
-  const getStatusColor = (status: OrderStatus) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-50 text-yellow-600';
+      case 'confirmed': return 'bg-yellow-50 text-yellow-600';
       case 'preparing': return 'bg-blue-50 text-blue-600';
+      case 'pickup-scheduled': return 'bg-blue-50 text-blue-600';
+      case 'collected': return 'bg-indigo-50 text-indigo-600';
+      case 'in-transit': return 'bg-purple-50 text-purple-600';
+      case 'out-for-delivery': return 'bg-cyan-50 text-cyan-600';
       case 'ready': return 'bg-emerald-50 text-emerald-600';
+      case 'delivered': return 'bg-emerald-50 text-emerald-600';
       case 'completed': return 'bg-gray-50 text-gray-400';
+      case 'failed-delivery': return 'bg-red-50 text-red-600';
       case 'cancelled': return 'bg-red-50 text-red-600';
+      case 'returned': return 'bg-orange-50 text-orange-600';
       default: return 'bg-gray-50 text-black';
     }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      'pending': 'Order Placed',
+      'confirmed': 'Confirmed',
+      'preparing': 'Preparing',
+      'pickup-scheduled': 'Pickup Scheduled',
+      'collected': 'Collected',
+      'in-transit': 'In Transit',
+      'out-for-delivery': 'Out for Delivery',
+      'ready': 'Ready',
+      'delivered': 'Delivered',
+      'completed': 'Completed',
+      'failed-delivery': 'Delivery Failed',
+      'cancelled': 'Cancelled',
+      'returned': 'Returned',
+    };
+    return labels[status] || status;
   };
 
   return (
@@ -3129,7 +3156,7 @@ const OrdersDrawer = ({
                         <p className="text-[10px] opacity-30 mt-1">{new Date(order.date).toLocaleString()}</p>
                       </div>
                       <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest ${getStatusColor(order.status)}`}>
-                        {order.status}
+                        {getStatusLabel(order.status)}
                       </span>
                     </div>
 
@@ -3156,23 +3183,21 @@ const OrdersDrawer = ({
 
 
                     {/* Tracking Information */}
-                    {(order.trackingNumber || order.trackingUrl) && (
+                    {(order.trackingNumber || order.trackingUrl || (order as any).trackingReference) && (
                       <div className="pt-4 border-t border-gray-100 space-y-3">
                         <div className="flex justify-between items-end">
                           <div>
                             <p className="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-1">Tracking Number</p>
-                            <p className="text-xs font-mono">{order.trackingNumber || 'N/A'}</p>
+                            <p className="text-xs font-mono">{order.trackingNumber || (order as any).trackingReference || 'N/A'}</p>
                           </div>
-                          {order.trackingUrl && (
-                            <a 
-                              href={order.trackingUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-black/80 transition-colors"
-                            >
-                              Track Order <ExternalLink size={12} />
-                            </a>
-                          )}
+                          <a 
+                            href={order.trackingUrl || `/track-order?id=${order.id}&email=${encodeURIComponent(order.email)}`}
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-black/80 transition-colors"
+                          >
+                            Track <ExternalLink size={12} />
+                          </a>
                         </div>
                         {user.role === 'admin' && order.labelUrl && (
                           <button 
