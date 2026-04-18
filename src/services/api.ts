@@ -341,7 +341,7 @@ export const authService = {
 export const supportService = {
   subscribeNewsletter: async (email: string): Promise<any> => {
     try {
-      const response = await fetch('/api/send-email', {
+      const response = await fetch('/api/notifications?action=email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -376,7 +376,7 @@ export const supportService = {
   },
   submitHelpDesk: async (data: any): Promise<any> => {
     try {
-      const response = await fetch('/api/send-email', {
+      const response = await fetch('/api/notifications?action=email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
