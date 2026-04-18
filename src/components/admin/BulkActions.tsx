@@ -22,7 +22,7 @@ export default function BulkActions({ selectedCount, onBulkDispatch, onBulkPrint
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 12,
-      padding: '12px 20px', background: '#f8f9fa', border: '1px solid #e5e7eb',
+      padding: '12px 20px', background: '#111', border: '1px solid #222',
       borderRadius: 10, marginBottom: 16,
     }}>
       <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>
@@ -46,7 +46,7 @@ export default function BulkActions({ selectedCount, onBulkDispatch, onBulkPrint
         style={{
           display: 'flex', alignItems: 'center', gap: 6,
           padding: '8px 16px', borderRadius: 8,
-          background: '#f1f3f5', color: '##333', border: '1px solid #d1d5db',
+          background: '#1a1a1a', color: '#ccc', border: '1px solid #333',
           cursor: 'pointer', fontSize: 11, fontWeight: 700,
           letterSpacing: 1, textTransform: 'uppercase',
         }}>
@@ -56,7 +56,7 @@ export default function BulkActions({ selectedCount, onBulkDispatch, onBulkPrint
       <button onClick={onClearSelection}
         style={{
           background: 'transparent', border: 'none',
-          color: '#999', cursor: 'pointer', padding: 4,
+          color: '#555', cursor: 'pointer', padding: 4,
         }}>
         <X size={16} />
       </button>

@@ -33,9 +33,9 @@ export default function StatusFilter({ active, counts, onChange }: Props) {
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
               padding: '8px 16px', borderRadius: 8,
-              border: isActive ? `1px solid ${color}` : border: '1px solid #e5e7eb',
-              background: isActive ? `${color}15` : '#f8f9fa',
-              color: isActive ? color : '#999',
+              border: isActive ? `1px solid ${color}` : '1px solid #222',
+              background: isActive ? `${color}15` : '#111',
+              color: isActive ? color : '#666',
               cursor: 'pointer', fontSize: 12, fontWeight: 600,
               whiteSpace: 'nowrap', transition: 'all 0.2s',
             }}

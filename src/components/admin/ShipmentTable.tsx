@@ -46,7 +46,7 @@ export default function ShipmentTable({ orders, selected, onToggle, onToggleAll,
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
         <thead>
-          <tr style={{ borderBottom: 'borderBottom: '1px solid #e5e7eb' }}>
+          <tr style={{ borderBottom: '1px solid #222' }}>
             <th style={thStyle}>
               <input type="checkbox" checked={allSelected} onChange={onToggleAll}
                 style={{ accentColor: '#22c55e' }} />
@@ -65,15 +65,15 @@ export default function ShipmentTable({ orders, selected, onToggle, onToggleAll,
             const badge = STATUS_BADGES[o.status] || { label: o.status, color: '#888', bg: '#88888818' };
             return (
               <tr key={o.id} style={{
-                borderBottom: '1px solid #f0f0f0'',
-                background: selected.has(o.id) ? '#e8f0fe' : 'transparent',
+                borderBottom: '1px solid #1a1a1a',
+                background: selected.has(o.id) ? '#1a2332' : 'transparent',
               }}>
                 <td style={tdStyle}>
                   <input type="checkbox" checked={selected.has(o.id)}
                     onChange={() => onToggle(o.id)} style={{ accentColor: '#22c55e' }} />
                 </td>
                 <td style={tdStyle}>
-                  <div style={{ fontWeight: 700, color: '#111', textTransform: 'uppercase' }}>
+                  <div style={{ fontWeight: 700, color: '#fff', textTransform: 'uppercase' }}>
                     #{o.id.slice(0, 8)}
                   </div>
                   <div style={{ color: '#555', fontSize: 10 }}>
@@ -81,9 +81,9 @@ export default function ShipmentTable({ orders, selected, onToggle, onToggleAll,
                   </div>
                 </td>
                 <td style={tdStyle}>
-                  <div style={{ color: '#111', fontWeight: 600 }}>{o.firstName} {o.lastName}</div>
+                  <div style={{ color: '#fff', fontWeight: 600 }}>{o.firstName} {o.lastName}</div>
                   <div style={{ color: '#555', fontSize: 10 }}>{o.email}</div>
-                  {o.city && <div style={{ color: '#888', fontSize: 10, display: 'flex', alignItems: 'center', gap: 3 }}>
+                  {o.city && <div style={{ color: '#444', fontSize: 10, display: 'flex', alignItems: 'center', gap: 3 }}>
                     <MapPin size={9} /> {o.city}{o.province ? `, ${o.province}` : ''}
                   </div>}
                 </td>
@@ -100,15 +100,15 @@ export default function ShipmentTable({ orders, selected, onToggle, onToggleAll,
                       {o.trackingReference}
                     </span>
                   ) : (
-                    <span style={{ color: '#888', fontSize: 10 }}>Not shipped</span>
+                    <span style={{ color: '#444', fontSize: 10 }}>Not shipped</span>
                   )}
                   {o.lastTrackingUpdate && (
-                    <div style={{ color: '#888', fontSize: 9, display: 'flex', alignItems: 'center', gap: 3, marginTop: 2 }}>
+                    <div style={{ color: '#444', fontSize: 9, display: 'flex', alignItems: 'center', gap: 3, marginTop: 2 }}>
                       <Clock size={8} /> {new Date(o.lastTrackingUpdate).toLocaleDateString('en-ZA')}
                     </div>
                   )}
                 </td>
-                <td style={{ ...tdStyle, fontWeight: 700, color: '#111' }}>R{o.total}</td>
+                <td style={{ ...tdStyle, fontWeight: 700, color: '#fff' }}>R{o.total}</td>
                 <td style={{ ...tdStyle, color: '#555', fontSize: 11 }}>
                   {new Date(o.date).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}
                 </td>
@@ -134,7 +134,7 @@ export default function ShipmentTable({ orders, selected, onToggle, onToggleAll,
             );
           })}
           {orders.length === 0 && (
-            <tr><td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#888' }}>
+            <tr><td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#444' }}>
               <Package size={32} style={{ marginBottom: 8, opacity: 0.3 }} />
               <div>No orders found</div>
             </td></tr>
@@ -146,12 +146,12 @@ export default function ShipmentTable({ orders, selected, onToggle, onToggleAll,
 }
 
 const thStyle: React.CSSProperties = {
-  padding: '10px 12px', textAlign: 'left', color: '#888',
+  padding: '10px 12px', textAlign: 'left', color: '#444',
   fontSize: 9, fontWeight: 900, letterSpacing: 2, textTransform: 'uppercase',
 };
 const tdStyle: React.CSSProperties = { padding: '12px', verticalAlign: 'top' };
 const actionBtnStyle: React.CSSProperties = {
-  background: '#f1f3f5', border: '1px solid #333', borderRadius: 6,
+  background: '#1a1a1a', border: '1px solid #333', borderRadius: 6,
   padding: '5px 8px', cursor: 'pointer', color: '#888', display: 'flex',
   alignItems: 'center', transition: 'all 0.2s',
 };
