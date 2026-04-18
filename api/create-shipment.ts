@@ -91,11 +91,14 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ error: 'ShipLogic error', details: data });
     }
 
+    console.log('ShipLogic raw response:', JSON.stringify(data));
     res.json({
       success: true,
-      shipmentId: data.shipment_id,
-      trackingNumber: data.tracking_number,
+      shipmentId: data.id || data.shipment_id || null,
+      trackingNumber: data.tracking_reference || data.short_tracking_reference || data.tracking_number || null,
+      trackingRef: data.custom_tracking_reference || data.reference || null,
       status: data.status,
+      raw: data,
     });
 
   } catch (err: any) {

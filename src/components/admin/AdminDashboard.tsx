@@ -84,11 +84,12 @@ export default function AdminDashboard() {
     const withShipments = selectedOrders.filter(o => o.shiplogicShipmentId);
 
     if (withShipments.length === 0) {
-      alert(
+      setDispatchStatus(
         selectedOrders.length === 0
-          ? 'No orders selected.'
-          : `${selectedOrders.length} order(s) selected but none have been dispatched via ShipLogic yet.\n\nDispatch orders first to generate waybill labels.`
+          ? '⚠️ No orders selected.'
+          : `⚠️ ${selectedOrders.length} order(s) selected but none dispatched yet. Dispatch first to generate labels.`
       );
+      setTimeout(() => setDispatchStatus(null), 5000);
       return;
     }
 
@@ -101,12 +102,68 @@ export default function AdminDashboard() {
     });
 
     if (withShipments.length < selectedOrders.length) {
-      alert(`Opened ${withShipments.length} label(s).\n${selectedOrders.length - withShipments.length} order(s) skipped (not yet dispatched).`);
+      setDispatchStatus(`📄 Opened ${withShipments.length} label(s). ${selectedOrders.length - withShipments.length} skipped (not dispatched).`);
+      setTimeout(() => setDispatchStatus(null), 5000);
     }
   };
 
     // Bulk dispatch — creates ShipLogic shipments for selected pending orders
+  const [dispatchStatus, setDispatchStatus] = useState<string | null>(null);
+
   const bulkDispatch = async () => {
+    const pending = filtered.filter(o => selected.has(o.id) && o.status === 'confirmed');
+    if (pending.length === 0) {
+      setDispatchStatus('⚠️ No pending orders selected to dispatch.');
+      setTimeout(() => setDispatchStatus(null), 4000);
+      return;
+    }
+    if (!window.confirm(`Dispatch ${pending.length} order(s)? This will create ShipLogic shipments.`)) return;
+
+    let success = 0;
+    let failed = 0;
+    const errors: string[] = [];
+    setDispatchStatus(`🚚 Dispatching ${pending.length} order(s)...`);
+
+    for (const order of pending) {
+      try {
+        const res = await fetch(`${API_BASE}/api/create-shipment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order, serviceLevel: 'standard' }),
+        });
+        const data = await res.json();
+        console.log('Dispatch response for', order.id, data);
+
+        if (data.success) {
+          const shipId = data.shipmentId || data.raw?.id || null;
+          const trackRef = data.trackingRef || data.raw?.custom_tracking_reference || `GNG-${order.id}`;
+          const trackNum = data.trackingNumber || data.raw?.tracking_reference || '';
+
+          await updateDoc(doc(db, 'orders', order.id), {
+            status: 'confirmed',
+            trackingReference: trackRef,
+            trackingNumber: trackNum,
+            ...(shipId ? { shiplogicShipmentId: shipId } : {}),
+          });
+          success++;
+        } else {
+          failed++;
+          const detail = typeof data.details === 'string' ? data.details : data.details?.message || data.error || 'Unknown';
+          errors.push(`#${order.id.slice(0, 8)}: ${detail}`);
+        }
+      } catch (err: any) {
+        failed++;
+        errors.push(`#${order.id.slice(0, 8)}: ${err.message}`);
+      }
+    }
+
+    let msg = `✅ ${success} shipment(s) dispatched.`;
+    if (failed > 0) msg += ` ❌ ${failed} failed: ${errors.join(', ')}`;
+    setDispatchStatus(msg);
+    setTimeout(() => setDispatchStatus(null), 8000);
+    await fetchOrders();
+    setSelected(new Set());
+  };
     const pending = filtered.filter(o => selected.has(o.id) && o.status === 'confirmed');
     if (pending.length === 0) {
       alert('No pending orders selected to dispatch.');
@@ -224,6 +281,30 @@ export default function AdminDashboard() {
           />
         </div>
       </div>
+
+      {/* Status banner */}
+      {dispatchStatus && (
+        <div style={{
+          padding: '12px 20px', marginBottom: 12, borderRadius: 10,
+          background: dispatchStatus.includes('❌') ? '#2a1515' : dispatchStatus.includes('⚠️') ? '#2a2515' : '#152a15',
+          border: `1px solid ${dispatchStatus.includes('❌') ? '#7f1d1d' : dispatchStatus.includes('⚠️') ? '#78350f' : '#166534'}`,
+          color: '#fff', fontSize: 12, fontWeight: 600,
+        }}>
+          {dispatchStatus}
+        </div>
+      )}
+
+      {/* Status banner */}
+      {dispatchStatus && (
+        <div style={{
+          padding: '12px 20px', marginBottom: 12, borderRadius: 10,
+          background: dispatchStatus.includes('❌') ? '#2a1515' : dispatchStatus.includes('⚠️') ? '#2a2515' : '#152a15',
+          border: `1px solid ${dispatchStatus.includes('❌') ? '#7f1d1d' : dispatchStatus.includes('⚠️') ? '#78350f' : '#166534'}`,
+          color: '#fff', fontSize: 12, fontWeight: 600,
+        }}>
+          {dispatchStatus}
+        </div>
+      )}
 
       {/* Bulk actions */}
       <BulkActions
