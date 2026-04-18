@@ -23,7 +23,9 @@ export default async function handler(req: any, res: any) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json() as any;
+        const errText = await response.text();
+        let errorData: any;
+        try { errorData = JSON.parse(errText); } catch { errorData = errText; }
         return res.status(response.status).json({ error: 'Label fetch failed', details: errorData });
       }
 
