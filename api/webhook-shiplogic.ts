@@ -127,6 +127,12 @@ async function handleTracking(event: any, res: any) {
     });
   }
 
+  if (fbStatus === 'delivered') {
+    fire(`${base}/api/notifications?action=post-delivery`, {
+      orderId: doc.id, firstName: order.firstName, email: order.email, phone: order.phone,
+    });
+  }
+
   return res.json({ received: true, matched: true, orderId: doc.id, status: fbStatus });
 }
 
