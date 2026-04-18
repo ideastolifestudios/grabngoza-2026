@@ -165,45 +165,7 @@ export default function AdminDashboard() {
     setSelected(new Set());
   };
 
-    let failed = 0;
-    const errors: string[] = [];
 
-    for (const order of pending) {
-      try {
-        const res = await fetch(`${API_BASE}/api/create-shipment`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order, serviceLevel: 'standard' }),
-        });
-        const data = await res.json();
-
-        if (data.success && data.shipmentId) {
-          // Save shipment details to Firestore so webhook can match later
-          const trackingRef = `GNG-${order.id}`;
-          await updateDoc(doc(db, 'orders', order.id), {
-            status: 'confirmed',
-            trackingReference: trackingRef,
-            trackingNumber: data.trackingNumber || '',
-            shiplogicShipmentId: data.shipmentId,
-          });
-          success++;
-        } else {
-          failed++;
-          const detail = typeof data.details === 'string' ? data.details : data.details?.message || '';
-          errors.push(`#${order.id.slice(0, 8)}: ${data.error}${detail ? ' — ' + detail : ''}`);
-        }
-      } catch (err: any) {
-        failed++;
-        errors.push(`#${order.id.slice(0, 8)}: ${err.message}`);
-      }
-    }
-
-    let msg = `✅ ${success} shipment(s) created successfully.`;
-    if (failed > 0) msg += `\n❌ ${failed} failed:\n${errors.join('\n')}`;
-    alert(msg);
-    await fetchOrders();
-    setSelected(new Set());
-  };
 
   // Stats cards
   const pendingCount = counts['confirmed'] || 0;
@@ -274,17 +236,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Status banner */}
-      {dispatchStatus && (
-        <div style={{
-          padding: '12px 20px', marginBottom: 12, borderRadius: 10,
-          background: dispatchStatus.includes('❌') ? '#2a1515' : dispatchStatus.includes('⚠️') ? '#2a2515' : '#152a15',
-          border: `1px solid ${dispatchStatus.includes('❌') ? '#7f1d1d' : dispatchStatus.includes('⚠️') ? '#78350f' : '#166534'}`,
-          color: '#fff', fontSize: 12, fontWeight: 600,
-        }}>
-          {dispatchStatus}
-        </div>
-      )}
 
       {/* Status banner */}
       {dispatchStatus && (
