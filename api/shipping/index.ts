@@ -1,5 +1,6 @@
 // api/shipping/index.ts
 import fetch from 'node-fetch';
+import { IncomingMessage, ServerResponse } from 'http';
 
 type ShipLogicRate = {
   rate_id: string;
@@ -23,8 +24,9 @@ type PickupPoint = {
 const SHIPLOGIC_API_KEY = process.env.SHIPLOGIC_API_KEY || '';
 const SHIPLOGIC_API_URL = (process.env.SHIPLOGIC_API_URL || 'https://api.shiplogic.co.za').replace(/\/$/, '');
 
-function jsonResponse(res: any, status: number, body: any) {
-  res.status(status).setHeader('Content-Type', 'application/json');
+function jsonResponse(res: ServerResponse, status: number, body: any) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify(body));
 }
 
@@ -54,15 +56,40 @@ async function fetchShipLogic(path: string, opts: any = {}) {
   return res.json();
 }
 
+async function readBody(req: IncomingMessage) {
+  return new Promise<any>((resolve) => {
+    let data = '';
+    req.on('data', (chunk) => (data += chunk));
+    req.on('end', () => {
+      try {
+        resolve(data ? JSON.parse(data) : {});
+      } catch {
+        resolve({});
+      }
+    });
+    req.on('error', () => resolve({}));
+  });
+}
+
 export default async function handler(req: any, res: any) {
   try {
     const method = (req.method || 'GET').toUpperCase();
-    const url = req.url || '';
-    if (method === 'GET' && url.includes('/api/shipping/rates')) {
+    const rawUrl = (req.url || '').toString();
+
+    // Normalize path: if Vercel gives relative path like "/rates", or full path "/api/shipping/rates"
+    const path = rawUrl.split('?')[0] || '';
+    const normalized = path.toLowerCase();
+
+    // Helper checks that work for both '/rates' and '/api/shipping/rates'
+    const isRates = normalized.endsWith('/rates') || normalized.includes('/rates');
+    const isPickup = normalized.endsWith('/pickup-points') || normalized.includes('/pickup-points');
+
+    // GET /rates
+    if (method === 'GET' && isRates) {
       if (!SHIPLOGIC_API_KEY) {
         return jsonResponse(res, 200, { success: true, rates: mockRates(), source: 'mock' });
       }
-      const qs = req.url.split('?')[1] || '';
+      const qs = rawUrl.split('?')[1] || '';
       try {
         const data = await fetchShipLogic(`/rates${qs ? `?${qs}` : ''}`);
         const rates = data?.rates ?? data;
@@ -73,11 +100,12 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    if (method === 'GET' && url.includes('/api/shipping/pickup-points')) {
+    // GET /pickup-points
+    if (method === 'GET' && isPickup) {
       if (!SHIPLOGIC_API_KEY) {
         return jsonResponse(res, 200, { success: true, points: mockPickupPoints(), source: 'mock' });
       }
-      const qs = req.url.split('?')[1] || '';
+      const qs = rawUrl.split('?')[1] || '';
       try {
         const data = await fetchShipLogic(`/pickup-points${qs ? `?${qs}` : ''}`);
         const points = data?.points ?? data;
@@ -88,25 +116,12 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    if (method === 'POST' && url.includes('/api/shipping/rates')) {
-      let body: any = req.body;
-      if (!body) {
-        try {
-          const raw = await new Promise<string>((resolve) => {
-            let data = '';
-            req.on('data', (chunk: any) => (data += chunk));
-            req.on('end', () => resolve(data));
-          });
-          body = raw ? JSON.parse(raw) : {};
-        } catch {
-          body = {};
-        }
-      }
-
+    // POST /rates
+    if (method === 'POST' && isRates) {
+      let body: any = req.body ?? (await readBody(req));
       if (!SHIPLOGIC_API_KEY) {
-        return jsonResponse(res, 200, { success: true, rates: mockRates(), source: 'mock' });
+        return jsonResponse(res, 200, { success: true, rates: mockRates(), source: 'mock', bodyReceived: body });
       }
-
       try {
         const data = await fetchShipLogic(`/rates`, { method: 'POST', body: JSON.stringify(body) });
         const rates = data?.rates ?? data;
@@ -117,6 +132,7 @@ export default async function handler(req: any, res: any) {
       }
     }
 
+    // Not found / method not allowed
     res.setHeader('Allow', 'GET, POST');
     return jsonResponse(res, 405, { success: false, message: 'Method Not Allowed or unknown shipping route' });
   } catch (err: any) {
