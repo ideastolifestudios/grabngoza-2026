@@ -2528,7 +2528,7 @@ const TrackingTimeline = ({ trackingNumber, trackingUrl }: { trackingNumber: str
     const fetchTracking = async () => {
       setLoadingEvents(true);
       try {
-        const res = await fetch(`/api/track-shipment?trackingNumber=${encodeURIComponent(trackingNumber)}`);
+        const res = await fetch(`/api/shipping?action=track&trackingNumber=${encodeURIComponent(trackingNumber)}`);
         if (res.ok) {
           const data = await res.json();
           setEvents(data.events || []);
@@ -5086,7 +5086,7 @@ const HybridCheckoutModal = ({
       setLoadingRates(true);
       try {
         const deliveryCountry = deliveryMethod === 'international' ? country : 'ZA';
-        const res = await fetch('/api/get-shipping-rates', {
+        const res = await fetch('/api/shipping?action=rates', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -5117,7 +5117,7 @@ const HybridCheckoutModal = ({
         const params = new URLSearchParams();
         if (postalCode) params.set('postal_code', postalCode);
         if (city) params.set('city', city);
-        const res = await fetch(`/api/shipping/pickup-points?${params.toString()}`);
+        const res = await fetch(`/api/shipping?action=pickup-points&${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
           setPickupPoints(data.pickup_points?.length > 0 ? data.pickup_points : BOBGO_FALLBACK_POINTS);
@@ -5237,7 +5237,7 @@ const HybridCheckoutModal = ({
       }));
 
       // Call Yoco checkout API
-      const response = await fetch('/api/create-yoco-payment', {
+      const response = await fetch('/api/payments?action=yoco', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -7091,11 +7091,11 @@ function AppContent() {
         // 1. Update status from payment_pending to pending in Firestore
         await orderService.updateOrder(id, { status: 'pending' });
 
-        // 2. Call /api/order-success with the order data to send email + WhatsApp confirmations
-        await fetch('/api/order-success', {
+        // 2. Send order confirmation email + WhatsApp
+        await fetch('/api/payments?action=order-success', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(orderData)
+          body: JSON.stringify({ order: orderData })
         });
 
         // 3. Clear cart and localStorage

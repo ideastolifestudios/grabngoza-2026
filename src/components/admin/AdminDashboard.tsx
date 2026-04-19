@@ -76,7 +76,7 @@ export default function AdminDashboard() {
 
   // Print label
   const printLabel = (shipmentId: number) => {
-    window.open(`${API_BASE}/api/shipment-actions?action=label&shipmentId=${shipmentId}`, '_blank');
+    window.open(`${API_BASE}/api/shipping?action=label&shipmentId=${shipmentId}`, '_blank');
   };
 
  // Bulk print labels
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
     // Open each label PDF in a new tab (browser prints it)
     withShipments.forEach(o => {
       window.open(
-        `${API_BASE}/api/shipment-actions?action=label&shipmentId=${o.shiplogicShipmentId}&type=label`,
+        `$${API_BASE}/api/shipping?action=label&shipmentId=${o.shiplogicShipmentId}&type=label`,
         '_blank'
       );
     });
