@@ -6,6 +6,7 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import multer from "multer";
 import fs from "fs";
+import shippingRouter from './api/shipping/index';
 
 dotenv.config();
 
@@ -36,6 +37,10 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json());
+
+  // Mount shipping router to handle /api/shipping routes
+  app.use('/api/shipping', shippingRouter);
+  console.log('Mounted shipping router at /api/shipping');
 
   // SMTP Transporter
   const transporter = nodemailer.createTransport({
