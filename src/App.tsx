@@ -5329,6 +5329,7 @@ const HybridCheckoutModal = ({
         const res = await fetch(`/api/shipping?action=pickup-points&${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
+          // Always show points — use API results if available, else fallback
           setPickupPoints(data.pickup_points?.length > 0 ? data.pickup_points : BOBGO_FALLBACK_POINTS);
         } else {
           setPickupPoints(BOBGO_FALLBACK_POINTS);
@@ -5340,6 +5341,7 @@ const HybridCheckoutModal = ({
       }
     };
     fetchPoints();
+  // Load immediately when tab opens, refresh when city/postal changes
   }, [deliveryMethod, postalCode, city]);
 
   const shippingCost = useMemo(() => {
@@ -5702,6 +5704,73 @@ const HybridCheckoutModal = ({
                       </div>
 
                     <div className="space-y-4">
+                      {/* ── Bob Go Pickup Point Selector ── */}
+                      {deliveryMethod === 'bobgo' && (
+                        <div className="space-y-4">
+                          {/* Contact fields for Bob Go */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <input type="text" placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" />
+                            <input type="text" placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" />
+                          </div>
+                          <input type="tel" placeholder="Phone number" value={phone} onChange={(e) => setPhone(e.target.value)} required className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" />
+                          <input type="text" placeholder="Your city (to find nearby points)" value={city} onChange={(e) => setCity(e.target.value)} className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" />
+                          <input type="text" placeholder="Postal code (optional)" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} inputMode="numeric" className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" />
+
+                          {/* Step 1: Choose pickup point */}
+                          <div>
+                            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">1. Choose a Bob Go Pickup Point</label>
+                            {loadingPickupPoints ? (
+                              <div className="flex items-center gap-2 py-4 text-sm text-gray-400"><Loader2 className="animate-spin" size={16} /> Finding nearby pickup points...</div>
+                            ) : (
+                              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                                {pickupPoints.map((point) => (
+                                  <button key={point.id} type="button" onClick={() => setSelectedPickupPoint(point)}
+                                    className={`w-full text-left p-3 rounded-md border transition-all ${selectedPickupPoint?.id === point.id ? 'border-black bg-gray-50 shadow-sm' : 'border-gray-200 hover:border-gray-300'}`}>
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="min-w-0">
+                                        <p className="text-sm font-semibold truncate">{point.name}</p>
+                                        <p className="text-[10px] text-gray-400 truncate">{point.address}, {point.suburb}</p>
+                                        {point.operating_hours && <p className="text-[10px] text-gray-300 mt-0.5">{point.operating_hours}</p>}
+                                      </div>
+                                      <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 shrink-0 mt-0.5">
+                                        {point.type === 'locker' ? '🔒 Locker' : '🏪 Counter'}
+                                      </span>
+                                    </div>
+                                  </button>
+                                ))}
+                                {pickupPoints.length === 0 && <p className="text-xs text-gray-400 py-2">No pickup points found. Showing major cities.</p>}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Step 2: Speed after point chosen */}
+                          {selectedPickupPoint && (
+                            <div>
+                              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">2. Delivery Speed to Pickup Point</label>
+                              <button type="button"
+                                onClick={() => setSelectedRate({ amount: 89, serviceLevel: { name: 'Bob Go Standard', description: '3–5 business days to pickup point', code: 'ECO' } })}
+                                className={`w-full flex items-center justify-between p-3 rounded-md border text-left transition-all ${selectedRate ? 'border-black bg-gray-50 shadow-sm' : 'border-gray-200 hover:border-gray-300'}`}>
+                                <div>
+                                  <p className="text-sm font-semibold">Bob Go Standard</p>
+                                  <p className="text-[10px] text-gray-400">3–5 business days to pickup point</p>
+                                </div>
+                                <span className="text-sm font-bold">R89.00</span>
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Summary */}
+                          {selectedPickupPoint && selectedRate && (
+                            <div className="p-3 bg-gray-50 border border-gray-100 rounded-md">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Collecting from</p>
+                              <p className="text-sm font-semibold">{selectedPickupPoint.name}</p>
+                              <p className="text-[10px] text-gray-500">{selectedPickupPoint.address}, {selectedPickupPoint.suburb}</p>
+                              {selectedPickupPoint.operating_hours && <p className="text-[10px] text-gray-400 mt-1">⏰ {selectedPickupPoint.operating_hours}</p>}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {deliveryMethod === 'standard' || deliveryMethod === 'international' ? (
                         <>
                           <div className="relative">
@@ -5850,111 +5919,7 @@ const HybridCheckoutModal = ({
                             </div>
                           )}
 
-                          {/* ── Bob Go Pickup Point Selector ───────────────── */}
-                          {deliveryMethod === 'bobgo' && (
-                            <div className="mt-4 space-y-4">
-                              <div>
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">
-                                  1. Choose a Bob Go Pickup Point
-                                </label>
-                                {loadingPickupPoints ? (
-                                  <div className="flex items-center gap-2 py-4 text-sm text-gray-400">
-                                    <Loader2 className="animate-spin" size={16} /> Finding nearby pickup points...
-                                  </div>
-                                ) : (
-                                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                                    {pickupPoints.map((point) => (
-                                      <button
-                                        key={point.id}
-                                        type="button"
-                                        onClick={() => setSelectedPickupPoint(point)}
-                                        className={`w-full text-left p-3 rounded-md border transition-all ${
-                                          selectedPickupPoint?.id === point.id
-                                            ? 'border-black bg-gray-50 shadow-sm'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                        }`}
-                                      >
-                                        <div className="flex items-start justify-between gap-2">
-                                          <div className="min-w-0">
-                                            <p className="text-sm font-semibold truncate">{point.name}</p>
-                                            <p className="text-[10px] text-gray-400 truncate">{point.address}, {point.suburb}</p>
-                                            {point.operating_hours && (
-                                              <p className="text-[10px] text-gray-300 mt-0.5">{point.operating_hours}</p>
-                                            )}
-                                          </div>
-                                          <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 shrink-0 mt-0.5">
-                                            {point.type === 'locker' ? '🔒 Locker' : '🏪 Counter'}
-                                          </span>
-                                        </div>
-                                      </button>
-                                    ))}
-                                    {pickupPoints.length === 0 && (
-                                      <p className="text-xs text-gray-400 py-2">No pickup points found near your area.</p>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Speed selector — only after pickup point chosen */}
-                              {selectedPickupPoint && (
-                                <div>
-                                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">
-                                    2. Delivery Speed to Pickup Point
-                                  </label>
-                                  {loadingRates ? (
-                                    <div className="flex items-center gap-2 py-2 text-sm text-gray-400">
-                                      <Loader2 className="animate-spin" size={16} /> Fetching rates...
-                                    </div>
-                                  ) : shippingRates.length > 0 ? (
-                                    <div className="space-y-2">
-                                      {shippingRates.slice(0, 3).map((rate: any, idx: number) => (
-                                        <button
-                                          key={idx}
-                                          type="button"
-                                          onClick={() => setSelectedRate(rate)}
-                                          className={`w-full flex items-center justify-between p-3 rounded-md border text-left transition-all ${
-                                            selectedRate === rate
-                                              ? 'border-black bg-gray-50 shadow-sm'
-                                              : 'border-gray-200 hover:border-gray-300'
-                                          }`}
-                                        >
-                                          <div>
-                                            <p className="text-sm font-semibold">{rate.serviceLevel?.name || rate.serviceLevel}</p>
-                                            <p className="text-[10px] text-gray-400">{rate.serviceLevel?.description || rate.carrier}</p>
-                                          </div>
-                                          <span className="text-sm font-bold whitespace-nowrap">R{rate.amount?.toFixed(2)}</span>
-                                        </button>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    /* Flat-rate fallback until ShipLogic Bob Go rates are live */
-                                    <button
-                                      type="button"
-                                      onClick={() => setSelectedRate({ amount: 89, serviceLevel: { name: 'Bob Go Standard', description: '3–5 business days to pickup point' } })}
-                                      className={`w-full flex items-center justify-between p-3 rounded-md border text-left transition-all ${
-                                        selectedRate ? 'border-black bg-gray-50 shadow-sm' : 'border-gray-200 hover:border-gray-300'
-                                      }`}
-                                    >
-                                      <div>
-                                        <p className="text-sm font-semibold">Bob Go Standard</p>
-                                        <p className="text-[10px] text-gray-400">3–5 business days to pickup point</p>
-                                      </div>
-                                      <span className="text-sm font-bold">R89.00</span>
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-
-                              {/* Selected summary */}
-                              {selectedPickupPoint && selectedRate && (
-                                <div className="p-3 bg-gray-50 border border-gray-100 rounded-md">
-                                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Delivering to</p>
-                                  <p className="text-sm font-semibold">{selectedPickupPoint.name}</p>
-                                  <p className="text-[10px] text-gray-500">{selectedPickupPoint.address}, {selectedPickupPoint.suburb}</p>
-                                </div>
-                              )}
-                            </div>
-                          )}                        </>
+                        </>
                       ) : (
                         <div className="space-y-4">
                           <p className="text-xs text-gray-500 mb-2">Pickup your order directly from our studio in Midrand (No shipping fee).</p>
