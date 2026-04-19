@@ -368,7 +368,9 @@ export const supportService = {
           text: "Welcome to the Grab & Go Fam! You'll be the first to know about new drops. Use code WELCOME10 for 10% off your first order."
         })
       });
-      return await response.json();
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
+      return text ? JSON.parse(text) : { success: true };
     } catch (error) {
       console.error('Newsletter subscription error:', error);
       throw error;
@@ -397,7 +399,9 @@ export const supportService = {
           text: `Hi ${data.name}, we received your inquiry: "${data.subject}". We'll get back to you within 24 hours.`
         })
       });
-      return await response.json();
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
+      return text ? JSON.parse(text) : { success: true };
     } catch (error) {
       console.error('Help desk submission error:', error);
       throw error;
