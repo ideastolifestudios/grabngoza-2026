@@ -844,10 +844,24 @@ const Sidebar = ({
   user: User | null,
   partners?: Partner[],
   searchQuery: string,
+setSearchQuery: (q: string) => void,
+  setFilterCategory: (c: string) => void,
+  categories = [] as Category[]
+}: {
+  isOpen: boolean,
+  onClose: () => void,
+  onOpenOrders: () => void,
+  onOpenAuth: () => void,
+  onOpenWishlist: () => void,
+  onLogout: () => void,
+  onOpenCart: () => void,
+  onOpenProducts: () => void,
+  cartCount: number,
+  user: User | null,
+  partners?: Partner[],
+  searchQuery: string,
   setSearchQuery: (q: string) => void,
   setFilterCategory: (c: string) => void,
-categories = []
-}: {
   categories?: Category[]
 }) => {
   const navigate = useNavigate();
