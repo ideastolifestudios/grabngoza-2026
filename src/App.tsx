@@ -637,21 +637,50 @@ const Header = ({
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         className={`fixed top-0 left-0 right-0 z-50 ${scrolled ? 'bg-white/95 backdrop-blur-md py-1 border-b border-gray-100 shadow-sm' : 'bg-white py-2'}`}
       >
-      <div className="max-w-[1800px] mx-auto px-4 md:px-10 flex items-center justify-between">
+        <div className="max-w-[1800px] mx-auto px-4 md:px-10 flex items-center justify-between gap-4">
         
-        {/* Left: Navigation Links */}
-        <div className="hidden lg:flex items-center gap-8 flex-1">
-        </div>
-
-        {/* Center: Logo */}
-        <div className="flex-shrink-0 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
+        {/* Left: Logo */}
+        <div className="flex-shrink-0">
           <Link to="/" className="block group">
-            <Logo className="h-6 md:h-8 transition-transform duration-500 group-hover:scale-105" dark />
+            <Logo className="h-8 md:h-12 transition-transform duration-500 group-hover:scale-105" dark />
           </Link>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center justify-end gap-2 md:gap-6 flex-1">
+        <div className="flex items-center justify-end gap-2 md:gap-4 flex-1">
+          {/* Search — next to wishlist */}
+          <div className="relative hidden sm:block">
+            <div className="flex items-center border border-gray-200 rounded-full px-3 py-1.5 gap-2 bg-white hover:border-gray-400 transition-all">
+              <Search size={14} className="text-gray-400 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                className="text-xs font-medium outline-none bg-transparent w-28 md:w-40 placeholder:text-gray-300"
+              />
+            </div>
+            {/* Suggestions dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-xl z-50 overflow-hidden">
+                {suggestions.map(p => (
+                  <button
+                    key={p.id}
+                    onMouseDown={() => { navigate(`/product/${p.id}`); setLocalSearch(''); setShowSuggestions(false); }}
+                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 text-left"
+                  >
+                    {p.image && <img src={p.image} className="w-8 h-8 object-cover rounded" />}
+                    <div>
+                      <p className="text-xs font-bold text-black">{p.name}</p>
+                      <p className="text-[9px] text-gray-400 uppercase">R{p.price}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <button 
             onClick={onOpenWishlist}
             className="p-2 hover:bg-black/5 rounded-full transition-colors text-black hidden sm:block"
@@ -659,6 +688,7 @@ const Header = ({
           >
             <Heart size={20} />
           </button>
+
           <button 
             onClick={onOpenCart} 
             className="relative p-2 hover:bg-black/5 rounded-full transition-colors text-black active:scale-90" 
@@ -728,20 +758,26 @@ const Sidebar = ({
   partners?: Partner[],
   searchQuery: string,
   setSearchQuery: (q: string) => void,
-  setFilterCategory: (c: string) => void
+  setFilterCategory: (c: string) => void,
+  categories?: Category[]
 }) => {
+
   const navigate = useNavigate();
   const location = useLocation();
   const [isShopOpen, setIsShopOpen] = useState(true);
 
-  const navLinks = [
-    { name: 'New Arrivals', filter: 'New' },
-    { name: 'Men', filter: 'Men' },
-    { name: 'Women', filter: 'Women' },
-    { name: 'Kids', filter: 'Kids' },
-    { name: 'Sport', filter: 'Sport' },
-    { name: 'Accessories', filter: 'Accessories' }
-  ];
+  // Use live categories from Firestore, fallback to defaults
+  const navLinks = (categories && categories.length > 0)
+    ? [{ name: 'All Products', filter: 'All' }, ...categories.filter(c => !c.parentId).map(c => ({ name: c.name, filter: c.name }))]
+    : [
+        { name: 'All Products', filter: 'All' },
+        { name: 'New Arrivals', filter: 'New' },
+        { name: 'Men', filter: 'Men' },
+        { name: 'Women', filter: 'Women' },
+        { name: 'Kids', filter: 'Kids' },
+        { name: 'Sport', filter: 'Sport' },
+        { name: 'Accessories', filter: 'Accessories' }
+      ];
 
   return (
     <AnimatePresence>
@@ -823,11 +859,7 @@ const Sidebar = ({
                   </AnimatePresence>
                 </div>
 
-                {/* Direct Links */}
-                <button onClick={() => { onClose(); navigate('/story'); }} className="py-4 text-left text-2xl font-bold tracking-tight border-b border-gray-50 last:border-0">
-                  Our Story
-                </button>
-              </div>
+                {/* Direct Links — Our Story removed */}              </div>
 
               {/* Membership / Account */}
               <div className="pt-4">
@@ -1604,8 +1636,7 @@ const PartnershipHub = ({ partners }: { partners: Partner[] }) => (
   </section>
 );
 
-const Footer = () => {
-  const [subscribed, setSubscribed] = useState(false);
+const Footer = ({ categories = [] }: { categories?: Category[] }) => {  const [subscribed, setSubscribed] = useState(false);
   const [email, setEmail] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1672,7 +1703,7 @@ const Footer = () => {
 
     <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-8 md:gap-12">
       <div className="space-y-4 md:space-y-6">
-        <Logo className="h-6 md:h-8" dark />
+        <Logo className="h-10 md:h-14" dark />
         <div className="flex gap-4">
           <motion.a 
             whileHover={{ scale: 1.1 }}
@@ -1700,8 +1731,14 @@ const Footer = () => {
           <h4 className="text-[9px] font-semibold uppercase tracking-wider opacity-20 text-black">Shop</h4>
           <ul className="space-y-1 md:space-y-2 text-[9px] font-semibold uppercase tracking-wider text-black">
             <li onClick={() => { document.getElementById('drops')?.scrollIntoView({ behavior: 'smooth' }); }} className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">All Products</li>
-            <li onClick={() => { document.getElementById('drops')?.scrollIntoView({ behavior: 'smooth' }); }} className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">New Arrivals</li>
-            <li onClick={() => { document.getElementById('drops')?.scrollIntoView({ behavior: 'smooth' }); }} className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">Bundles</li>
+            {(categories.length > 0
+              ? categories.filter(c => !c.parentId).slice(0, 6)
+              : [{ id: 'new', name: 'New Arrivals' }, { id: 'men', name: 'Men' }, { id: 'women', name: 'Women' }]
+            ).map(cat => (
+              <li key={cat.id} onClick={() => { document.getElementById('drops')?.scrollIntoView({ behavior: 'smooth' }); }} className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
+                {cat.name}
+              </li>
+            ))}
           </ul>
         </div>
         
@@ -1750,11 +1787,11 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto mt-12 md:mt-20 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8 border-t border-gray-50 pt-6 md:pt-8">
         <p className="text-[7px] font-semibold uppercase tracking-widest opacity-20 text-black">© 2026 Grab & Go</p>
         <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6 transition-all duration-500">
-          <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-5 object-contain" referrerPolicy="no-referrer" />
-          <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-7 object-contain" referrerPolicy="no-referrer" />
-          <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-7 object-contain" referrerPolicy="no-referrer" />
-          <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-7 object-contain" referrerPolicy="no-referrer" />
-          <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-5 object-contain" referrerPolicy="no-referrer" />
+          <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-3 object-contain opacity-40 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+          <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-4 object-contain opacity-40 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+          <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-4 object-contain opacity-40 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+          <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-4 object-contain opacity-40 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+          <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-3 object-contain opacity-40 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
         </div>
       </div>
   </footer>
@@ -7367,8 +7404,7 @@ function AppContent() {
         product={selectedProduct} 
       />
 
-      <Footer />
-
+      <Footer categories={categories} />
       <Sidebar 
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
@@ -7384,7 +7420,9 @@ function AppContent() {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         setFilterCategory={setFilterCategory}
+        categories={categories}
       />
+
 
       <WishlistDrawer 
         isOpen={isWishlistOpen}
