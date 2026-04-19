@@ -846,9 +846,10 @@ const Sidebar = ({
   searchQuery: string,
   setSearchQuery: (q: string) => void,
   setFilterCategory: (c: string) => void,
+categories = []
+}: {
   categories?: Category[]
 }) => {
-
   const navigate = useNavigate();
   const location = useLocation();
   const [isShopOpen, setIsShopOpen] = useState(true);
