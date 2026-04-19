@@ -743,7 +743,8 @@ const Sidebar = ({
   partners = [],
   searchQuery,
   setSearchQuery,
-  setFilterCategory
+  setFilterCategory,
+  categories = []
 }: { 
   isOpen: boolean, 
   onClose: () => void, 
