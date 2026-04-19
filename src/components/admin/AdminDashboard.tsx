@@ -76,20 +76,21 @@ export default function AdminDashboard() {
 
   // Print label
   const printLabel = (shipmentId: number) => {
-    window.open(`${API_BASE}/api/shipping?action=label&shipmentId=${shipmentId}`, '_blank');
+    window.open(`${API_BASE}/api/shipment-actions?action=label&shipmentId=${shipmentId}`, '_blank');
   };
 
-  // Bulk print labels
+ // Bulk print labels
   const bulkPrintLabels = () => {
     const selectedOrders = filtered.filter(o => selected.has(o.id));
     const withShipments = selectedOrders.filter(o => o.shiplogicShipmentId);
 
     if (withShipments.length === 0) {
-      alert(
+      setDispatchStatus(
         selectedOrders.length === 0
-          ? 'No orders selected.'
-          : `${selectedOrders.length} order(s) selected but none have been dispatched via ShipLogic yet.\n\nDispatch orders first to generate waybill labels.`
+          ? '⚠️ No orders selected.'
+          : `⚠️ ${selectedOrders.length} order(s) selected but none dispatched yet. Dispatch first to generate labels.`
       );
+      setTimeout(() => setDispatchStatus(null), 5000);
       return;
     }
 
@@ -102,46 +103,53 @@ export default function AdminDashboard() {
     });
 
     if (withShipments.length < selectedOrders.length) {
-      alert(`Opened ${withShipments.length} label(s).\n${selectedOrders.length - withShipments.length} order(s) skipped (not yet dispatched).`);
+      setDispatchStatus(`📄 Opened ${withShipments.length} label(s). ${selectedOrders.length - withShipments.length} skipped (not dispatched).`);
+      setTimeout(() => setDispatchStatus(null), 5000);
     }
   };
 
-   // Bulk dispatch — creates ShipLogic shipments for selected pending orders
-  const bulkDispatch = async () => {
+    // Bulk dispatch — creates ShipLogic shipments for selected pending orders
+
+   const bulkDispatch = async () => {
     const pending = filtered.filter(o => selected.has(o.id) && o.status === 'confirmed');
     if (pending.length === 0) {
-      alert('No pending orders selected to dispatch.');
+      setDispatchStatus('⚠️ No pending orders selected to dispatch.');
+      setTimeout(() => setDispatchStatus(null), 4000);
       return;
     }
-    const yes = window.confirm(`Dispatch ${pending.length} order(s)? This will create ShipLogic shipments.`);
-    if (!yes) return;
+    if (!window.confirm(`Dispatch ${pending.length} order(s)? This will create ShipLogic shipments.`)) return;
 
     let success = 0;
     let failed = 0;
     const errors: string[] = [];
+    setDispatchStatus(`🚚 Dispatching ${pending.length} order(s)...`);
 
     for (const order of pending) {
       try {
-        const res = await fetch(`${API_BASE}/api/create-shipment`, {
+        const res = await fetch(`${API_BASE}/api/shipping?action=create`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ order, serviceLevel: 'standard' }),
         });
         const data = await res.json();
+        console.log('Dispatch response for', order.id, data);
 
-        if (data.success && data.shipmentId) {
-          // Save shipment details to Firestore so webhook can match later
-          const trackingRef = `GNG-${order.id}`;
+        if (data.success) {
+          const shipId = data.shipmentId || data.raw?.id || null;
+          const trackRef = data.trackingRef || data.raw?.custom_tracking_reference || `GNG-${order.id}`;
+          const trackNum = data.trackingNumber || data.raw?.tracking_reference || '';
+
           await updateDoc(doc(db, 'orders', order.id), {
             status: 'confirmed',
-            trackingReference: trackingRef,
-            trackingNumber: data.trackingNumber || '',
-            shiplogicShipmentId: data.shipmentId,
+            trackingReference: trackRef,
+            trackingNumber: trackNum,
+            ...(shipId ? { shiplogicShipmentId: shipId } : {}),
           });
           success++;
         } else {
           failed++;
-          errors.push(`#${order.id.slice(0, 8)}: ${data.error || data.details?.message || 'Unknown error'}`);
+          const detail = typeof data.details === 'string' ? data.details : data.details?.message || data.error || 'Unknown';
+          errors.push(`#${order.id.slice(0, 8)}: ${detail}`);
         }
       } catch (err: any) {
         failed++;
@@ -149,9 +157,10 @@ export default function AdminDashboard() {
       }
     }
 
-    let msg = `✅ ${success} shipment(s) created successfully.`;
-    if (failed > 0) msg += `\n❌ ${failed} failed:\n${errors.join('\n')}`;
-    alert(msg);
+    let msg = `✅ ${success} shipment(s) dispatched.`;
+    if (failed > 0) msg += ` ❌ ${failed} failed: ${errors.join(', ')}`;
+    setDispatchStatus(msg);
+    setTimeout(() => setDispatchStatus(null), 8000);
     await fetchOrders();
     setSelected(new Set());
   };

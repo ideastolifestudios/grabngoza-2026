@@ -129,13 +129,13 @@ export default async function handler(req: any, res: any) {
 
     const rates = (data.rates || []).map((r: any) => ({
       serviceLevel: {
-        name: r.service_level?.name || r.service_level?.code || 'Delivery',
-        description: r.service_level?.description || '',
-        code: r.service_level?.code || '',
+        name: String(r.service_level?.name || r.service_level?.code || 'Delivery'),
+        description: String(r.service_level?.description || ''),
+        code: String(r.service_level?.code || ''),
         delivery_date_from: r.estimated_delivery_date || null,
       },
-      amount: r.price_breakdown?.total || r.cost?.amount || r.rate || 0,
-      carrier: r.courier?.name || r.carrier || 'Courier',
+      amount: Number(r.price_breakdown?.total || r.cost?.amount || r.rate || 0),
+      carrier: String(r.courier?.name || r.service_level?.name || r.carrier || 'Courier'),
     })).sort((a: any, b: any) => a.amount - b.amount);
 
     return res.status(200).json({ success: true, rates: rates.length ? rates : FALLBACK_RATES, parcelDetails: parcel });
@@ -182,6 +182,9 @@ export default async function handler(req: any, res: any) {
       code: order.postalCode || '',
     };
 
+    // Use selected service level from checkout if available, fallback to ECO
+    const serviceLevelCode = order.selectedServiceLevel || 'ECO';
+
     const payload: any = {
       collection_address: STORE(),
       delivery_address: deliveryAddr,
@@ -196,12 +199,30 @@ export default async function handler(req: any, res: any) {
         email: order.email || '',
       },
       parcels: [parcel],
-      service_level_id: 184277,
+      service_level_code: serviceLevelCode,
       reference: `GNG-${order.id || Date.now()}`,
       declared_value: order.total || 0,
-      ...(special_instructions_delivery ? { special_instructions_delivery } : {}),
+      // Bob Go special instructions from order
+      ...(special_instructions_delivery || order.specialInstructions
+        ? { special_instructions_delivery: special_instructions_delivery || order.specialInstructions }
+        : {}),
       ...(special_instructions_collection ? { special_instructions_collection } : {}),
-      ...(isInternational && customs ? { customs } : {}),
+      ...(isInternational && (customs || order.items)
+        ? {
+            customs: customs || {
+              description: 'Clothing / Fashion Apparel',
+              incoterm: 'DDU',
+              contents_type: 'sale_of_goods',
+              items: (order.items || []).map((item: any) => ({
+                description: item.name,
+                quantity: item.quantity || 1,
+                value: item.price || 0,
+                weight_kg: item.weight || 0.5,
+                origin_country: 'ZA',
+              })),
+            },
+          }
+        : {}),
     };
 
     const { ok, status, data } = await slFetch('/shipments', 'POST', payload);
@@ -252,36 +273,36 @@ export default async function handler(req: any, res: any) {
 
   const labelType = type === 'sticker' ? 'sticker' : 'label';
 
-  const url = `${BASE_URL}/v2/shipments/${shipmentId}/${labelType}`;
+  // Try v2 first, then base path fallback
+  const urls = [
+    `${BASE_URL}/v2/shipments/${shipmentId}/${labelType}`,
+    `${BASE_URL}/shipments/${shipmentId}/${labelType}`,
+  ];
 
-  let attempts = 0;
-  let response;
-
-  while (attempts < 3) {
-    response = await fetch(url, {
-      headers: { Authorization: `Bearer ${API_KEY()}` },
-    });
-
-    if (response.ok) break;
-
-    // 🔁 wait 2 seconds before retry
-    await new Promise(r => setTimeout(r, 2000));
-    attempts++;
+  let response: any;
+  for (const url of urls) {
+    let attempts = 0;
+    while (attempts < 3) {
+      response = await fetch(url, {
+        headers: { Authorization: `Bearer ${API_KEY()}`, Accept: 'application/pdf' },
+      });
+      if (response.ok) break;
+      await new Promise(r => setTimeout(r, 2000));
+      attempts++;
+    }
+    if (response?.ok) break;
   }
 
-  // ❌ still failing after retries
   if (!response || !response.ok) {
-    const text = await response?.text();
+    const text = await response?.text().catch(() => '');
     return res.status(response?.status || 500).json({
-      error: 'Label not ready yet',
+      error: 'Label not ready yet. The shipment may still be processing — try again in a few seconds.',
       details: text,
     });
   }
 
-  // ✅ success
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename=label-${shipmentId}.pdf`);
-
   const buffer = await response.arrayBuffer();
   return res.send(Buffer.from(buffer));
 }
