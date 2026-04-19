@@ -564,7 +564,8 @@ const Header = ({
   searchQuery,
   setSearchQuery,
   products,
-  onOpenHowToOrder
+  onOpenHowToOrder,
+  categories = []
 }: { 
   cartCount: number, 
   onOpenCart: () => void, 
@@ -578,7 +579,8 @@ const Header = ({
   searchQuery: string,
   setSearchQuery: (q: string) => void,
   products: Product[],
-  onOpenHowToOrder: () => void
+  onOpenHowToOrder: () => void,
+  categories?: Category[]
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -587,7 +589,20 @@ const Header = ({
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const debouncedSearch = useDebounce(localSearch, 300);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
+  const megaMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleNavEnter = (id: string) => {
+    if (megaMenuTimer.current) clearTimeout(megaMenuTimer.current);
+    setMegaMenuOpen(id);
+  };
+  const handleNavLeave = () => {
+    megaMenuTimer.current = setTimeout(() => setMegaMenuOpen(null), 150);
+  };
+
+  const topCats = categories.filter(c => !c.parentId);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -635,9 +650,10 @@ const Header = ({
           opacity: isVisible ? 1 : 0
         }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className={`fixed top-0 left-0 right-0 z-50 ${scrolled ? 'bg-white/95 backdrop-blur-md py-1 border-b border-gray-100 shadow-sm' : 'bg-white py-2'}`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/98 backdrop-blur-md shadow-sm border-b border-gray-100' : 'bg-white'}`}
       >
-        <div className="max-w-[1800px] mx-auto px-4 md:px-10 flex items-center justify-between gap-4">
+        {/* Top bar: Logo + Actions */}
+        <div className="max-w-[1800px] mx-auto px-4 md:px-10 flex items-center justify-between gap-4 py-2 md:py-3">
         
         {/* Left: Logo */}
         <div className="flex-shrink-0">
@@ -646,9 +662,70 @@ const Header = ({
           </Link>
         </div>
 
+        {/* Centre: Desktop Category Nav */}
+        {topCats.length > 0 && (
+          <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center" onMouseLeave={handleNavLeave}>
+            <Link
+              to="/"
+              className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-colors rounded-full ${location.pathname === '/' ? 'text-black bg-black/5' : 'text-gray-400 hover:text-black hover:bg-black/5'}`}
+            >
+              All
+            </Link>
+            {topCats.slice(0, 7).map(cat => {
+              const subCats = categories.filter(c => c.parentId === cat.id);
+              const isActive = location.pathname === `/category/${encodeURIComponent(cat.name.toLowerCase())}`;
+              return (
+                <div key={cat.id} className="relative" onMouseEnter={() => handleNavEnter(cat.id)} onMouseLeave={handleNavLeave}>
+                  <Link
+                    to={`/category/${encodeURIComponent(cat.name.toLowerCase())}`}
+                    className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-colors rounded-full flex items-center gap-1 ${isActive ? 'text-black bg-black/5' : 'text-gray-400 hover:text-black hover:bg-black/5'}`}
+                  >
+                    {cat.name}
+                    {subCats.length > 0 && <ChevronDown size={10} className={`transition-transform ${megaMenuOpen === cat.id ? 'rotate-180' : ''}`} />}
+                  </Link>
+                  {/* Mega dropdown for sub-categories */}
+                  <AnimatePresence>
+                    {megaMenuOpen === cat.id && subCats.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.15, ease: 'easeOut' }}
+                        onMouseEnter={() => handleNavEnter(cat.id)}
+                        onMouseLeave={handleNavLeave}
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white border border-gray-100 shadow-2xl rounded-xl p-4 min-w-[180px] z-50"
+                      >
+                        <div className="space-y-0.5">
+                          <Link
+                            to={`/category/${encodeURIComponent(cat.name.toLowerCase())}`}
+                            onClick={() => setMegaMenuOpen(null)}
+                            className="block px-3 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
+                          >
+                            All {cat.name}
+                          </Link>
+                          {subCats.map(sub => (
+                            <Link
+                              key={sub.id}
+                              to={`/category/${encodeURIComponent(sub.name.toLowerCase())}`}
+                              onClick={() => setMegaMenuOpen(null)}
+                              className="block px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
+                            >
+                              {sub.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </nav>
+        )}
+
         {/* Right: Actions */}
-        <div className="flex items-center justify-end gap-2 md:gap-4 flex-1">
-          {/* Search — next to wishlist */}
+        <div className="flex items-center justify-end gap-2 md:gap-3">
+          {/* Search */}
           <div className="relative hidden sm:block">
             <div className="flex items-center border border-gray-200 rounded-full px-3 py-1.5 gap-2 bg-white hover:border-gray-400 transition-all">
               <Search size={14} className="text-gray-400 shrink-0" />
@@ -659,31 +736,41 @@ const Header = ({
                 onChange={(e) => setLocalSearch(e.target.value)}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="text-xs font-medium outline-none bg-transparent w-28 md:w-40 placeholder:text-gray-300"
+                className="text-xs font-medium outline-none bg-transparent w-28 md:w-36 placeholder:text-gray-300"
               />
             </div>
             {/* Suggestions dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-xl z-50 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-xl z-50 overflow-hidden min-w-[280px]">
                 {suggestions.map(p => (
                   <button
                     key={p.id}
                     onMouseDown={() => { navigate(`/product/${p.id}`); setLocalSearch(''); setShowSuggestions(false); }}
-                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 text-left"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 text-left transition-colors"
                   >
-                    {p.image && <img src={p.image} className="w-8 h-8 object-cover rounded" />}
-                    <div>
-                      <p className="text-xs font-bold text-black">{p.name}</p>
-                      <p className="text-[9px] text-gray-400 uppercase">R{p.price}</p>
+                    {p.image && <img src={p.image} className="w-10 h-10 object-cover rounded-lg flex-shrink-0" referrerPolicy="no-referrer" />}
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-black truncate">{p.name}</p>
+                      <p className="text-[9px] text-gray-400 uppercase tracking-widest">{formatPrice(p.price)}</p>
                     </div>
+                    <ChevronRight size={12} className="text-gray-300 flex-shrink-0 ml-auto" />
                   </button>
                 ))}
+                <div className="border-t border-gray-50 px-3 py-2">
+                  <button
+                    onMouseDown={() => { navigate('/'); setShowSuggestions(false); }}
+                    className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
+                  >
+                    Browse all products →
+                  </button>
+                </div>
               </div>
             )}
           </div>
+
           <button 
             onClick={onOpenWishlist}
-            className="p-2 hover:bg-black/5 rounded-full transition-colors text-black hidden sm:block"
+            className="p-2 hover:bg-black/5 rounded-full transition-colors text-black hidden sm:block relative"
             title="Wishlist"
           >
             <Heart size={20} />
@@ -743,8 +830,7 @@ const Sidebar = ({
   partners = [],
   searchQuery,
   setSearchQuery,
-  setFilterCategory,
-  categories = []
+  setFilterCategory
 }: { 
   isOpen: boolean, 
   onClose: () => void, 
@@ -844,12 +930,17 @@ const Sidebar = ({
                             key={link.name}
                             onClick={() => {
                               onClose();
-                              setFilterCategory(link.filter);
-                              if (location.pathname !== '/') {
+                              if (link.filter === 'All') {
                                 navigate('/');
+                              } else {
+                                navigate(`/category/${encodeURIComponent(link.filter.toLowerCase())}`);
                               }
                             }}
-                            className="group py-3 flex items-center justify-between text-lg font-medium text-gray-500 hover:text-black transition-all"
+                            className={`group py-3 flex items-center justify-between text-lg font-medium transition-all ${
+                              (location.pathname === `/category/${encodeURIComponent(link.filter.toLowerCase())}` ||
+                               (link.filter === 'All' && location.pathname === '/'))
+                                ? 'text-black font-bold' : 'text-gray-500 hover:text-black'
+                            }`}
                           >
                             <span>{link.name}</span>
                             <ChevronRight size={16} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
@@ -970,29 +1061,71 @@ const Sidebar = ({
   );
 };
 
-const Hero = () => (
-  <section className="relative h-[60vh] md:h-[80vh] flex items-center overflow-hidden bg-white">
+const Hero = () => {
+  const navigate = useNavigate();
+  return (
+  <section className="relative h-[70vh] md:h-[88vh] flex items-end overflow-hidden bg-black">
     <div className="absolute inset-0 z-0">
       <img 
         src="https://picsum.photos/seed/streetwear-hero/1920/1080" 
         alt="HeroBackground" 
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover opacity-70 scale-105"
+        style={{ objectPosition: 'center 30%' }}
         referrerPolicy="no-referrer"
       />
-      <div className="absolute inset-0 bg-black/10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
     </div>
     
-    <div className="absolute bottom-10 right-10 hidden lg:flex flex-col items-end gap-2 opacity-50 text-white">
-      <div className="w-[1px] h-24 bg-white/30 relative overflow-hidden">
+    {/* Hero Content */}
+    <div className="relative z-10 w-full max-w-[1800px] mx-auto px-6 md:px-10 pb-12 md:pb-20">
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-xl"
+      >
+        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/50 mb-4">New Season · 2026</p>
+        <h1 className="text-5xl md:text-7xl font-display font-black uppercase tracking-tighter text-white leading-[0.9] mb-6">
+          Fresh<br />Drops.<br /><span className="text-[#e34234]">Daily.</span>
+        </h1>
+        <p className="text-xs md:text-sm text-white/60 uppercase tracking-widest font-bold mb-10 max-w-xs leading-relaxed">
+          Premium streetwear & lifestyle essentials. Exclusive brands, delivered nationwide.
+        </p>
+        <div className="flex items-center gap-4 flex-wrap">
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate('/')}
+            className="px-8 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white/90 transition-all flex items-center gap-3 shadow-2xl"
+          >
+            Shop Now <ArrowRight size={14} />
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
+            className="px-8 py-4 border border-white/30 text-white text-[10px] font-black uppercase tracking-[0.3em] hover:border-white/60 transition-all backdrop-blur-sm"
+          >
+            View All
+          </motion.button>
+        </div>
+      </motion.div>
+    </div>
+
+    {/* Scroll indicator */}
+    <div className="absolute bottom-8 right-10 hidden lg:flex flex-col items-center gap-2 opacity-40 text-white">
+      <span className="text-[8px] font-black uppercase tracking-widest rotate-90 mb-4">Scroll</span>
+      <div className="w-[1px] h-20 bg-white/30 relative overflow-hidden">
         <motion.div 
-          animate={{ y: [0, 96] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          animate={{ y: [0, 80] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
           className="absolute top-0 left-0 w-full h-1/2 bg-white"
         />
       </div>
     </div>
   </section>
-);
+  );
+};
 
 
 const PAYMENT_LOGOS = {
@@ -1044,6 +1177,9 @@ const ProductDetailContent = ({
     }
   };
 
+  // Recently viewed tracking
+  const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
+
   useEffect(() => {
     if (product?.variants) {
       const initial: Record<string, string> = {};
@@ -1057,6 +1193,18 @@ const ProductDetailContent = ({
     setOpenAccordion(null);
     window.scrollTo(0, 0);
   }, [product]);
+
+  // Track recently viewed in localStorage
+  useEffect(() => {
+    if (!product) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem('grab_go_recently_viewed') || '[]') as string[];
+      const updated = [product.id, ...stored.filter(id => id !== product.id)].slice(0, 8);
+      localStorage.setItem('grab_go_recently_viewed', JSON.stringify(updated));
+      const viewed = updated.filter(id => id !== product.id).map(id => allProducts.find(p => p.id === id)).filter(Boolean) as Product[];
+      setRecentlyViewed(viewed.slice(0, 6));
+    } catch {}
+  }, [product?.id]);
 
   if (!product) return (
     <div className="min-h-screen flex items-center justify-center pt-24">
@@ -1386,6 +1534,27 @@ const ProductDetailContent = ({
             ))}
           </div>
         </div>
+
+        {/* Recently Viewed */}
+        {recentlyViewed.length > 0 && (
+          <div className="mt-8 md:mt-10 pt-8 md:pt-10 border-t border-gray-100">
+            <h4 className="text-sm md:text-lg font-bold uppercase tracking-tighter mb-4 md:mb-6">Recently Viewed</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+              {recentlyViewed.map(p => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  onAddToCart={onAddToCart}
+                  onEmailDetails={onEmailDetails}
+                  onBuyNow={onBuyNow}
+                  isWishlisted={wishlist.includes(p.id)}
+                  onToggleWishlist={onToggleWishlist}
+                  isLoading={isCartLoading}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1731,13 +1900,15 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {  const [s
         <div className="space-y-3 md:space-y-4">
           <h4 className="text-[9px] font-semibold uppercase tracking-wider opacity-20 text-black">Shop</h4>
           <ul className="space-y-1 md:space-y-2 text-[9px] font-semibold uppercase tracking-wider text-black">
-            <li onClick={() => { document.getElementById('drops')?.scrollIntoView({ behavior: 'smooth' }); }} className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">All Products</li>
+            <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
+              <Link to="/">All Products</Link>
+            </li>
             {(categories.length > 0
               ? categories.filter(c => !c.parentId).slice(0, 6)
               : [{ id: 'new', name: 'New Arrivals' }, { id: 'men', name: 'Men' }, { id: 'women', name: 'Women' }]
             ).map(cat => (
-              <li key={cat.id} onClick={() => { document.getElementById('drops')?.scrollIntoView({ behavior: 'smooth' }); }} className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
-                {cat.name}
+              <li key={cat.id} className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
+                <Link to={`/category/${encodeURIComponent(cat.name.toLowerCase())}`}>{cat.name}</Link>
               </li>
             ))}
           </ul>
@@ -6166,16 +6337,17 @@ const Breadcrumbs = ({
 
   return (
     <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-black/30 mb-6 overflow-x-auto no-scrollbar whitespace-nowrap">
-      <Link to="/" onClick={() => onCategorySelect?.('All')} className="hover:text-black transition-colors">Studio</Link>
+      <Link to="/" className="hover:text-black transition-colors">Studio</Link>
       {path.map((item, idx) => (
         <React.Fragment key={idx}>
           <ChevronRight size={8} className="flex-shrink-0" />
-          <button 
+          <Link 
+            to={idx === path.length - 1 && !product ? '#' : `/category/${encodeURIComponent(item.name.toLowerCase())}`}
             onClick={() => onCategorySelect?.(item.name)}
-            className={`hover:text-black transition-colors ${idx === path.length - 1 && !product ? 'text-black' : ''}`}
+            className={`hover:text-black transition-colors ${idx === path.length - 1 && !product ? 'text-black pointer-events-none' : ''}`}
           >
             {item.name}
-          </button>
+          </Link>
         </React.Fragment>
       ))}
       {product && (
@@ -6593,6 +6765,9 @@ const HomePage = ({
 
       <PromoGrid />
 
+      {/* Products anchor for hero scroll */}
+      <div id="products-section" />
+
       {/* Brand Sections with Banners */}
       {brandNames.map(brandName => {
         const brandProducts = filteredAndSortedProducts.filter(p => p.brand === brandName);
@@ -6685,11 +6860,311 @@ const HomePage = ({
         </div>
       )}
 
+      {/* Shop by Category grid — only shown if categories have images */}
+      {categories.filter(c => !c.parentId && c.image).length > 0 && (
+        <section className="py-16 md:py-24 px-4 md:px-10 bg-gray-50/40">
+          <div className="max-w-[1800px] mx-auto">
+            <div className="flex items-end justify-between mb-10 md:mb-14">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-black/30 mb-2">Browse by Category</p>
+                <h2 className="text-3xl md:text-5xl font-display font-black uppercase tracking-tighter text-black leading-none">Shop<br />The Look</h2>
+              </div>
+              <Link to="/" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors flex items-center gap-2 pb-1">
+                View All <ArrowRight size={12} />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
+              {categories.filter(c => !c.parentId && c.image).slice(0, 6).map(cat => (
+                <Link
+                  key={cat.id}
+                  to={`/category/${encodeURIComponent(cat.name.toLowerCase())}`}
+                  className="group relative aspect-[3/4] overflow-hidden bg-gray-100 rounded-sm"
+                >
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white leading-tight">{cat.name}</p>
+                    <p className="text-[8px] text-white/60 uppercase tracking-widest mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                      Shop Now <ArrowRight size={8} />
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <SocialProof testimonials={testimonials} />
       <PartnershipHub partners={partners} />
     </main>
   );
 };
+
+// ─── Category Page (MyRunway-style) ─────────────────────────────────────────
+
+const CategoryPage = ({
+  products,
+  categories,
+  brands,
+  addToCart,
+  handleBuyNow,
+  onEmailDetails,
+  wishlist,
+  toggleWishlist,
+  isCartLoading,
+  showToast
+}: {
+  products: Product[];
+  categories: Category[];
+  brands: Brand[];
+  addToCart: (p: Product, v?: Record<string, string>, q?: number) => void;
+  handleBuyNow: (p: Product, v?: Record<string, string>) => void;
+  onEmailDetails: (p: Product) => void;
+  wishlist: string[];
+  toggleWishlist: (id: string) => void;
+  isCartLoading: boolean;
+  showToast: (msg: string, type?: 'success' | 'error') => void;
+}) => {
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
+  const [sortBy, setSortBy] = useState<'default' | 'price-low' | 'price-high' | 'newest'>('default');
+  const [maxPrice, setMaxPrice] = useState<number>(Infinity);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [selectedSubCat, setSelectedSubCat] = useState<string>('All');
+
+  // Resolve category from slug
+  const decodedSlug = slug ? decodeURIComponent(slug) : '';
+  const matchedCat = categories.find(c => c.name.toLowerCase() === decodedSlug);
+  const categoryName = matchedCat?.name || decodedSlug.charAt(0).toUpperCase() + decodedSlug.slice(1);
+
+  // Sub-categories of this category
+  const subCats = matchedCat
+    ? categories.filter(c => c.parentId === matchedCat.id)
+    : [];
+
+  // Products in this category or its sub-categories
+  const categoryProducts = useMemo(() => {
+    let result = products.filter(p => {
+      const cats = p.categories || [];
+      if (matchedCat) {
+        const subNames = categories.filter(c => c.parentId === matchedCat.id).map(c => c.name);
+        return cats.includes(matchedCat.name) || subNames.some(sn => cats.includes(sn));
+      }
+      return cats.some(c => c.toLowerCase() === decodedSlug.toLowerCase());
+    });
+
+    if (selectedSubCat !== 'All') {
+      result = result.filter(p => (p.categories || []).includes(selectedSubCat));
+    }
+    if (maxPrice !== Infinity) {
+      result = result.filter(p => p.price <= maxPrice);
+    }
+    if (sortBy === 'price-low') result.sort((a, b) => a.price - b.price);
+    else if (sortBy === 'price-high') result.sort((a, b) => b.price - a.price);
+    return result;
+  }, [products, categories, matchedCat, decodedSlug, selectedSubCat, maxPrice, sortBy]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const close = () => setActiveDropdown(null);
+    if (activeDropdown) window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, [activeDropdown]);
+
+  useEffect(() => { 
+    window.scrollTo(0, 0);
+    setMaxPrice(Infinity);
+    setSortBy('default');
+    setSelectedSubCat('All');
+  }, [slug]);
+
+  const brandNames = useMemo(() => {
+    const b = new Set<string>();
+    categoryProducts.forEach(p => { if (p.brand) b.add(p.brand); });
+    return Array.from(b);
+  }, [categoryProducts]);
+
+  return (
+    <main className="bg-white text-black min-h-screen pt-16 md:pt-20">
+      {/* Category Hero */}
+      <div className="relative h-[28vh] md:h-[40vh] bg-gray-900 overflow-hidden">
+        {matchedCat?.image ? (
+          <img src={matchedCat.image} alt={categoryName} className="absolute inset-0 w-full h-full object-cover opacity-60" referrerPolicy="no-referrer" />
+        ) : (
+          <img src={`https://picsum.photos/seed/${categoryName}/1920/600?grayscale`} alt={categoryName} className="absolute inset-0 w-full h-full object-cover opacity-40" referrerPolicy="no-referrer" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+        <div className="absolute inset-0 flex flex-col justify-end px-6 md:px-12 pb-8 md:pb-12">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-white/50 mb-3">
+            <button onClick={() => navigate('/')} className="hover:text-white transition-colors">Home</button>
+            <ChevronRight size={8} />
+            <span className="text-white">{categoryName}</span>
+          </nav>
+          <h1 className="text-3xl md:text-6xl font-display font-black uppercase tracking-tighter text-white leading-none">
+            {categoryName}
+          </h1>
+          <p className="text-[10px] text-white/50 uppercase tracking-[0.3em] mt-2 font-bold">
+            {categoryProducts.length} items
+          </p>
+        </div>
+      </div>
+
+      {/* Sub-category tabs */}
+      {subCats.length > 0 && (
+        <div className="sticky top-14 md:top-[60px] z-30 bg-white border-b border-gray-100 px-4 md:px-10">
+          <div className="max-w-[1800px] mx-auto flex items-center gap-0 overflow-x-auto no-scrollbar">
+            {[{ id: 'all', name: 'All' }, ...subCats].map(sc => (
+              <button
+                key={sc.id || 'all'}
+                onClick={() => setSelectedSubCat(sc.name === 'All' ? 'All' : sc.name)}
+                className={`flex-shrink-0 px-5 py-4 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all ${
+                  selectedSubCat === (sc.name === 'All' ? 'All' : sc.name)
+                    ? 'border-black text-black'
+                    : 'border-transparent text-gray-400 hover:text-black hover:border-gray-300'
+                }`}
+              >
+                {sc.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Filter bar */}
+      <div className={`sticky z-20 bg-white/95 backdrop-blur-xl border-b border-gray-100 py-3 px-4 md:px-10 ${subCats.length > 0 ? 'top-[110px] md:top-[120px]' : 'top-[56px] md:top-[64px]'}`}>
+        <div className="max-w-[1800px] mx-auto flex items-center justify-between gap-4" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center gap-8">
+            <FilterDropdown
+              label="Sort"
+              value={sortBy}
+              options={[
+                { value: 'default', label: 'Recommended' },
+                { value: 'price-low', label: 'Price: Low — High' },
+                { value: 'price-high', label: 'Price: High — Low' },
+              ]}
+              onChange={setSortBy}
+              onClear={() => setSortBy('default')}
+              displayValue={sortBy === 'default' ? 'Recommended' : sortBy === 'price-low' ? 'Price: Low — High' : 'Price: High — Low'}
+              isOpen={activeDropdown === 'sort'}
+              onToggle={() => setActiveDropdown(activeDropdown === 'sort' ? null : 'sort')}
+            />
+            <FilterDropdown
+              label="Price"
+              value={maxPrice}
+              options={[
+                { value: Infinity, label: 'All Prices' },
+                { value: 200, label: 'Under R200' },
+                { value: 400, label: 'Under R400' },
+                { value: 800, label: 'Under R800' },
+                { value: 1500, label: 'Under R1500' },
+              ]}
+              onChange={setMaxPrice}
+              onClear={() => setMaxPrice(Infinity)}
+              displayValue={maxPrice === Infinity ? 'All' : `Under R${maxPrice}`}
+              isOpen={activeDropdown === 'price'}
+              onToggle={() => setActiveDropdown(activeDropdown === 'price' ? null : 'price')}
+            />
+          </div>
+          <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 hidden md:block">
+            {categoryProducts.length} Results
+          </span>
+        </div>
+      </div>
+
+      {/* Products — grouped by brand if multiple brands, otherwise plain grid */}
+      <div className="max-w-[1800px] mx-auto px-4 md:px-10 py-10 md:py-16">
+        {categoryProducts.length === 0 ? (
+          <div className="py-32 text-center">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search size={24} className="opacity-20" />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30">No products in this category yet</p>
+            <button onClick={() => navigate('/')} className="mt-6 text-[10px] font-black uppercase tracking-widest underline underline-offset-4 hover:opacity-60 transition-opacity">
+              Browse All Products
+            </button>
+          </div>
+        ) : brandNames.length > 1 ? (
+          // Multi-brand layout: brand sections
+          <div className="space-y-16">
+            {brandNames.map(brandName => {
+              const brandProducts = categoryProducts.filter(p => p.brand === brandName);
+              const brandInfo = brands.find(b => b.name === brandName);
+              return (
+                <div key={brandName}>
+                  <div className="flex items-center gap-6 mb-6 pb-4 border-b border-gray-100">
+                    {(brandInfo?.logo || brandProducts[0]?.soldByLogo) ? (
+                      <img src={brandInfo?.logo || brandProducts[0]?.soldByLogo} alt={brandName} className="h-8 object-contain grayscale" referrerPolicy="no-referrer" />
+                    ) : (
+                      <h2 className="text-sm font-black uppercase tracking-[0.3em] text-black">{brandName}</h2>
+                    )}
+                    <div className="flex-grow h-[1px] bg-gray-100" />
+                    <span className="text-[9px] text-gray-300 uppercase tracking-widest font-bold">{brandProducts.length} items</span>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8">
+                    {brandProducts.map((product, idx) => (
+                      <ProductCard
+                        key={product.id || idx}
+                        product={product}
+                        onAddToCart={addToCart}
+                        onEmailDetails={onEmailDetails}
+                        onBuyNow={handleBuyNow}
+                        isWishlisted={wishlist.includes(product.id)}
+                        onToggleWishlist={toggleWishlist}
+                        isLoading={isCartLoading}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            {/* Products without brand */}
+            {categoryProducts.filter(p => !p.brand).length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8">
+                {categoryProducts.filter(p => !p.brand).map((product, idx) => (
+                  <ProductCard
+                    key={product.id || idx}
+                    product={product}
+                    onAddToCart={addToCart}
+                    onEmailDetails={onEmailDetails}
+                    onBuyNow={handleBuyNow}
+                    isWishlisted={wishlist.includes(product.id)}
+                    onToggleWishlist={toggleWishlist}
+                    isLoading={isCartLoading}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          // Single-brand or unbranded: clean grid like MyRunway
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8">
+            {categoryProducts.map((product, idx) => (
+              <ProductCard
+                key={product.id || idx}
+                product={product}
+                onAddToCart={addToCart}
+                onEmailDetails={onEmailDetails}
+                onBuyNow={handleBuyNow}
+                isWishlisted={wishlist.includes(product.id)}
+                onToggleWishlist={toggleWishlist}
+                isLoading={isCartLoading}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const ProductPage = ({ 
   products, 
@@ -6969,6 +7444,7 @@ function AppContent() {
   const toggleWishlist = async (productId: string) => {
     if (!user) {
       setIsAuthOpen(true);
+      setToast({ message: 'Sign in to save to your wishlist', type: 'error' });
       return;
     }
     const isAdding = !wishlist.includes(productId);
@@ -7000,8 +7476,10 @@ function AppContent() {
         }
         return [...prev, saved];
       });
+      setToast({ message: productData.id ? 'Product updated' : 'Product added', type: 'success' });
     } catch (err) {
       console.error("Error saving product:", err);
+      setToast({ message: 'Failed to save product', type: 'error' });
     }
   };
 
@@ -7010,8 +7488,10 @@ function AppContent() {
     try {
       await productService.deleteProduct(id);
       setProducts(prev => prev.filter(p => p.id !== id));
+      setToast({ message: 'Product deleted', type: 'success' });
     } catch (err) {
       console.error("Error deleting product:", err);
+      setToast({ message: 'Failed to delete product', type: 'error' });
     }
   };
 
@@ -7021,6 +7501,7 @@ function AppContent() {
     try {
       const userData = await authService.getCurrentUser();
       setUser(userData);
+      setToast({ message: `Welcome back, ${userData.firstName}!`, type: 'success' });
     } catch (err: any) {
       console.error("Failed to fetch user after login:", err);
       
@@ -7035,6 +7516,7 @@ function AppContent() {
       }
       
       setUser(null);
+      setToast({ message, type: 'error' });
       console.error(message);
     } finally {
       setIsProfileLoading(false);
@@ -7053,8 +7535,10 @@ function AppContent() {
         }
         return [...prev, saved];
       });
+      setToast({ message: category.id ? 'Category updated' : 'Category created', type: 'success' });
     } catch (error) {
       console.error("Failed to save category:", error);
+      setToast({ message: 'Failed to save category', type: 'error' });
     }
   };
 
@@ -7062,8 +7546,10 @@ function AppContent() {
     try {
       await categoryService.deleteCategory(id);
       setCategories(prev => prev.filter(c => c.id !== id));
+      setToast({ message: 'Category deleted', type: 'success' });
     } catch (error) {
       console.error("Failed to delete category:", error);
+      setToast({ message: 'Failed to delete category', type: 'error' });
     }
   };
 
@@ -7079,8 +7565,10 @@ function AppContent() {
         }
         return [...prev, saved];
       });
+      setToast({ message: brand.id ? 'Brand updated' : 'Brand created', type: 'success' });
     } catch (error) {
       console.error("Failed to save brand:", error);
+      setToast({ message: 'Failed to save brand', type: 'error' });
     }
   };
 
@@ -7088,8 +7576,10 @@ function AppContent() {
     try {
       await brandService.deleteBrand(id);
       setBrands(prev => prev.filter(b => b.id !== id));
+      setToast({ message: 'Brand deleted', type: 'success' });
     } catch (error) {
       console.error("Failed to delete brand:", error);
+      setToast({ message: 'Failed to delete brand', type: 'error' });
     }
   };
 
@@ -7098,8 +7588,10 @@ function AppContent() {
       await signOut(auth);
       setUser(null);
       setIsMenuOpen(false);
+      setToast({ message: 'Signed out successfully', type: 'success' });
     } catch (err) {
       console.error("Logout failed:", err);
+      setToast({ message: 'Failed to sign out', type: 'error' });
     }
   };
 
@@ -7108,8 +7600,10 @@ function AppContent() {
     try {
       const updated = await orderService.updateOrder(orderId, updates);
       setOrders(prev => prev.map(o => o.id === orderId ? updated : o));
+      setToast({ message: 'Order updated', type: 'success' });
     } catch (err) {
       console.error("Error updating order:", err);
+      setToast({ message: 'Failed to update order', type: 'error' });
     }
   };
 
@@ -7144,11 +7638,13 @@ function AppContent() {
         // 4. Update UI to success state
         setPaymentStatus('success');
         setIsCheckoutOpen(true);
+        setToast({ message: '🎉 Order placed successfully!', type: 'success' });
         
         // Clean up URL
         window.history.replaceState({}, '', '/');
       } catch (err) {
         console.error("Error finalizing payment:", err);
+        setToast({ message: 'Error confirming order — contact support', type: 'error' });
       }
     };
 
@@ -7160,9 +7656,11 @@ function AppContent() {
       setIsCheckoutOpen(true);
       setCart([]);
       localStorage.removeItem('grab_and_go_cart');
+      setToast({ message: '🎉 Order placed successfully!', type: 'success' });
     } else if (status === 'cancelled') {
       setPaymentStatus('cancelled');
       setIsCheckoutOpen(true);
+      setToast({ message: 'Payment cancelled', type: 'error' });
       // Clean up URL
       window.history.replaceState({}, '', '/');
     }
@@ -7276,9 +7774,11 @@ function AppContent() {
   };
 
   const removeFromCart = (productId: string, variants?: Record<string, string>) => {
-    setCart(prev => prev.filter(item => 
-      !(item.id === productId && JSON.stringify(item.selectedVariants || {}) === JSON.stringify(variants || {}))
-    ));
+    setCart(prev => {
+      const item = prev.find(i => i.id === productId && JSON.stringify(i.selectedVariants || {}) === JSON.stringify(variants || {}));
+      if (item) setToast({ message: `${item.name} removed from cart`, type: 'success' });
+      return prev.filter(i => !(i.id === productId && JSON.stringify(i.selectedVariants || {}) === JSON.stringify(variants || {})));
+    });
   };
 
   const handleCheckout = () => {
@@ -7314,6 +7814,7 @@ function AppContent() {
         setSearchQuery={setSearchQuery}
         products={products}
         onOpenHowToOrder={() => setIsHowToOrderOpen(true)}
+        categories={categories}
       />
       
       <Routes>
@@ -7368,6 +7869,23 @@ function AppContent() {
             isCartLoading={isCartLoading}
             categories={categories}
             brands={brands}
+          />
+        } />
+        <Route path="/category/:slug" element={
+          <CategoryPage
+            products={products}
+            categories={categories}
+            brands={brands}
+            addToCart={addToCart}
+            handleBuyNow={handleBuyNow}
+            onEmailDetails={(p) => {
+              setSelectedProduct(p);
+              setIsSendingEmail(true);
+            }}
+            wishlist={wishlist}
+            toggleWishlist={toggleWishlist}
+            isCartLoading={isCartLoading}
+            showToast={(msg, type) => setToast({ message: msg, type: type || 'success' })}
           />
         } />
         <Route path="/order-success" element={
