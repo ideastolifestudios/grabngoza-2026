@@ -245,32 +245,46 @@ export default async function handler(req: any, res: any) {
 
   // ── Print label / cancel ────────────────────────────────────────────────────
   if (action === 'label') {
-    if (req.method !== 'GET') return res.status(405).json({ error: 'GET required' });
-    const { shipmentId, type } = req.query;
-    if (!shipmentId) return res.status(400).json({ error: 'shipmentId required' });
+  if (req.method !== 'GET') return res.status(405).json({ error: 'GET required' });
 
-    const labelType = type === 'sticker' ? 'sticker' : 'label';
-    const response = await fetch(`${BASE_URL}/v2/shipments/${shipmentId}/${labelType}`, {
+  const { shipmentId, type } = req.query;
+  if (!shipmentId) return res.status(400).json({ error: 'shipmentId required' });
+
+  const labelType = type === 'sticker' ? 'sticker' : 'label';
+
+  const url = `${BASE_URL}/v2/shipments/${shipmentId}/${labelType}`;
+
+  let attempts = 0;
+  let response;
+
+  while (attempts < 3) {
+    response = await fetch(url, {
       headers: { Authorization: `Bearer ${API_KEY()}` },
     });
 
-    if (!response.ok) return res.status(response.status).json({ error: 'Label fetch failed' });
+    if (response.ok) break;
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename=label-${shipmentId}.pdf`);
-    const buffer = await response.arrayBuffer();
-    return res.send(Buffer.from(buffer));
+    // 🔁 wait 2 seconds before retry
+    await new Promise(r => setTimeout(r, 2000));
+    attempts++;
   }
 
-  if (action === 'cancel') {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
-    const { shipmentId } = req.body || {};
-    if (!shipmentId) return res.status(400).json({ error: 'shipmentId required' });
-
-    const { ok, data } = await slFetch(`/shipments/${shipmentId}/cancel`, 'POST');
-    if (!ok) return res.status(400).json({ error: 'Cancel failed', details: data });
-    return res.status(200).json({ success: true, message: data.message || 'Cancelled' });
+  // ❌ still failing after retries
+  if (!response || !response.ok) {
+    const text = await response?.text();
+    return res.status(response?.status || 500).json({
+      error: 'Label not ready yet',
+      details: text,
+    });
   }
+
+  // ✅ success
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename=label-${shipmentId}.pdf`);
+
+  const buffer = await response.arrayBuffer();
+  return res.send(Buffer.from(buffer));
+}
 
   // ── ShipLogic webhook ───────────────────────────────────────────────────────
   if (action === 'webhook') {
