@@ -38,7 +38,6 @@ async function startServer() {
   app.use(express.json());
 
   // Mount shipping router to handle /api/shipping routes
-  app.use('/api/shipping', shippingRouter);
   console.log('Mounted shipping router at /api/shipping');
 
   // SMTP Transporter
