@@ -6,7 +6,6 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import multer from "multer";
 import fs from "fs";
-import shippingRouter from './api/shipping/index';
 
 dotenv.config();
 
