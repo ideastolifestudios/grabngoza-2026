@@ -59,6 +59,32 @@ import {
   Tag
 } from 'lucide-react';
 import { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod, Category, Brand, Testimonial, Partner } from './types';
+
+// Bob Go pickup point type — used in checkout state
+interface BobGoPickupPoint {
+  id: string;
+  name: string;
+  address: string;
+  suburb: string;
+  city: string;
+  province: string;
+  postal_code: string;
+  lat: number;
+  lng: number;
+  operating_hours?: string;
+  type: 'locker' | 'counter' | 'pudo';
+}
+
+// Fallback pickup points shown before Bob Go API is live
+const BOBGO_FALLBACK_POINTS: BobGoPickupPoint[] = [
+  { id: 'bg-jnb-001', name: 'PUDO Locker – Sandton City', address: 'Shop L23, Sandton City Mall, 83 Rivonia Rd', suburb: 'Sandton', city: 'Johannesburg', province: 'Gauteng', postal_code: '2196', lat: -26.1076, lng: 28.0567, operating_hours: 'Mon–Sat 09:00–21:00, Sun 10:00–19:00', type: 'locker' },
+  { id: 'bg-jnb-002', name: 'PUDO Counter – Rosebank Mall', address: 'Shop 14, The Zone @ Rosebank, Oxford Rd', suburb: 'Rosebank', city: 'Johannesburg', province: 'Gauteng', postal_code: '2196', lat: -26.1453, lng: 28.044, operating_hours: 'Mon–Sun 09:00–20:00', type: 'counter' },
+  { id: 'bg-cpt-001', name: 'PUDO Locker – V&A Waterfront', address: 'Ground Floor, Victoria Wharf', suburb: 'Waterfront', city: 'Cape Town', province: 'Western Cape', postal_code: '8001', lat: -33.9025, lng: 18.4199, operating_hours: 'Mon–Sun 09:00–21:00', type: 'locker' },
+  { id: 'bg-cpt-002', name: 'PUDO Counter – Cavendish Square', address: 'Lower Ground, Cavendish Square, Dreyer St', suburb: 'Claremont', city: 'Cape Town', province: 'Western Cape', postal_code: '7708', lat: -33.9821, lng: 18.4692, operating_hours: 'Mon–Sat 09:00–19:00', type: 'counter' },
+  { id: 'bg-dbn-001', name: 'PUDO Locker – Gateway', address: 'Upper Level, Gateway Theatre, 1 Palm Blvd', suburb: 'Umhlanga', city: 'Durban', province: 'KwaZulu-Natal', postal_code: '4319', lat: -29.7298, lng: 31.0723, operating_hours: 'Mon–Sat 09:00–21:00', type: 'locker' },
+  { id: 'bg-pta-001', name: 'PUDO Counter – Menlyn Park', address: 'Menlyn Park Shopping Centre, Atterbury Rd', suburb: 'Menlyn', city: 'Pretoria', province: 'Gauteng', postal_code: '0181', lat: -25.7836, lng: 28.277, operating_hours: 'Mon–Sat 09:00–21:00', type: 'counter' },
+];
+
 import { 
   productService, 
   orderService, 
@@ -5026,7 +5052,7 @@ const HybridCheckoutModal = ({
   user: User | null,
   onOpenAuth: () => void
 }) => {
-  const [deliveryMethod, setDeliveryMethod] = useState<ShippingMethod>('standard');
+   const [deliveryMethod, setDeliveryMethod] = useState<ShippingMethod>('standard');
   const [country, setCountry] = useState('South Africa');
   const [discountCode, setDiscountCode] = useState('');
   const [email, setEmail] = useState(user?.email || '');
@@ -5040,14 +5066,18 @@ const HybridCheckoutModal = ({
   const [isPaying, setIsPaying] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [orderMessage, setOrderMessage] = useState<string | null>(null);
-   const [paymentGateway, setPaymentGateway] = useState<'yoco'>('yoco');
+  const [paymentGateway, setPaymentGateway] = useState<'yoco'>('yoco');
   const [shippingRates, setShippingRates] = useState<any[]>([]);
   const [selectedRate, setSelectedRate] = useState<any>(null);
   const [loadingRates, setLoadingRates] = useState(false);
+  // Bob Go pickup point state
+  const [pickupPoints, setPickupPoints] = useState<BobGoPickupPoint[]>([]);
+  const [selectedPickupPoint, setSelectedPickupPoint] = useState<BobGoPickupPoint | null>(null);
+  const [loadingPickupPoints, setLoadingPickupPoints] = useState(false);
 
-  // Fetch live rates when address is complete
+  // Fetch live shipping rates (standard + international)
   useEffect(() => {
-    if (deliveryMethod !== 'standard' || !address || !city || !province || !postalCode) {
+    if ((deliveryMethod !== 'standard' && deliveryMethod !== 'international') || !address || !city || !province || !postalCode) {
       setShippingRates([]);
       setSelectedRate(null);
       return;
@@ -5055,11 +5085,12 @@ const HybridCheckoutModal = ({
     const timer = setTimeout(async () => {
       setLoadingRates(true);
       try {
+        const deliveryCountry = deliveryMethod === 'international' ? country : 'ZA';
         const res = await fetch('/api/get-shipping-rates', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            deliveryAddress: { address, city, province, postalCode, country: 'ZA' },
+            deliveryAddress: { address, city, province, postalCode, country: deliveryCountry },
             items: cartItems.map(item => ({ name: item.name, weight: item.weight || 0.5, quantity: item.quantity })),
           }),
         });
@@ -5073,15 +5104,42 @@ const HybridCheckoutModal = ({
       } finally {
         setLoadingRates(false);
       }
-    }, 800); // debounce
+    }, 800);
     return () => clearTimeout(timer);
-  }, [address, city, province, postalCode, deliveryMethod, cartItems]);
+  }, [address, city, province, postalCode, deliveryMethod, country, cartItems]);
+
+  // Fetch Bob Go pickup points when that tab is selected
+  useEffect(() => {
+    if (deliveryMethod !== 'bobgo') return;
+    setLoadingPickupPoints(true);
+    const fetchPoints = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (postalCode) params.set('postal_code', postalCode);
+        if (city) params.set('city', city);
+        const res = await fetch(`/api/shipping/pickup-points?${params.toString()}`);
+        if (res.ok) {
+          const data = await res.json();
+          setPickupPoints(data.pickup_points?.length > 0 ? data.pickup_points : BOBGO_FALLBACK_POINTS);
+        } else {
+          setPickupPoints(BOBGO_FALLBACK_POINTS);
+        }
+      } catch {
+        setPickupPoints(BOBGO_FALLBACK_POINTS);
+      } finally {
+        setLoadingPickupPoints(false);
+      }
+    };
+    fetchPoints();
+  }, [deliveryMethod, postalCode, city]);
 
   const shippingCost = useMemo(() => {
     if (deliveryMethod === 'pickup') return 0;
-    if (deliveryMethod === 'international') return 450;
+    if (deliveryMethod === 'bobgo') return selectedRate?.amount || 89; // Bob Go flat fallback R89
+    if (deliveryMethod === 'international') return selectedRate?.amount || 450;
     return selectedRate?.amount || 0;
   }, [deliveryMethod, selectedRate]);
+
 
   const subtotal = total;
   const finalTotal = subtotal + shippingCost;
@@ -5127,7 +5185,41 @@ const HybridCheckoutModal = ({
         shippingCost,
         items: cartItems,
         total: finalTotal,
-        paymentGateway
+        paymentGateway,
+        // Bob Go pickup point — saved to Firestore so admin can see it
+        ...(deliveryMethod === 'bobgo' && selectedPickupPoint ? {
+          bobGoPickupPoint: {
+            id: selectedPickupPoint.id,
+            name: selectedPickupPoint.name,
+            address: selectedPickupPoint.address,
+            suburb: selectedPickupPoint.suburb,
+            city: selectedPickupPoint.city,
+            province: selectedPickupPoint.province,
+            postal_code: selectedPickupPoint.postal_code,
+          },
+          // Override delivery address with pickup point address for ShipLogic
+          deliveryAddress: {
+            type: 'business',
+            company: selectedPickupPoint.name,
+            street_address: selectedPickupPoint.address,
+            local_area: selectedPickupPoint.suburb,
+            city: selectedPickupPoint.city,
+            zone: selectedPickupPoint.province,
+            code: selectedPickupPoint.postal_code,
+            country: 'ZA',
+          },
+          specialInstructions: `PUDO Pickup: ${selectedPickupPoint.name} — ${selectedPickupPoint.address}, ${selectedPickupPoint.suburb}. Hours: ${selectedPickupPoint.operating_hours || 'See store'}`,
+        } : {}),
+        // International — flag for admin/ShipLogic customs
+        ...(deliveryMethod === 'international' ? {
+          isInternational: true,
+          deliveryCountry: country,
+        } : {}),
+        // Selected ShipLogic rate — saved so admin dispatch uses same service
+        ...(selectedRate ? {
+          selectedServiceLevel: selectedRate.serviceLevel?.code || selectedRate.serviceLevel?.name || null,
+          selectedServiceName: selectedRate.serviceLevel?.name || null,
+        } : {}),
       };
 
       // In a production environment, this would integrate with a payment gateway
@@ -5375,25 +5467,25 @@ const HybridCheckoutModal = ({
                       {/* Delivery Method Toggle */}
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-0 border border-gray-200 rounded-md overflow-hidden mb-6">
                         <button 
-                          onClick={() => {
-                            setDeliveryMethod('standard');
-                            setCountry('South Africa');
-                          }}
+                          onClick={() => { setDeliveryMethod('standard'); setCountry('South Africa'); setSelectedPickupPoint(null); }}
                           className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold transition-all ${deliveryMethod === 'standard' ? 'bg-gray-50 shadow-inner' : 'bg-white hover:bg-gray-50'}`}
                         >
                           <Truck size={14} className="md:w-4 md:h-4" /> Standard
                         </button>
                         <button 
-                          onClick={() => {
-                            setDeliveryMethod('pickup');
-                            setCountry('South Africa');
-                          }}
+                          onClick={() => { setDeliveryMethod('bobgo'); setCountry('South Africa'); setSelectedPickupPoint(null); }}
+                          className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold transition-all ${deliveryMethod === 'bobgo' ? 'bg-gray-50 shadow-inner' : 'bg-white hover:bg-gray-50'}`}
+                        >
+                          <Package size={14} className="md:w-4 md:h-4" /> Bob Go
+                        </button>
+                        <button 
+                          onClick={() => { setDeliveryMethod('pickup'); setCountry('South Africa'); setSelectedPickupPoint(null); }}
                           className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold transition-all ${deliveryMethod === 'pickup' ? 'bg-gray-50 shadow-inner' : 'bg-white hover:bg-gray-50'}`}
                         >
                           <MapPin size={14} className="md:w-4 md:h-4" /> Pickup
                         </button>
                         <button 
-                          onClick={() => setDeliveryMethod('international')}
+                          onClick={() => { setDeliveryMethod('international'); setSelectedPickupPoint(null); }}
                           className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold transition-all ${deliveryMethod === 'international' ? 'bg-gray-50 shadow-inner' : 'bg-white hover:bg-gray-50'}`}
                         >
                           <Globe size={14} className="md:w-4 md:h-4" /> International
@@ -5500,10 +5592,19 @@ const HybridCheckoutModal = ({
                             required
                             className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
                           />
-                           {/* Shipping Rate Selector */}
-                          {deliveryMethod === 'standard' && (
+                            {/* Shipping Rate Selector — Standard & International */}
+                          {(deliveryMethod === 'standard' || deliveryMethod === 'international') && (
                             <div className="mt-4">
-                              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">Shipping Service</label>
+                              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">
+                                {deliveryMethod === 'international' ? 'International Shipping Service' : 'Shipping Service'}
+                              </label>
+                              {deliveryMethod === 'international' && (
+                                <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                                  <p className="text-[10px] text-amber-700 font-medium uppercase tracking-wider">
+                                    ⚠️ Customs & import duties are the buyer's responsibility (DDU — Delivered Duty Unpaid).
+                                  </p>
+                                </div>
+                              )}
                               {loadingRates ? (
                                 <div className="flex items-center gap-2 py-4 text-sm text-gray-400">
                                   <Loader2 className="animate-spin" size={16} /> Fetching live rates...
@@ -5516,8 +5617,8 @@ const HybridCheckoutModal = ({
                                       type="button"
                                       onClick={() => setSelectedRate(rate)}
                                       className={`w-full flex items-center justify-between p-3 rounded-md border text-left transition-all ${
-                                        selectedRate === rate 
-                                          ? 'border-black bg-gray-50 shadow-sm' 
+                                        selectedRate === rate
+                                          ? 'border-black bg-gray-50 shadow-sm'
                                           : 'border-gray-200 hover:border-gray-300'
                                       }`}
                                     >
@@ -5539,7 +5640,112 @@ const HybridCheckoutModal = ({
                               ) : null}
                             </div>
                           )}
-                        </>
+
+                          {/* ── Bob Go Pickup Point Selector ───────────────── */}
+                          {deliveryMethod === 'bobgo' && (
+                            <div className="mt-4 space-y-4">
+                              <div>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">
+                                  1. Choose a Bob Go Pickup Point
+                                </label>
+                                {loadingPickupPoints ? (
+                                  <div className="flex items-center gap-2 py-4 text-sm text-gray-400">
+                                    <Loader2 className="animate-spin" size={16} /> Finding nearby pickup points...
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                                    {pickupPoints.map((point) => (
+                                      <button
+                                        key={point.id}
+                                        type="button"
+                                        onClick={() => setSelectedPickupPoint(point)}
+                                        className={`w-full text-left p-3 rounded-md border transition-all ${
+                                          selectedPickupPoint?.id === point.id
+                                            ? 'border-black bg-gray-50 shadow-sm'
+                                            : 'border-gray-200 hover:border-gray-300'
+                                        }`}
+                                      >
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div className="min-w-0">
+                                            <p className="text-sm font-semibold truncate">{point.name}</p>
+                                            <p className="text-[10px] text-gray-400 truncate">{point.address}, {point.suburb}</p>
+                                            {point.operating_hours && (
+                                              <p className="text-[10px] text-gray-300 mt-0.5">{point.operating_hours}</p>
+                                            )}
+                                          </div>
+                                          <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 shrink-0 mt-0.5">
+                                            {point.type === 'locker' ? '🔒 Locker' : '🏪 Counter'}
+                                          </span>
+                                        </div>
+                                      </button>
+                                    ))}
+                                    {pickupPoints.length === 0 && (
+                                      <p className="text-xs text-gray-400 py-2">No pickup points found near your area.</p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Speed selector — only after pickup point chosen */}
+                              {selectedPickupPoint && (
+                                <div>
+                                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">
+                                    2. Delivery Speed to Pickup Point
+                                  </label>
+                                  {loadingRates ? (
+                                    <div className="flex items-center gap-2 py-2 text-sm text-gray-400">
+                                      <Loader2 className="animate-spin" size={16} /> Fetching rates...
+                                    </div>
+                                  ) : shippingRates.length > 0 ? (
+                                    <div className="space-y-2">
+                                      {shippingRates.slice(0, 3).map((rate: any, idx: number) => (
+                                        <button
+                                          key={idx}
+                                          type="button"
+                                          onClick={() => setSelectedRate(rate)}
+                                          className={`w-full flex items-center justify-between p-3 rounded-md border text-left transition-all ${
+                                            selectedRate === rate
+                                              ? 'border-black bg-gray-50 shadow-sm'
+                                              : 'border-gray-200 hover:border-gray-300'
+                                          }`}
+                                        >
+                                          <div>
+                                            <p className="text-sm font-semibold">{rate.serviceLevel?.name || rate.serviceLevel}</p>
+                                            <p className="text-[10px] text-gray-400">{rate.serviceLevel?.description || rate.carrier}</p>
+                                          </div>
+                                          <span className="text-sm font-bold whitespace-nowrap">R{rate.amount?.toFixed(2)}</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    /* Flat-rate fallback until ShipLogic Bob Go rates are live */
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedRate({ amount: 89, serviceLevel: { name: 'Bob Go Standard', description: '3–5 business days to pickup point' } })}
+                                      className={`w-full flex items-center justify-between p-3 rounded-md border text-left transition-all ${
+                                        selectedRate ? 'border-black bg-gray-50 shadow-sm' : 'border-gray-200 hover:border-gray-300'
+                                      }`}
+                                    >
+                                      <div>
+                                        <p className="text-sm font-semibold">Bob Go Standard</p>
+                                        <p className="text-[10px] text-gray-400">3–5 business days to pickup point</p>
+                                      </div>
+                                      <span className="text-sm font-bold">R89.00</span>
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Selected summary */}
+                              {selectedPickupPoint && selectedRate && (
+                                <div className="p-3 bg-gray-50 border border-gray-100 rounded-md">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Delivering to</p>
+                                  <p className="text-sm font-semibold">{selectedPickupPoint.name}</p>
+                                  <p className="text-[10px] text-gray-500">{selectedPickupPoint.address}, {selectedPickupPoint.suburb}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}                        </>
                       ) : (
                         <div className="space-y-4">
                           <p className="text-xs text-gray-500 mb-2">Pickup your order directly from our studio in Midrand (No shipping fee).</p>
