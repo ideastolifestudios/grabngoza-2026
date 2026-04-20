@@ -75,8 +75,39 @@ export default function AdminDashboard() {
   };
 
   // Print label
-  const printLabel = (shipmentId: number) => {
-    window.open(`${API_BASE}/api/shipment-actions?action=label&shipmentId=${shipmentId}`, '_blank');
+  const printLabel = async (shipmentId: number) => {
+    const url = `${API_BASE}/api/shipping?action=label&shipmentId=${shipmentId}`;
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('pdf')) {
+          // Direct PDF — open in new tab
+          const blob = await res.blob();
+          window.open(URL.createObjectURL(blob), '_blank');
+        } else {
+          const data = await res.json();
+          if (data.redirect) {
+            // ShipLogic returned a waybill URL — open it directly
+            window.open(data.redirect, '_blank');
+          } else {
+            setDispatchStatus(`⚠️ ${data.error || 'Label not ready yet — try again in 30 seconds'}`);
+            setTimeout(() => setDispatchStatus(null), 5000);
+          }
+        }
+      } else {
+        const data = await res.json().catch(() => ({}));
+        if (data.redirect) {
+          window.open(data.redirect, '_blank');
+        } else {
+          setDispatchStatus(`⚠️ ${data.error || 'Label not ready yet — try again shortly'}`);
+          setTimeout(() => setDispatchStatus(null), 5000);
+        }
+      }
+    } catch (err) {
+      setDispatchStatus('⚠️ Could not fetch label — check connection');
+      setTimeout(() => setDispatchStatus(null), 5000);
+    }
   };
 
  // Bulk print labels
@@ -97,7 +128,7 @@ export default function AdminDashboard() {
     // Open each label PDF in a new tab (browser prints it)
     withShipments.forEach(o => {
       window.open(
-        `${API_BASE}/api/shipment-actions?action=label&shipmentId=${o.shiplogicShipmentId}&type=label`,
+        `${API_BASE}/api/shipping?action=label&shipmentId=${o.shiplogicShipmentId}&type=label`,
         '_blank'
       );
     });

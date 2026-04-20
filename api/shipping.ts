@@ -172,18 +172,29 @@ export default async function handler(req: any, res: any) {
     const isInternational = order.isInternational || (order.country && order.country !== 'ZA');
     const parcel = parcelFromItems(order.items || []);
 
-    const deliveryAddr = order.deliveryAddress || {
-      type: 'residential',
-      street_address: order.address || '',
-      local_area: order.city || '',
-      city: order.city || '',
-      zone: order.province || '',
-      country: order.country || 'ZA',
-      code: order.postalCode || '',
-    };
-
-    // Use selected service level from checkout if available, fallback to ECO
-    const serviceLevelCode = order.selectedServiceLevel || 'ECO';
+    const deliveryAddr = order.deliveryAddress || (
+      order.deliveryMethod === 'pickup'
+        ? {
+            // Studio pickup — deliver back to store address
+            type: 'business',
+            company: 'IDEAS TO LIFE STUDIOS',
+            street_address: process.env.BUSINESS_ADDRESS || '1104 Tugela Street',
+            local_area: process.env.BUSINESS_LOCAL_AREA || 'Klipfontein View',
+            city: process.env.BUSINESS_CITY || 'Midrand',
+            zone: process.env.BUSINESS_PROVINCE || 'Gauteng',
+            country: 'ZA',
+            code: process.env.BUSINESS_POSTAL_CODE || '1685',
+          }
+        : {
+            type: 'residential',
+            street_address: order.address || '',
+            local_area: order.city || '',
+            city: order.city || '',
+            zone: order.province || '',
+            country: order.country || 'ZA',
+            code: order.postalCode || '',
+          }
+    );
 
     const payload: any = {
       collection_address: STORE(),
@@ -199,30 +210,12 @@ export default async function handler(req: any, res: any) {
         email: order.email || '',
       },
       parcels: [parcel],
-      service_level_code: serviceLevelCode,
+      service_level_id: 184277,
       reference: `GNG-${order.id || Date.now()}`,
       declared_value: order.total || 0,
-      // Bob Go special instructions from order
-      ...(special_instructions_delivery || order.specialInstructions
-        ? { special_instructions_delivery: special_instructions_delivery || order.specialInstructions }
-        : {}),
+      ...(special_instructions_delivery ? { special_instructions_delivery } : {}),
       ...(special_instructions_collection ? { special_instructions_collection } : {}),
-      ...(isInternational && (customs || order.items)
-        ? {
-            customs: customs || {
-              description: 'Clothing / Fashion Apparel',
-              incoterm: 'DDU',
-              contents_type: 'sale_of_goods',
-              items: (order.items || []).map((item: any) => ({
-                description: item.name,
-                quantity: item.quantity || 1,
-                value: item.price || 0,
-                weight_kg: item.weight || 0.5,
-                origin_country: 'ZA',
-              })),
-            },
-          }
-        : {}),
+      ...(isInternational && customs ? { customs } : {}),
     };
 
     const { ok, status, data } = await slFetch('/shipments', 'POST', payload);
@@ -273,35 +266,42 @@ export default async function handler(req: any, res: any) {
 
   const labelType = type === 'sticker' ? 'sticker' : 'label';
 
-  // Try v2 first, then base path fallback
+  // ShipLogic label endpoint — try both path variants
   const urls = [
     `${BASE_URL}/v2/shipments/${shipmentId}/${labelType}`,
     `${BASE_URL}/shipments/${shipmentId}/${labelType}`,
+    `${BASE_URL}/v2/shipments/${shipmentId}/waybill`,
   ];
 
   let response: any;
   for (const url of urls) {
-    let attempts = 0;
-    while (attempts < 3) {
+    try {
       response = await fetch(url, {
-        headers: { Authorization: `Bearer ${API_KEY()}`, Accept: 'application/pdf' },
+        headers: { Authorization: `Bearer ${API_KEY()}`, Accept: 'application/pdf,*/*' },
       });
       if (response.ok) break;
-      await new Promise(r => setTimeout(r, 2000));
-      attempts++;
+    } catch {
+      continue;
     }
-    if (response?.ok) break;
   }
 
   if (!response || !response.ok) {
+    // Last resort: get shipment details and return waybill_url for client to open
+    try {
+      const { ok, data } = await slFetch(`/v2/shipments/${shipmentId}`, 'GET');
+      if (ok && data.waybill_url) {
+        return res.status(200).json({ redirect: data.waybill_url });
+      }
+    } catch {}
     const text = await response?.text().catch(() => '');
-    return res.status(response?.status || 500).json({
-      error: 'Label not ready yet. The shipment may still be processing — try again in a few seconds.',
+    return res.status(202).json({
+      error: 'Label generating — try again in 30 seconds',
       details: text,
     });
   }
 
-  res.setHeader('Content-Type', 'application/pdf');
+  const contentType = response.headers.get('content-type') || 'application/pdf';
+  res.setHeader('Content-Type', contentType);
   res.setHeader('Content-Disposition', `inline; filename=label-${shipmentId}.pdf`);
   const buffer = await response.arrayBuffer();
   return res.send(Buffer.from(buffer));
