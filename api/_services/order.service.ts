@@ -5,7 +5,7 @@
  * All external calls are fire-and-catch — never crash the API.
  */
 
-import type { Order } from '../lib/types.ts';
+import type { Order } from '../_lib/types.ts';
 import { createZohoOrder, type ZohoSalesOrderResult } from './zohoInventoryService.ts';
 import { createOrUpdateCustomer, type ZohoCRMResult } from './zohoCRMService.ts';
 

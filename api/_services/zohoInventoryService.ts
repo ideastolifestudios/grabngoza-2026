@@ -5,8 +5,8 @@
  * No more manual token management.
  */
 
-import type { Order } from '../lib/types.ts';
-import { zohoApiFetch, ZOHO_REGION } from '../lib/zohoAuth.ts';
+import type { Order } from '../_lib/types.ts';
+import { zohoApiFetch, ZOHO_REGION } from '../_lib/zohoAuth.ts';
 
 const BASE_URL = `https://inventory.zoho.${ZOHO_REGION}/api/v1`;
 const ORG_ID   = process.env.ZOHO_INVENTORY_ORG_ID || '';
