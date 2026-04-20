@@ -1,12 +1,13 @@
 /**
  * api/services/order.service.ts — Order business logic
  *
- * In-memory mock storage + Zoho Inventory sync.
- * Zoho failures are caught and logged — never crash the API.
+ * In-memory mock storage + Zoho Inventory sync + Zoho CRM sync.
+ * All external calls are fire-and-catch — never crash the API.
  */
 
 import type { Order } from '../lib/types.ts';
 import { createZohoOrder, type ZohoSalesOrderResult } from './zohoInventoryService.ts';
+import { createOrUpdateCustomer, type ZohoCRMResult } from './zohoCRMService.ts';
 
 // ─── In-memory store ────────────────────────────────────────────
 const orders = new Map<string, Order>();
@@ -15,10 +16,7 @@ function nextId(): string { return `ORD-${++counter}`; }
 
 // ─── Validation ─────────────────────────────────────────────────
 
-export interface ValidationError {
-  field: string;
-  message: string;
-}
+export interface ValidationError { field: string; message: string; }
 
 export function validateCreateOrder(body: any): ValidationError[] {
   const errors: ValidationError[] = [];
@@ -28,34 +26,29 @@ export function validateCreateOrder(body: any): ValidationError[] {
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email))
     errors.push({ field: 'email', message: 'Invalid email format' });
 
-  if (!body.firstName?.trim())
-    errors.push({ field: 'firstName', message: 'First name is required' });
-  if (!body.lastName?.trim())
-    errors.push({ field: 'lastName', message: 'Last name is required' });
+  if (!body.firstName?.trim()) errors.push({ field: 'firstName', message: 'First name is required' });
+  if (!body.lastName?.trim())  errors.push({ field: 'lastName', message: 'Last name is required' });
 
   if (!Array.isArray(body.items) || body.items.length === 0) {
     errors.push({ field: 'items', message: 'At least one item is required' });
   } else {
     body.items.forEach((item: any, i: number) => {
-      if (!item.productId)
-        errors.push({ field: `items[${i}].productId`, message: 'Product ID is required' });
-      if (!item.name || typeof item.name !== 'string')
-        errors.push({ field: `items[${i}].name`, message: 'Item name is required' });
+      if (!item.productId)       errors.push({ field: `items[${i}].productId`, message: 'Required' });
+      if (!item.name)            errors.push({ field: `items[${i}].name`, message: 'Required' });
       if (typeof item.price !== 'number' || item.price <= 0)
-        errors.push({ field: `items[${i}].price`, message: 'Price must be positive' });
+        errors.push({ field: `items[${i}].price`, message: 'Must be positive' });
       if (typeof item.quantity !== 'number' || item.quantity < 1 || !Number.isInteger(item.quantity))
-        errors.push({ field: `items[${i}].quantity`, message: 'Quantity must be a positive integer' });
+        errors.push({ field: `items[${i}].quantity`, message: 'Must be a positive integer' });
     });
   }
 
   if (typeof body.total !== 'number' || body.total <= 0)
-    errors.push({ field: 'total', message: 'Total must be positive' });
+    errors.push({ field: 'total', message: 'Must be positive' });
 
   if (Array.isArray(body.items) && typeof body.total === 'number') {
-    const computed = body.items.reduce((s: number, i: any) => s + ((i.price || 0) * (i.quantity || 0)), 0);
-    const expected = computed + (body.shippingCost || 0);
+    const expected = body.items.reduce((s: number, i: any) => s + ((i.price || 0) * (i.quantity || 0)), 0) + (body.shippingCost || 0);
     if (Math.abs(body.total - expected) > 1)
-      errors.push({ field: 'total', message: `Total (${body.total}) doesn't match items+shipping (${expected.toFixed(2)})` });
+      errors.push({ field: 'total', message: `Mismatch: got ${body.total}, expected ${expected.toFixed(2)}` });
   }
 
   return errors;
@@ -63,20 +56,19 @@ export function validateCreateOrder(body: any): ValidationError[] {
 
 export function validateUpdateOrder(body: any): ValidationError[] {
   const errors: ValidationError[] = [];
-  const validStatuses = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
-  if (body.status && !validStatuses.includes(body.status))
-    errors.push({ field: 'status', message: `Must be one of: ${validStatuses.join(', ')}` });
-  const validPayment = ['pending', 'paid', 'failed', 'refunded'];
-  if (body.paymentStatus && !validPayment.includes(body.paymentStatus))
-    errors.push({ field: 'paymentStatus', message: `Must be one of: ${validPayment.join(', ')}` });
+  const vs = ['pending','paid','processing','shipped','delivered','cancelled','returned'];
+  if (body.status && !vs.includes(body.status)) errors.push({ field: 'status', message: `Must be: ${vs.join(', ')}` });
+  const vp = ['pending','paid','failed','refunded'];
+  if (body.paymentStatus && !vp.includes(body.paymentStatus)) errors.push({ field: 'paymentStatus', message: `Must be: ${vp.join(', ')}` });
   return errors;
 }
 
-// ─── Create Order Result (includes Zoho) ────────────────────────
+// ─── Result types ───────────────────────────────────────────────
 
 export interface CreateOrderResult {
   order: Order;
   zoho: ZohoSalesOrderResult;
+  crm: ZohoCRMResult;
 }
 
 // ─── CRUD ───────────────────────────────────────────────────────
@@ -115,28 +107,40 @@ export async function createOrder(data: Omit<Order, 'id'>): Promise<CreateOrderR
     updatedAt: now,
   };
 
-  // 1. Store locally
+  // ── 1. Store locally (always succeeds) ────────────────────────
   orders.set(id, order);
 
-  // 2. Sync to Zoho Inventory (fire-and-catch, never crash)
+  // ── 2. Sync to Zoho CRM (fire-and-catch) ─────────────────────
+  let crmResult: ZohoCRMResult;
+  try {
+    crmResult = await createOrUpdateCustomer(order);
+  } catch (err: any) {
+    console.error(`[order.service] CRM sync exception for ${id}:`, err.message);
+    crmResult = { success: false, error: `Unexpected: ${err.message}` };
+  }
+
+  // ── 3. Sync to Zoho Inventory (fire-and-catch) ────────────────
   let zohoResult: ZohoSalesOrderResult;
   try {
-    zohoResult = await createZohoOrder(order);
+    // Pass CRM contact ID if we got one — links SO to contact
+    const zohoCustomerId = crmResult.zohoContactId || undefined;
+    zohoResult = await createZohoOrder(order, zohoCustomerId);
 
-    // If Zoho succeeded, store the Zoho ID on the order
     if (zohoResult.success && zohoResult.zohoSalesOrderId) {
-      order.notes = [
-        order.notes,
-        `Zoho SO: ${zohoResult.zohoSalesOrderId}`,
-      ].filter(Boolean).join(' | ');
-      orders.set(id, order);
+      order.notes = [order.notes, `Zoho SO: ${zohoResult.zohoSalesOrderId}`].filter(Boolean).join(' | ');
     }
   } catch (err: any) {
-    console.error(`[order.service] Zoho sync exception for ${id}:`, err.message);
+    console.error(`[order.service] Inventory sync exception for ${id}:`, err.message);
     zohoResult = { success: false, error: `Unexpected: ${err.message}` };
   }
 
-  return { order, zoho: zohoResult };
+  // ── 4. Append CRM ID to notes ─────────────────────────────────
+  if (crmResult.success && crmResult.zohoContactId) {
+    order.notes = [order.notes, `CRM: ${crmResult.zohoContactId}`].filter(Boolean).join(' | ');
+  }
+
+  orders.set(id, order);
+  return { order, zoho: zohoResult, crm: crmResult };
 }
 
 export async function updateOrder(id: string, data: Partial<Order>): Promise<Order | null> {
