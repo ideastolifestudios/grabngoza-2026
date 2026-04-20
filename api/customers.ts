@@ -11,9 +11,9 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { setCors } from './lib/cors';
-import { success, error } from './lib/response';
-import * as customerService from './services/customer.service';
+import { setCors } from './lib/cors.ts';
+import { success, error } from './lib/response.ts';
+import * as customerService from './services/customer.service.ts';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   setCors(res);

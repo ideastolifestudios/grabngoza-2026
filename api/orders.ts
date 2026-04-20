@@ -10,9 +10,9 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { setCors } from './lib/cors';
-import { success, error } from './lib/response';
-import * as orderService from './services/order.service';
+import { setCors } from './lib/cors.ts';
+import { success, error } from './lib/response.ts';
+import * as orderService from './services/order.service.ts';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   setCors(res);
