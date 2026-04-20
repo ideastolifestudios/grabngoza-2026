@@ -290,7 +290,8 @@ const WishlistDrawer = ({
                   {wishlistItems.map((item) => (
                     <div key={item.id} className="flex gap-4 group">
                       <div className="w-24 h-32 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <img src={item.image} alt={item.name} loading="lazy"
+                        className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       </div>
                       <div className="flex-grow flex flex-col justify-between py-1">
                         <div>
@@ -846,10 +847,9 @@ const Sidebar = ({
   searchQuery: string,
   setSearchQuery: (q: string) => void,
   setFilterCategory: (c: string) => void,
-categories = []
-}: {
   categories?: Category[]
 }) => {
+
   const navigate = useNavigate();
   const location = useLocation();
   const [isShopOpen, setIsShopOpen] = useState(true);
@@ -1328,6 +1328,45 @@ const ProductDetailContent = ({
             </div>
 
             <div className="mb-4">
+              {(() => {
+                // Dynamic stock level for selected variants
+                const currentStock = (() => {
+                  if (!product.stock) return Infinity;
+                  if (Object.keys(selectedVariants).length > 0) {
+                    let min = Infinity;
+                    for (const [k, v] of Object.entries(selectedVariants)) {
+                      const key = `${k}:${v}`;
+                      if (product.stock[key] !== undefined) min = Math.min(min, product.stock[key]);
+                    }
+                    return min;
+                  }
+                  return product.stock['_default'] ?? Infinity;
+                })();
+                const outOfStock = currentStock === 0;
+                const lowStock   = currentStock > 0 && currentStock <= 5 && currentStock !== Infinity;
+                return (
+                  <>
+                    {/* Out of stock banner */}
+                    {outOfStock && (
+                      <div className="mb-4 p-3 bg-red-50 border border-red-200 flex items-center gap-3">
+                        <AlertCircle size={16} className="text-red-500 flex-shrink-0" />
+                        <p className="text-[10px] font-black uppercase tracking-widest text-red-600">
+                          Out of Stock — {product.variants?.length ? 'Select a different size/colour' : 'Check back soon'}
+                        </p>
+                      </div>
+                    )}
+                    {/* Low stock warning */}
+                    {lowStock && (
+                      <div className="mb-4 p-3 bg-amber-50 border border-amber-200 flex items-center gap-3">
+                        <AlertTriangle size={16} className="text-amber-500 flex-shrink-0" />
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">
+                          Only {currentStock} left — order soon!
+                        </p>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center border border-black p-1">
                   <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-1 hover:bg-black/5 transition-colors"><Minus size={12} /></button>
@@ -1335,7 +1374,23 @@ const ProductDetailContent = ({
                   <button onClick={() => setQuantity(quantity + 1)} className="px-3 py-1 hover:bg-black/5 transition-colors"><Plus size={12} /></button>
                 </div>
                 <div className="flex gap-4 text-[10px] font-black uppercase tracking-widest">
-                  <span className="text-green-600 border-b-2 border-green-600 pb-1">In stock</span>
+                  {(() => {
+                    const s = (() => {
+                      if (!product.stock) return Infinity;
+                      if (Object.keys(selectedVariants).length > 0) {
+                        let min = Infinity;
+                        for (const [k, v] of Object.entries(selectedVariants)) {
+                          const key = `${k}:${v}`;
+                          if (product.stock[key] !== undefined) min = Math.min(min, product.stock[key]);
+                        }
+                        return min;
+                      }
+                      return product.stock['_default'] ?? Infinity;
+                    })();
+                    if (s === 0) return <span className="text-red-500 border-b-2 border-red-500 pb-1">Out of stock</span>;
+                    if (s <= 5) return <span className="text-amber-600 border-b-2 border-amber-500 pb-1">{s} left</span>;
+                    return <span className="text-green-600 border-b-2 border-green-600 pb-1">In stock</span>;
+                  })()}
                 </div>
               </div>
 
@@ -1390,29 +1445,49 @@ const ProductDetailContent = ({
             </div>
 
             {/* Actions */}
-            <div className="space-y-3 mb-6">
-              <button 
-                onClick={() => {
-                  onAddToCart(product, selectedVariants, quantity);
-                }}
-                disabled={isCartLoading}
-                className="w-full h-14 bg-black text-white font-black uppercase text-[11px] tracking-[0.3em] hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-3 relative overflow-hidden"
-              >
-                {isCartLoading ? (
-                  <Loader2 className="animate-spin" size={20} />
-                ) : (
-                  <>Add to cart <ShoppingBag size={16} /></>
-                )}
-              </button>
-              <button 
-                onClick={() => {
-                  onBuyNow(product, selectedVariants);
-                }}
-                className="w-full h-14 border-2 border-black text-black font-black uppercase text-[11px] tracking-[0.3em] hover:bg-black hover:text-white active:scale-[0.98] transition-all flex items-center justify-center gap-3"
-              >
-                Buy it now
-              </button>
-            </div>
+            {(() => {
+              const currentStock = (() => {
+                if (!product.stock) return Infinity;
+                if (Object.keys(selectedVariants).length > 0) {
+                  let min = Infinity;
+                  for (const [k, v] of Object.entries(selectedVariants)) {
+                    const key = `${k}:${v}`;
+                    if (product.stock[key] !== undefined) min = Math.min(min, product.stock[key]);
+                  }
+                  return min;
+                }
+                return product.stock['_default'] ?? Infinity;
+              })();
+              const isOOS = currentStock === 0;
+              return (
+                <div className="space-y-3 mb-6">
+                  <button 
+                    onClick={() => { if (!isOOS) onAddToCart(product, selectedVariants, quantity); }}
+                    disabled={isCartLoading || isOOS}
+                    className={`w-full h-14 font-black uppercase text-[11px] tracking-[0.3em] active:scale-[0.98] transition-all flex items-center justify-center gap-3 relative overflow-hidden ${
+                      isOOS ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-black text-white hover:opacity-90'
+                    }`}
+                  >
+                    {isCartLoading ? (
+                      <Loader2 className="animate-spin" size={20} />
+                    ) : isOOS ? (
+                      <>Out of Stock <AlertCircle size={16} /></>
+                    ) : (
+                      <>Add to cart <ShoppingBag size={16} /></>
+                    )}
+                  </button>
+                  <button 
+                    onClick={() => { if (!isOOS) onBuyNow(product, selectedVariants); }}
+                    disabled={isOOS}
+                    className={`w-full h-14 border-2 font-black uppercase text-[11px] tracking-[0.3em] active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${
+                      isOOS ? 'border-gray-200 text-gray-300 cursor-not-allowed' : 'border-black text-black hover:bg-black hover:text-white'
+                    }`}
+                  >
+                    Buy it now
+                  </button>
+                </div>
+              );
+            })()}
 
             {/* Mobile Sticky Bar */}
             <motion.div 
@@ -1525,7 +1600,7 @@ const ProductDetailContent = ({
                   product={p}
                   onAddToCart={onAddToCart}
                   onEmailDetails={onEmailDetails}
-                  onBuyNow={() => {}}
+                  onBuyNow={onBuyNow}
                   searchQuery={searchQuery}
                   isWishlisted={wishlist.includes(p.id)}
                   onToggleWishlist={onToggleWishlist}
@@ -1585,6 +1660,23 @@ const ProductCard = ({
   const allImages = useMemo(() => [product.image, ...(product.images || [])], [product.image, product.images]);
   const navigate = useNavigate();
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
+
+  // Stock level for current variant selection
+  const stockLevel = useMemo(() => {
+    if (!product.stock) return Infinity;
+    if (Object.keys(selectedVariants).length > 0) {
+      let min = Infinity;
+      for (const [k, v] of Object.entries(selectedVariants)) {
+        const key = `${k}:${v}`;
+        if (product.stock[key] !== undefined) min = Math.min(min, product.stock[key]);
+      }
+      return min;
+    }
+    return product.stock['_default'] ?? Infinity;
+  }, [product.stock, selectedVariants]);
+
+  const isOutOfStock = stockLevel === 0;
+  const isLowStock   = stockLevel > 0 && stockLevel <= 5 && stockLevel !== Infinity;
 
   useEffect(() => {
     if (product.variants) {
@@ -1646,6 +1738,7 @@ const ProductCard = ({
           onError={(e) => {
             e.currentTarget.src = `https://picsum.photos/seed/${product.id}/800/1000`;
           }}
+          loading="lazy"
           className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-1000 ease-out ${allImages.length > 1 ? 'group-hover:opacity-0' : ''}`}
           referrerPolicy="no-referrer"
         />
@@ -1659,26 +1752,48 @@ const ProductCard = ({
             onError={(e) => {
               e.currentTarget.src = `https://picsum.photos/seed/${product.id}-alt/800/1000`;
             }}
+            loading="lazy"
             className="absolute inset-0 w-full h-full object-cover scale-105 opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-1000 ease-out"
             referrerPolicy="no-referrer"
           />
         )}
 
-        {discount > 0 && (
+        {/* Discount badge */}
+        {discount > 0 && !isOutOfStock && (
           <div className="absolute top-4 left-4 px-2 py-1 bg-red-500 text-white text-[7px] font-bold uppercase tracking-widest z-20">
             -{discount}%
           </div>
         )}
 
-        {/* Quick Add Button (Mobile Persistent, Desktop Hover) */}
+        {/* Out of Stock overlay + badge */}
+        {isOutOfStock && (
+          <>
+            <div className="absolute inset-0 bg-white/60 z-20 pointer-events-none" />
+            <div className="absolute top-4 left-4 px-2 py-1 bg-black text-white text-[7px] font-bold uppercase tracking-widest z-30">
+              Out of Stock
+            </div>
+          </>
+        )}
+
+        {/* Low Stock badge */}
+        {isLowStock && !isOutOfStock && (
+          <div className="absolute top-4 left-4 px-2 py-1 bg-amber-500 text-white text-[7px] font-bold uppercase tracking-widest z-20">
+            Only {stockLevel} left
+          </div>
+        )}
+
+        {/* Quick Add Button — disabled if out of stock */}
         <button 
           onClick={(e) => {
             e.stopPropagation();
-            onAddToCart(product, selectedVariants);
+            if (!isOutOfStock) onAddToCart(product, selectedVariants);
           }}
-          className={`absolute bottom-0 left-0 right-0 py-4 bg-black text-white text-[9px] font-bold uppercase tracking-[0.2em] z-30 transition-transform duration-300 active:scale-95 md:translate-y-full md:group-hover:translate-y-0 translate-y-0`}
+          disabled={isOutOfStock}
+          className={`absolute bottom-0 left-0 right-0 py-4 text-[9px] font-bold uppercase tracking-[0.2em] z-30 transition-transform duration-300 active:scale-95 md:translate-y-full md:group-hover:translate-y-0 translate-y-0 ${
+            isOutOfStock ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-black text-white'
+          }`}
         >
-          Quick Add
+          {isOutOfStock ? 'Out of Stock' : 'Quick Add'}
         </button>
       </div>
 
@@ -3288,6 +3403,104 @@ const AuthModal = ({
   );
 };
 
+// ─── Smart Label Download Button ─────────────────────────────────────────────
+// Handles async label generation: if labelUrl is a direct URL, opens it.
+// Otherwise polls /api/shipping?action=label&shipmentId=X with retries.
+const LabelDownloadButton = ({ order }: { order: Order }) => {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleDownload = async () => {
+    setStatus('loading');
+    setErrorMsg(null);
+
+    // If we already have a direct label URL stored, open it immediately
+    const directUrl = (order as any).labelUrl || (order as any).waybillUrl || (order as any).waybill_url;
+    if (directUrl && typeof directUrl === 'string' && directUrl.startsWith('http')) {
+      window.open(directUrl, '_blank');
+      setStatus('idle');
+      return;
+    }
+
+    const shipmentId = (order as any).shipmentId || (order as any).bobgoShipmentId;
+    if (!shipmentId) {
+      setErrorMsg('No shipment ID on this order — dispatch it first to generate a label.');
+      setStatus('error');
+      return;
+    }
+
+    const MAX_ATTEMPTS = 6;
+    const DELAY_MS = 5000; // 5s between attempts — ShipLogic label generation is async
+    const labelEndpoint = `/api/shipping?action=label&shipmentId=${shipmentId}`;
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const res = await fetch(labelEndpoint);
+        
+        if (res.status === 202) {
+          // Server says label not ready yet — wait and retry
+          if (attempt < MAX_ATTEMPTS) await new Promise(r => setTimeout(r, DELAY_MS));
+          continue;
+        }
+
+        if (res.ok) {
+          const contentType = res.headers.get('content-type') || '';
+          if (contentType.includes('application/pdf') || contentType.includes('application/octet')) {
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `label-${shipmentId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            setStatus('idle');
+            return;
+          } else {
+            const data = await res.json();
+            if (data.url || data.labelUrl) {
+              window.open(data.url || data.labelUrl, '_blank');
+              setStatus('idle');
+              return;
+            }
+          }
+        }
+        // Non-ok, non-202 — wait and retry
+        if (attempt < MAX_ATTEMPTS) {
+          await new Promise(r => setTimeout(r, DELAY_MS));
+        }
+      } catch {
+        if (attempt === MAX_ATTEMPTS) break;
+        await new Promise(r => setTimeout(r, DELAY_MS));
+      }
+    }
+
+    setErrorMsg('Label not ready yet — shipment may still be processing. Try again in a minute.');
+    setStatus('error');
+  };
+
+  return (
+    <div className="w-full space-y-1">
+      <button
+        onClick={handleDownload}
+        disabled={status === 'loading'}
+        className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-black text-black text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all disabled:opacity-50 disabled:cursor-wait"
+      >
+        {status === 'loading' ? (
+          <><Loader2 size={12} className="animate-spin" /> Generating Label...</>
+        ) : (
+          <><Package size={12} /> Download Shipping Label</>
+        )}
+      </button>
+      {status === 'error' && errorMsg && (
+        <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest text-center leading-tight">{errorMsg}</p>
+      )}
+    </div>
+  );
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 const OrdersDrawer = ({ 
   isOpen, 
   onClose, 
@@ -3435,33 +3648,8 @@ const OrdersDrawer = ({
                             Track <ExternalLink size={12} />
                           </a>
                         </div>
-                        {user.role === 'admin' && order.labelUrl && (
-                          <button 
-                            onClick={async () => {
-                              try {
-                                const res = await fetch(`/api/orders/${order.id}/label`, {
-                                  headers: { 'Authorization': `Bearer ${localStorage.getItem('grab_and_go_token')}` }
-                                });
-                                if (res.ok) {
-                                  const blob = await res.blob();
-                                  const url = window.URL.createObjectURL(blob);
-                                  const a = document.createElement('a');
-                                  a.href = url;
-                                  a.download = `shipping-label-${order.id}.pdf`;
-                                  document.body.appendChild(a);
-                                  a.click();
-                                  a.remove();
-                                } else {
-                                  console.error("Failed to download label");
-                                }
-                              } catch (err) {
-                                console.error("Label download error:", err);
-                              }
-                            }}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-black text-black text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all"
-                          >
-                            Download Shipping Label <Package size={12} />
-                          </button>
+                        {user.role === 'admin' && (order.labelUrl || order.shipmentId) && (
+                          <LabelDownloadButton order={order} />
                         )}
 
                       </div>
@@ -3570,6 +3758,7 @@ const CategoryManagementDrawer = ({
       setEditingCategory(prev => prev ? { ...prev, image: data.secure_url } : null);
     } catch (err) {
       console.error("Upload failed:", err);
+      window.dispatchEvent(new CustomEvent("grab-toast", { detail: { message: "Image upload failed", type: "error" } }));
     } finally {
       setIsUploading(false);
     }
@@ -3877,6 +4066,7 @@ const BrandManagementDrawer = ({
       );
     } catch (err) {
       console.error("Upload failed:", err);
+      window.dispatchEvent(new CustomEvent("grab-toast", { detail: { message: "Image upload failed", type: "error" } }));
     } finally {
       setIsUploading(false);
     }
@@ -4158,6 +4348,7 @@ const ProductManagementDrawer = ({
       setEditingProduct(prev => prev ? { ...prev, [field]: data.secure_url } : null);
     } catch (err) {
       console.error("Upload failed:", err);
+      window.dispatchEvent(new CustomEvent("grab-toast", { detail: { message: "Image upload failed", type: "error" } }));
     } finally {
       setIsUploading(false);
     }
@@ -4196,6 +4387,7 @@ const ProductManagementDrawer = ({
       });
     } catch (err) {
       console.error("Multiple upload failed:", err);
+      window.dispatchEvent(new CustomEvent("grab-toast", { detail: { message: "Some images failed to upload", type: "error" } }));
     } finally {
       setIsUploadingMultiple(false);
     }
@@ -5330,7 +5522,30 @@ const HybridCheckoutModal = ({
         const res = await fetch(`/api/shipping?action=pickup-points&${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
-          setPickupPoints(data.pickup_points?.length > 0 ? data.pickup_points : BOBGO_FALLBACK_POINTS);
+          // Normalise — ensure all fields are primitives (ShipLogic may return nested objects)
+          const normalisePoint = (p: any): BobGoPickupPoint => {
+            const s = (v: any): string => {
+              if (!v) return '';
+              if (typeof v === 'string') return v;
+              if (typeof v === 'object') return v.street_address || v.entered_address || v.name || v.address || '';
+              return String(v);
+            };
+            return {
+              id:              String(p.id || p.code || Math.random()),
+              name:            s(p.name) || s(p.title) || 'Pickup Point',
+              address:         s(p.address) || s(p.street_address) || '',
+              suburb:          s(p.suburb)  || s(p.local_area) || '',
+              city:            s(p.city) || city,
+              province:        s(p.province) || s(p.zone) || '',
+              postal_code:     s(p.postal_code) || s(p.code) || postalCode,
+              lat:             typeof p.lat === 'number' ? p.lat : 0,
+              lng:             typeof p.lng === 'number' ? p.lng : 0,
+              operating_hours: typeof p.operating_hours === 'string' ? p.operating_hours : '',
+              type:            (['locker','counter','pudo'].includes(p.type) ? p.type : 'counter') as 'locker'|'counter'|'pudo',
+            };
+          };
+          const points = (data.pickup_points || []).map(normalisePoint);
+          setPickupPoints(points.length > 0 ? points : BOBGO_FALLBACK_POINTS);
         } else {
           setPickupPoints(BOBGO_FALLBACK_POINTS);
         }
@@ -5833,9 +6048,9 @@ const HybridCheckoutModal = ({
                                       }`}
                                     >
                                       <div>
-                                        <p className="text-sm font-semibold">{rate.serviceLevel?.name || 'Delivery'}</p>
+                                        <p className="text-sm font-semibold">{rate.serviceLevel?.name || rate.serviceLevel}</p>
                                         <p className="text-[10px] text-gray-400">
-                                          {rate.serviceLevel?.description || rate.carrier || ''}
+                                          {rate.serviceLevel?.description || rate.carrier}
                                           {rate.serviceLevel?.delivery_date_from && (
                                             <> • Est. {new Date(rate.serviceLevel.delivery_date_from).toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' })}</>
                                           )}
@@ -5877,9 +6092,9 @@ const HybridCheckoutModal = ({
                                       >
                                         <div className="flex items-start justify-between gap-2">
                                           <div className="min-w-0">
-                                            <p className="text-sm font-semibold truncate">{point.name}</p>
-                                            <p className="text-[10px] text-gray-400 truncate">{point.address}, {point.suburb}</p>
-                                            {point.operating_hours && (
+                                            <p className="text-sm font-semibold truncate">{String(point.name || '')}</p>
+                                            <p className="text-[10px] text-gray-400 truncate">{String(point.address || '')}{point.suburb ? `, ${String(point.suburb)}` : ''}</p>
+                                            {point.operating_hours && typeof point.operating_hours === 'string' && (
                                               <p className="text-[10px] text-gray-300 mt-0.5">{point.operating_hours}</p>
                                             )}
                                           </div>
@@ -5920,8 +6135,8 @@ const HybridCheckoutModal = ({
                                           }`}
                                         >
                                           <div>
-                                            <p className="text-sm font-semibold">{rate.serviceLevel?.name || 'Delivery'}</p>
-                                            <p className="text-[10px] text-gray-400">{rate.serviceLevel?.description || rate.carrier || ''}</p>
+                                            <p className="text-sm font-semibold">{rate.serviceLevel?.name || rate.serviceLevel}</p>
+                                            <p className="text-[10px] text-gray-400">{rate.serviceLevel?.description || rate.carrier}</p>
                                           </div>
                                           <span className="text-sm font-bold whitespace-nowrap">R{rate.amount?.toFixed(2)}</span>
                                         </button>
@@ -5950,8 +6165,8 @@ const HybridCheckoutModal = ({
                               {selectedPickupPoint && selectedRate && (
                                 <div className="p-3 bg-gray-50 border border-gray-100 rounded-md">
                                   <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Delivering to</p>
-                                  <p className="text-sm font-semibold">{selectedPickupPoint.name}</p>
-                                  <p className="text-[10px] text-gray-500">{selectedPickupPoint.address}, {selectedPickupPoint.suburb}</p>
+                                  <p className="text-sm font-semibold">{String(selectedPickupPoint.name || '')}</p>
+                                  <p className="text-[10px] text-gray-500">{String(selectedPickupPoint.address || '')}{selectedPickupPoint.suburb ? `, ${String(selectedPickupPoint.suburb)}` : ''}</p>
                                 </div>
                               )}
                             </div>
@@ -6884,7 +7099,8 @@ const HomePage = ({
                   <img
                     src={cat.image}
                     alt={cat.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     referrerPolicy="no-referrer"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -6993,10 +7209,17 @@ const CategoryPage = ({
 
   return (
     <main className="bg-white text-black min-h-screen pt-16 md:pt-20">
+      <SEO
+        title={`${categoryName} | Grab & Go`}
+        description={matchedCat?.description || `Shop ${categoryName} at Grab & Go — premium streetwear and lifestyle essentials delivered across South Africa.`}
+        image={matchedCat?.image || undefined}
+        url={`https://grabandgo.co.za/category/${slug}`}
+      />
       {/* Category Hero */}
       <div className="relative h-[28vh] md:h-[40vh] bg-gray-900 overflow-hidden">
         {matchedCat?.image ? (
-          <img src={matchedCat.image} alt={categoryName} className="absolute inset-0 w-full h-full object-cover opacity-60" referrerPolicy="no-referrer" />
+          <img src={matchedCat.image} alt={categoryName} loading="lazy"
+          className="absolute inset-0 w-full h-full object-cover opacity-60" referrerPolicy="no-referrer" />
         ) : (
           <img src={`https://picsum.photos/seed/${categoryName}/1920/600?grayscale`} alt={categoryName} className="absolute inset-0 w-full h-full object-cover opacity-40" referrerPolicy="no-referrer" />
         )}
@@ -7670,17 +7893,20 @@ function AppContent() {
     const handleOpenCart = () => setIsCartOpen(true);
     const handleOpenMenu = () => setIsMenuOpen(true);
     const handleSelectProduct = (e: any) => setSelectedProduct(e.detail);
+    const handleGrabToast = (e: any) => setToast({ message: e.detail.message, type: e.detail.type || 'error' });
     
     window.addEventListener('open-orders', handleOpenOrders);
     window.addEventListener('open-cart', handleOpenCart);
     window.addEventListener('open-menu', handleOpenMenu);
     window.addEventListener('select-product', handleSelectProduct);
+    window.addEventListener('grab-toast', handleGrabToast);
     
     return () => {
       window.removeEventListener('open-orders', handleOpenOrders);
       window.removeEventListener('open-cart', handleOpenCart);
       window.removeEventListener('open-menu', handleOpenMenu);
       window.removeEventListener('select-product', handleSelectProduct);
+      window.removeEventListener('grab-toast', handleGrabToast);
     };
   }, []);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
@@ -7943,15 +8169,6 @@ function AppContent() {
         categories={categories}
       />
 
-
-      <WishlistDrawer 
-        isOpen={isWishlistOpen}
-        onClose={() => setIsWishlistOpen(false)}
-        wishlist={wishlist}
-        products={products}
-        onAddToCart={(p) => addToCart(p)}
-        onToggleWishlist={toggleWishlist}
-      />
 
       <AnimatePresence>
         {toast && (

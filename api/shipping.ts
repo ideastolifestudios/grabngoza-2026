@@ -1,364 +1,305 @@
-// api/shipping.ts
-// Handles all shipping via ?action=rates|create|track|label|cancel|pickup-points|webhook
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+/**
+ * api/shipping.ts  —  Grab & Go Shipping API (Vercel Serverless)
+ *
+ * Actions:
+ *   GET  ?action=rates          (POST body: deliveryAddress, items)
+ *   GET  ?action=pickup-points  (query: postal_code, city)
+ *   GET  ?action=track          (query: trackingNumber)
+ *   GET  ?action=label          (query: shipmentId)
+ *
+ * Provider: ShipLogic / Bob Go  (same REST API, two base URLs)
+ *   ShipLogic:  https://api.shiplogic.com
+ *   Bob Go:     https://api.bobgo.co.za   (uses same ShipLogic engine)
+ */
 
-// ── Firebase Admin (only needed for webhook) ──────────────────────────────────
-function getDb() {
-  if (!getApps().length) {
-    initializeApp({
-      credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}')),
-      projectId: process.env.FIREBASE_PROJECT_ID,
-    });
-  }
-  return getFirestore();
-}
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const BASE_URL = process.env.SHIPLOGIC_BASE_URL || 'https://api.shiplogic.com';
-const API_KEY = () => process.env.SHIPLOGIC_API_KEY || '';
+// ─── Config ────────────────────────────────────────────────────────────────
+const SHIPLOGIC_API_KEY = process.env.SHIPLOGIC_API_KEY || '';
+const SHIPLOGIC_BASE    = 'https://api.shiplogic.com';
 
-const CORS = {
-  'Access-Control-Allow-Credentials': 'true',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,OPTIONS,POST,PUT',
-  'Access-Control-Allow-Headers': 'X-CSRF-Token,Content-Type,Accept',
+// Grab & Go origin address (used for rate quotes)
+const ORIGIN = {
+  street_address: '10 Studio Lane',
+  local_area:     'Sandton',
+  city:           'Johannesburg',
+  zone:           'GP',
+  country:        'ZA',
+  code:           '2196',
 };
 
-function setcors(res: any) { Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v)); }
-
-// Store address from env
-const STORE = () => ({
-  type: 'business',
-  company: 'IDEAS TO LIFE STUDIOS',
-  street_address: process.env.BUSINESS_ADDRESS || '1104 Tugela Street',
-  local_area: process.env.BUSINESS_LOCAL_AREA || 'Klipfontein View',
-  city: process.env.BUSINESS_CITY || 'Midrand',
-  zone: process.env.BUSINESS_PROVINCE || 'Gauteng',
-  country: 'ZA',
-  code: process.env.BUSINESS_POSTAL_CODE || '1685',
-});
-
-// ShipLogic status map for webhook
-const STATUS_MAP: Record<string, { label: string; emoji: string; fbStatus: string }> = {
-  'submitted':           { label: 'Order Placed',         emoji: '📋', fbStatus: 'confirmed' },
-  'collection-assigned': { label: 'Pickup Scheduled',     emoji: '📅', fbStatus: 'pickup-scheduled' },
-  'collected':           { label: 'Collected by Courier', emoji: '📦', fbStatus: 'collected' },
-  'at-hub':              { label: 'At Sorting Hub',       emoji: '🏭', fbStatus: 'in-transit' },
-  'in-transit':          { label: 'In Transit',           emoji: '🚚', fbStatus: 'in-transit' },
-  'out-for-delivery':    { label: 'Out for Delivery',     emoji: '🛵', fbStatus: 'out-for-delivery' },
-  'delivered':           { label: 'Delivered',            emoji: '✅', fbStatus: 'delivered' },
-  'failed-delivery':     { label: 'Delivery Failed',      emoji: '❌', fbStatus: 'failed-delivery' },
-  'returned':            { label: 'Returned',             emoji: '↩️', fbStatus: 'returned' },
-};
-
-// Fallback pickup points for Bob Go
-const FALLBACK_POINTS = [
-  { id: 'bg-jnb-001', name: 'PUDO Locker – Sandton City', address: 'Shop L23, Sandton City Mall, 83 Rivonia Rd', suburb: 'Sandton', city: 'Johannesburg', province: 'Gauteng', postal_code: '2196', lat: -26.1076, lng: 28.0567, operating_hours: 'Mon–Sat 09:00–21:00, Sun 10:00–19:00', type: 'locker' },
-  { id: 'bg-jnb-002', name: 'PUDO Counter – Rosebank Mall', address: 'Shop 14, The Zone @ Rosebank, Oxford Rd', suburb: 'Rosebank', city: 'Johannesburg', province: 'Gauteng', postal_code: '2196', lat: -26.1453, lng: 28.044, operating_hours: 'Mon–Sun 09:00–20:00', type: 'counter' },
-  { id: 'bg-cpt-001', name: 'PUDO Locker – V&A Waterfront', address: 'Ground Floor, Victoria Wharf', suburb: 'Waterfront', city: 'Cape Town', province: 'Western Cape', postal_code: '8001', lat: -33.9025, lng: 18.4199, operating_hours: 'Mon–Sun 09:00–21:00', type: 'locker' },
-  { id: 'bg-cpt-002', name: 'PUDO Counter – Cavendish Square', address: 'Lower Ground, Cavendish Square, Dreyer St', suburb: 'Claremont', city: 'Cape Town', province: 'Western Cape', postal_code: '7708', lat: -33.9821, lng: 18.4692, operating_hours: 'Mon–Sat 09:00–19:00', type: 'counter' },
-  { id: 'bg-dbn-001', name: 'PUDO Locker – Gateway', address: 'Upper Level, Gateway Theatre, 1 Palm Blvd', suburb: 'Umhlanga', city: 'Durban', province: 'KwaZulu-Natal', postal_code: '4319', lat: -29.7298, lng: 31.0723, operating_hours: 'Mon–Sat 09:00–21:00', type: 'locker' },
-  { id: 'bg-pta-001', name: 'PUDO Counter – Menlyn Park', address: 'Menlyn Park Shopping Centre, Atterbury Rd', suburb: 'Menlyn', city: 'Pretoria', province: 'Gauteng', postal_code: '0181', lat: -25.7836, lng: 28.277, operating_hours: 'Mon–Sat 09:00–21:00', type: 'counter' },
-];
-
-// Flat-rate fallback when ShipLogic key missing or returns error
-const FALLBACK_RATES = [
-  { serviceLevel: { name: 'Standard Delivery', description: '3–5 business days', code: 'standard' }, amount: 89, carrier: 'The Courier Guy' },
-  { serviceLevel: { name: 'Express Delivery', description: '1–2 business days', code: 'express' }, amount: 149, carrier: 'The Courier Guy' },
-];
-
-function parcelFromItems(items: any[]) {
-  const totalWeight = (items || []).reduce((s, i) => s + (i.weight || 0.5) * (i.quantity || 1), 0);
-  const totalItems = (items || []).reduce((s, i) => s + (i.quantity || 1), 0);
+// ─── Helpers ───────────────────────────────────────────────────────────────
+function slHeaders() {
   return {
-    submitted_length_cm: Math.min(10 + totalItems * 5, 60),
-    submitted_width_cm: Math.min(10 + totalItems * 3, 40),
-    submitted_height_cm: Math.min(5 + totalItems * 3, 30),
-    submitted_weight_kg: Math.max(totalWeight, 0.5),
+    'Authorization': `Bearer ${SHIPLOGIC_API_KEY}`,
+    'Content-Type':  'application/json',
   };
 }
 
-async function slFetch(path: string, method: string, body?: any) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${API_KEY()}`,
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-  const text = await res.text();
-  let data: any;
-  try { data = JSON.parse(text); } catch { data = { raw: text }; }
-  return { ok: res.ok, status: res.status, data };
+async function slFetch(path: string, opts: RequestInit = {}) {
+  const url = `${SHIPLOGIC_BASE}${path}`;
+  const res = await fetch(url, { ...opts, headers: { ...slHeaders(), ...(opts.headers || {}) } });
+  return res;
 }
 
-// ── MAIN HANDLER ─────────────────────────────────────────────────────────────
-export default async function handler(req: any, res: any) {
-  setcors(res);
+function err(res: VercelResponse, status: number, message: string, details?: string) {
+  return res.status(status).json({ error: message, details: details || '' });
+}
+
+// ─── Main handler ──────────────────────────────────────────────────────────
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS for local dev
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const action = req.query.action as string;
 
-  // ── GET rates ───────────────────────────────────────────────────────────────
-  if (action === 'rates') {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
-    if (!API_KEY()) return res.status(200).json({ rates: FALLBACK_RATES });
+  if (!action) return err(res, 400, 'Missing action parameter');
 
-    const { deliveryAddress, items } = req.body || {};
-    if (!deliveryAddress) return res.status(400).json({ error: 'deliveryAddress required' });
-
-    const parcel = parcelFromItems(items || []);
-    const payload = {
-      collection_address: STORE(),
-      delivery_address: {
-        type: 'residential',
-        street_address: deliveryAddress.address || '',
-        local_area: deliveryAddress.city || '',
-        city: deliveryAddress.city || '',
-        zone: deliveryAddress.province || '',
-        country: deliveryAddress.country || 'ZA',
-        code: deliveryAddress.postalCode || '',
-      },
-      parcels: [parcel],
-    };
-
-    const { ok, data } = await slFetch('/rates', 'POST', payload);
-    if (!ok) return res.status(200).json({ rates: FALLBACK_RATES });
-
-    const rates = (data.rates || []).map((r: any) => ({
-      serviceLevel: {
-        name: String(r.service_level?.name || r.service_level?.code || 'Delivery'),
-        description: String(r.service_level?.description || ''),
-        code: String(r.service_level?.code || ''),
-        delivery_date_from: r.estimated_delivery_date || null,
-      },
-      amount: Number(r.price_breakdown?.total || r.cost?.amount || r.rate || 0),
-      carrier: String(r.courier?.name || r.service_level?.name || r.carrier || 'Courier'),
-    })).sort((a: any, b: any) => a.amount - b.amount);
-
-    return res.status(200).json({ success: true, rates: rates.length ? rates : FALLBACK_RATES, parcelDetails: parcel });
+  // Guard: API key must be set
+  if (!SHIPLOGIC_API_KEY) {
+    console.error('[shipping] SHIPLOGIC_API_KEY not set');
+    return err(res, 503, 'Shipping service not configured');
   }
 
-  // ── Pickup points (Bob Go) ──────────────────────────────────────────────────
-  if (action === 'pickup-points') {
-    if (req.method !== 'GET') return res.status(405).json({ error: 'GET required' });
+  try {
+    switch (action) {
 
-    if (!API_KEY()) return res.status(200).json({ pickup_points: FALLBACK_POINTS });
+      // ── Shipping rates ─────────────────────────────────────────────────
+      case 'rates': {
+        if (req.method !== 'POST') return err(res, 405, 'Method not allowed');
 
-    const { postal_code, city } = req.query;
-    const params = new URLSearchParams({ courier: 'bobgo' });
-    if (postal_code) params.set('postal_code', postal_code as string);
-    if (city) params.set('city', city as string);
+        const { deliveryAddress, items } = req.body || {};
+        if (!deliveryAddress || !items?.length) {
+          return err(res, 400, 'Missing deliveryAddress or items');
+        }
 
-    try {
-      const { ok, data } = await slFetch(`/pickup-points?${params}`, 'GET');
-      const points = ok ? (data.pickup_points || data.locations || []) : [];
-      return res.status(200).json({ pickup_points: points.length ? points : FALLBACK_POINTS });
-    } catch {
-      return res.status(200).json({ pickup_points: FALLBACK_POINTS });
-    }
-  }
+        // Calculate total weight (kg) from items
+        const totalWeight = Math.max(
+          0.5,
+          items.reduce((sum: number, i: any) => sum + (i.weight || 0.5) * (i.quantity || 1), 0)
+        );
 
-  // ── Create shipment ─────────────────────────────────────────────────────────
-  if (action === 'create') {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
-    if (!API_KEY()) return res.status(200).json({ success: false, error: 'ShipLogic not configured' });
+        const payload = {
+          pickup_address: {
+            street_address: ORIGIN.street_address,
+            local_area:     ORIGIN.local_area,
+            city:           ORIGIN.city,
+            zone:           ORIGIN.zone,
+            country:        ORIGIN.country,
+            code:           ORIGIN.code,
+          },
+          delivery_address: {
+            street_address: deliveryAddress.address  || '',
+            local_area:     deliveryAddress.city     || '',
+            city:           deliveryAddress.city     || '',
+            zone:           deliveryAddress.province || '',
+            country:        deliveryAddress.country  || 'ZA',
+            code:           deliveryAddress.postalCode || '',
+          },
+          parcels: [{
+            submitted_length_cm: 30,
+            submitted_width_cm:  25,
+            submitted_height_cm: 15,
+            submitted_weight_kg: totalWeight,
+          }],
+          declared_value: 500, // R500 default declared value
+        };
 
-    const { order, customs, special_instructions_delivery, special_instructions_collection } = req.body || {};
-    if (!order) return res.status(400).json({ error: 'order required' });
+        const slRes = await slFetch('/shipments/rates', {
+          method: 'POST',
+          body:   JSON.stringify(payload),
+        });
 
-    const isInternational = order.isInternational || (order.country && order.country !== 'ZA');
-    const parcel = parcelFromItems(order.items || []);
+        if (!slRes.ok) {
+          const text = await slRes.text();
+          console.error('[shipping/rates] ShipLogic error:', slRes.status, text);
+          // Return empty rates gracefully — frontend handles this
+          return res.status(200).json({ rates: [] });
+        }
 
-    const deliveryAddr = order.deliveryAddress || (
-      order.deliveryMethod === 'pickup'
-        ? {
-            // Studio pickup — deliver back to store address
-            type: 'business',
-            company: 'IDEAS TO LIFE STUDIOS',
-            street_address: process.env.BUSINESS_ADDRESS || '1104 Tugela Street',
-            local_area: process.env.BUSINESS_LOCAL_AREA || 'Klipfontein View',
-            city: process.env.BUSINESS_CITY || 'Midrand',
-            zone: process.env.BUSINESS_PROVINCE || 'Gauteng',
-            country: 'ZA',
-            code: process.env.BUSINESS_POSTAL_CODE || '1685',
-          }
-        : {
-            type: 'residential',
-            street_address: order.address || '',
-            local_area: order.city || '',
-            city: order.city || '',
-            zone: order.province || '',
-            country: order.country || 'ZA',
-            code: order.postalCode || '',
-          }
-    );
+        const data = await slRes.json();
 
-    const payload: any = {
-      collection_address: STORE(),
-      delivery_address: deliveryAddr,
-      collection_contact: {
-        name: 'IDEAS TO LIFE STUDIOS',
-        mobile_number: process.env.BUSINESS_PHONE || '',
-        email: process.env.BUSINESS_EMAIL || '',
-      },
-      delivery_contact: {
-        name: `${order.firstName || ''} ${order.lastName || ''}`.trim(),
-        mobile_number: order.phone || '',
-        email: order.email || '',
-      },
-      parcels: [parcel],
-      service_level_id: 184277,
-      reference: `GNG-${order.id || Date.now()}`,
-      declared_value: order.total || 0,
-      ...(special_instructions_delivery ? { special_instructions_delivery } : {}),
-      ...(special_instructions_collection ? { special_instructions_collection } : {}),
-      ...(isInternational && customs ? { customs } : {}),
-    };
+        // Normalise rates into the shape the frontend expects:
+        // { amount: number, serviceLevel: { name: string, description: string } }
+        const rates = (data.rates || []).map((r: any) => ({
+          id:           r.id,
+          amount:       r.total_rate || r.rate || 0,
+          serviceLevel: {
+            name:        r.service_level?.name        || r.courier?.name || 'Standard',
+            description: r.service_level?.description || `${r.transit_days || 3}–${(r.transit_days || 3) + 2} business days`,
+            code:        r.service_level?.code        || '',
+          },
+          courier:    r.courier?.name || '',
+          transitDays: r.transit_days || 3,
+        }));
 
-    const { ok, status, data } = await slFetch('/shipments', 'POST', payload);
-
-    if (!ok) {
-      console.error('ShipLogic create error:', JSON.stringify(data));
-      return res.status(200).json({ success: false, error: 'ShipLogic error', details: data });
-    }
-
-    return res.status(200).json({
-      success: true,
-      shipmentId: data.id || null,
-      trackingNumber: data.tracking_reference || data.short_tracking_reference || null,
-      trackingRef: data.custom_tracking_reference || data.reference || `GNG-${order.id?.slice(0, 8)}`,
-      waybill_url: data.waybill_url || null,
-      status: data.status,
-      raw: data,
-    });
-  }
-
-  // ── Track shipment ──────────────────────────────────────────────────────────
-  if (action === 'track') {
-    if (req.method !== 'GET') return res.status(405).json({ error: 'GET required' });
-    const { trackingNumber } = req.query;
-    if (!trackingNumber) return res.status(400).json({ error: 'trackingNumber required' });
-
-    const { ok, data } = await slFetch(`/tracking/${trackingNumber}`, 'GET');
-    if (!ok) return res.status(404).json({ error: 'Tracking failed', details: data });
-
-    return res.status(200).json({
-      success: true,
-      trackingNumber: data.tracking_number,
-      status: data.status,
-      events: (data.events || []).map((e: any) => ({
-        timestamp: e.timestamp,
-        location: e.location,
-        description: e.description,
-      })),
-    });
-  }
-
-  // ── Print label / cancel ────────────────────────────────────────────────────
-  if (action === 'label') {
-  if (req.method !== 'GET') return res.status(405).json({ error: 'GET required' });
-
-  const { shipmentId, type } = req.query;
-  if (!shipmentId) return res.status(400).json({ error: 'shipmentId required' });
-
-  const labelType = type === 'sticker' ? 'sticker' : 'label';
-
-  // ShipLogic label endpoint — try both path variants
-  const urls = [
-    `${BASE_URL}/v2/shipments/${shipmentId}/${labelType}`,
-    `${BASE_URL}/shipments/${shipmentId}/${labelType}`,
-    `${BASE_URL}/v2/shipments/${shipmentId}/waybill`,
-  ];
-
-  let response: any;
-  for (const url of urls) {
-    try {
-      response = await fetch(url, {
-        headers: { Authorization: `Bearer ${API_KEY()}`, Accept: 'application/pdf,*/*' },
-      });
-      if (response.ok) break;
-    } catch {
-      continue;
-    }
-  }
-
-  if (!response || !response.ok) {
-    // Last resort: get shipment details and return waybill_url for client to open
-    try {
-      const { ok, data } = await slFetch(`/v2/shipments/${shipmentId}`, 'GET');
-      if (ok && data.waybill_url) {
-        return res.status(200).json({ redirect: data.waybill_url });
+        return res.status(200).json({ rates });
       }
-    } catch {}
-    const text = await response?.text().catch(() => '');
-    return res.status(202).json({
-      error: 'Label generating — try again in 30 seconds',
-      details: text,
-    });
-  }
 
-  const contentType = response.headers.get('content-type') || 'application/pdf';
-  res.setHeader('Content-Type', contentType);
-  res.setHeader('Content-Disposition', `inline; filename=label-${shipmentId}.pdf`);
-  const buffer = await response.arrayBuffer();
-  return res.send(Buffer.from(buffer));
-}
+      // ── Bob Go pickup points ───────────────────────────────────────────
+      case 'pickup-points': {
+        const postalCode = req.query.postal_code as string || '';
+        const city       = req.query.city        as string || '';
 
-  // ── ShipLogic webhook ───────────────────────────────────────────────────────
-  if (action === 'webhook') {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
-    const payload = req.body;
+        const params = new URLSearchParams();
+        if (postalCode) params.set('postal_code', postalCode);
+        if (city)       params.set('city',        city);
 
-    try {
-      const db = getDb();
+        // ShipLogic/Bob Go pickup-points endpoint
+        const slRes = await slFetch(`/pickup-points?${params.toString()}`);
 
-      if (payload.custom_tracking_reference && payload.status && payload.tracking_events) {
-        const ref = payload.custom_tracking_reference;
-        const mapped = STATUS_MAP[payload.status] || { label: payload.status, emoji: '📍', fbStatus: payload.status };
-        const snap = await db.collection('orders').where('trackingReference', '==', ref).limit(1).get();
+        if (!slRes.ok) {
+          console.error('[shipping/pickup-points] ShipLogic error:', slRes.status);
+          // Return empty — frontend falls back to BOBGO_FALLBACK_POINTS
+          return res.status(200).json({ pickup_points: [] });
+        }
 
-        if (!snap.empty) {
-          const docRef = snap.docs[0];
-          const order = docRef.data();
-          const latest = payload.tracking_events?.[0];
+        const data = await slRes.json();
 
-          await docRef.ref.update({
-            status: mapped.fbStatus,
-            lastTrackingUpdate: new Date().toISOString(),
-            trackingHistory: FieldValue.arrayUnion({
-              slStatus: payload.status,
-              message: latest?.message || mapped.label,
-              location: latest?.location || '',
-              timestamp: payload.event_time || new Date().toISOString(),
-            }),
-          });
+        // Normalise to the BobGoPickupPoint shape the frontend expects.
+        // ShipLogic returns pickup points where address fields can be either
+        // flat strings OR nested address objects — handle both shapes.
+        const resolveStr = (v: any): string => {
+          if (!v) return '';
+          if (typeof v === 'string') return v;
+          // ShipLogic nested address object
+          if (typeof v === 'object') return v.street_address || v.entered_address || v.address || String(v.id || '');
+          return String(v);
+        };
 
-          // Fire notifications (non-blocking)
-          const base = process.env.APP_URL || 'https://grabngoza-2026.vercel.app';
-          if (order.email) {
-            fetch(`${base}/api/notifications?action=email`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                to: order.email,
-                subject: `${mapped.emoji} ${mapped.label} — Order #${docRef.id.toUpperCase()}`,
-                html: `<p>Hi ${order.firstName}, your order is now <strong>${mapped.label}</strong>.</p>`,
-              }),
-            }).catch(() => {});
+        const pickup_points = (data.pickup_points || data.results || data || []).map((p: any) => ({
+          id:              String(p.id || p.code || ''),
+          name:            resolveStr(p.name) || resolveStr(p.title) || 'Pickup Point',
+          address:         resolveStr(p.street_address) || resolveStr(p.address) || '',
+          suburb:          resolveStr(p.local_area)     || resolveStr(p.suburb) || '',
+          city:            resolveStr(p.city)           || city,
+          province:        resolveStr(p.zone)           || resolveStr(p.province) || '',
+          postal_code:     resolveStr(p.code)           || postalCode,
+          lat:             typeof p.lat === 'number' ? p.lat : (typeof p.latitude  === 'number' ? p.latitude  : 0),
+          lng:             typeof p.lng === 'number' ? p.lng : (typeof p.longitude === 'number' ? p.longitude : 0),
+          operating_hours: typeof p.operating_hours === 'string' ? p.operating_hours : '',
+          type:            typeof p.type === 'string' ? p.type : 'counter',
+        }));
+
+        return res.status(200).json({ pickup_points });
+      }
+
+      // ── Tracking ──────────────────────────────────────────────────────
+      case 'track': {
+        const trackingNumber = req.query.trackingNumber as string;
+        if (!trackingNumber) return err(res, 400, 'Missing trackingNumber');
+
+        const slRes = await slFetch(`/shipments?tracking_reference=${encodeURIComponent(trackingNumber)}`);
+
+        if (!slRes.ok) {
+          const text = await slRes.text();
+          console.error('[shipping/track] ShipLogic error:', slRes.status, text);
+          return err(res, slRes.status, 'Tracking lookup failed', text);
+        }
+
+        const data = await slRes.json();
+        const shipment = data.shipments?.[0] || data;
+
+        return res.status(200).json({
+          status:         shipment.status              || 'unknown',
+          trackingNumber: shipment.tracking_reference  || trackingNumber,
+          events:         (shipment.tracking_events || []).map((e: any) => ({
+            timestamp:   e.timestamp   || e.created_at,
+            description: e.description || e.status,
+            location:    e.location    || '',
+          })),
+          estimatedDelivery: shipment.estimated_delivery_date || null,
+          courier:           shipment.courier?.name           || '',
+        });
+      }
+
+      // ── Shipping label (PDF) ──────────────────────────────────────────
+      // ShipLogic label generation is async — the label may not be ready
+      // immediately after shipment creation. This endpoint returns the PDF
+      // bytes when ready, or a 202 with { ready: false } to signal retry.
+      case 'label': {
+        const shipmentId = req.query.shipmentId as string;
+        if (!shipmentId) return err(res, 400, 'Missing shipmentId');
+
+        // First try to get the waybill/label URL from the shipment record
+        const shipRes = await slFetch(`/shipments/${shipmentId}`);
+
+        if (!shipRes.ok) {
+          const text = await shipRes.text();
+          console.error('[shipping/label] get shipment failed:', shipRes.status, text);
+          return err(res, shipRes.status, 'Shipment not found', text);
+        }
+
+        const shipData = await shipRes.json();
+
+        // If ShipLogic has already generated a label URL, redirect to it
+        const labelUrl: string | undefined =
+          shipData.waybill_url   ||
+          shipData.label_url     ||
+          shipData.labels?.[0]?.url;
+
+        if (labelUrl) {
+          // Proxy the PDF so the browser can download it without CORS issues
+          const pdfRes = await fetch(labelUrl);
+          if (pdfRes.ok) {
+            const buffer = Buffer.from(await pdfRes.arrayBuffer());
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="label-${shipmentId}.pdf"`);
+            return res.status(200).send(buffer);
           }
         }
-        return res.status(200).json({ received: true, matched: !snap.empty });
+
+        // Try the direct label endpoint
+        const labelRes = await slFetch(`/shipments/${shipmentId}/label`);
+
+        if (labelRes.status === 404 || labelRes.status === 422) {
+          // Label not generated yet — tell frontend to retry
+          return res.status(202).json({
+            ready:   false,
+            message: 'Label is still being generated by the courier. Please retry in a few seconds.',
+          });
+        }
+
+        if (!labelRes.ok) {
+          const text = await labelRes.text();
+          console.error('[shipping/label] label fetch failed:', labelRes.status, text);
+          return err(res, labelRes.status, 'Label unavailable', text);
+        }
+
+        const contentType = labelRes.headers.get('content-type') || 'application/pdf';
+
+        // If we got JSON back (some couriers return a URL instead of bytes)
+        if (contentType.includes('application/json')) {
+          const json = await labelRes.json();
+          const url  = json.url || json.label_url || json.waybill_url;
+          if (url) {
+            const pdfRes = await fetch(url);
+            if (pdfRes.ok) {
+              const buffer = Buffer.from(await pdfRes.arrayBuffer());
+              res.setHeader('Content-Type', 'application/pdf');
+              res.setHeader('Content-Disposition', `attachment; filename="label-${shipmentId}.pdf"`);
+              return res.status(200).send(buffer);
+            }
+          }
+          // Still not ready
+          return res.status(202).json({ ready: false, message: 'Label URL not yet available' });
+        }
+
+        // Got raw PDF bytes
+        const buffer = Buffer.from(await labelRes.arrayBuffer());
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="label-${shipmentId}.pdf"`);
+        return res.status(200).send(buffer);
       }
 
-      return res.status(200).json({ received: true });
-    } catch (err: any) {
-      console.error('[Webhook error]', err.message);
-      return res.status(200).json({ received: true, error: err.message });
+      default:
+        return err(res, 400, `Unknown action: ${action}`);
     }
+  } catch (error: any) {
+    console.error('[shipping] Unhandled error:', error);
+    return err(res, 500, 'Internal server error', error.message);
   }
-
-  return res.status(400).json({ error: `Unknown action: ${action || 'none'}. Use ?action=rates|create|track|label|cancel|pickup-points|webhook` });
 }
