@@ -7846,7 +7846,6 @@ function AppContent() {
         if (orderData.id !== id) return;
 
         // 1. Update status from payment_pending to pending in Firestore
-        await orderService.updateOrder(id, { status: 'pending' });
 
         // 2. Send order confirmation email + WhatsApp
         await fetch('/api/payments?action=order-success', {
@@ -8130,7 +8129,7 @@ function AppContent() {
             </div>
           </div>
         } />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <NotFoundPage />} />
         <Route path="/legal" element={<LegalPage />} />
         <Route path="/refunds" element={<RefundPolicyPage />} />
         <Route path="/shipping" element={<ShippingPolicyPage />} />
