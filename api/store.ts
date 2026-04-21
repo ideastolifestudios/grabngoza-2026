@@ -10,7 +10,11 @@ const CORS = {
 };
 function setcors(res: any) { Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v)); }
 
+// FIX: Guard SMTP config — return null if not configured
 function makeTransport() {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    return null;
+  }
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
@@ -37,8 +41,14 @@ export default async function handler(req: any, res: any) {
     const { email, product } = req.body || {};
     if (!email || !product) return res.status(400).json({ error: 'email and product required' });
 
+    // FIX: Check transport before attempting send
+    const transport = makeTransport();
+    if (!transport) {
+      return res.status(503).json({ error: 'Email service not configured — check SMTP_HOST, SMTP_USER, SMTP_PASS' });
+    }
+
     try {
-      await makeTransport().sendMail({
+      await transport.sendMail({
         from: `"Grab & Go" <${process.env.SMTP_USER}>`,
         to: email,
         subject: `Product Details: ${product.name}`,
@@ -65,8 +75,13 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'orderId, email, returnMethod and returnReason required' });
     }
 
+    // FIX: Check transport before attempting send
+    const transporter = makeTransport();
+    if (!transporter) {
+      return res.status(503).json({ error: 'Email service not configured — check SMTP_HOST, SMTP_USER, SMTP_PASS' });
+    }
+
     try {
-      const transporter = makeTransport();
       await Promise.all([
         // Customer email
         transporter.sendMail({
@@ -78,30 +93,28 @@ export default async function handler(req: any, res: any) {
               <img src="https://res.cloudinary.com/dggitwduo/image/upload/v1774084848/GRAB_GO_WEB_LOGO_as09yx.png" style="height:40px;filter:brightness(0) invert(1);margin-bottom:20px;" />
               <h2 style="text-transform:uppercase;letter-spacing:2px;font-size:16px;">Return Request Received</h2>
               <p style="color:#aaa;">Hi, we've received your return request for order <strong style="color:#fff;">#${orderId.toUpperCase()}</strong>.</p>
-              <div style="background:#1a1a1a;padding:20px;margin:20px 0;border:1px solid #333;">
-                <p style="margin:5px 0;font-size:13px;"><strong>Method:</strong> ${returnMethod === 'instore' ? 'In-Store (Free)' : 'Online (R120 fee)'}</p>
-                <p style="margin:5px 0;font-size:13px;"><strong>Reason:</strong> ${returnReason}</p>
+              <div style="background:#1a1a1a;padding:20px;margin:20px 0;border:1px solid #222;">
+                <p style="margin:0 0 8px;color:#888;font-size:10px;letter-spacing:1px;text-transform:uppercase;">Method</p>
+                <p style="margin:0;color:#fff;">${returnMethod === 'courier' ? 'Courier Pickup' : 'Drop Off at Studio'}</p>
+                <p style="margin:12px 0 8px 0;color:#888;font-size:10px;letter-spacing:1px;text-transform:uppercase;">Reason</p>
+                <p style="margin:0;color:#fff;">${returnReason}</p>
               </div>
-              ${returnMethod === 'instore'
-                ? '<p style="color:#aaa;font-size:13px;">Please bring your item to our studio in original condition with tags attached.</p>'
-                : '<p style="color:#aaa;font-size:13px;">We will email shipping instructions within 1–2 business days. A R120 fee will be deducted from your refund.</p>'}
-              <p style="color:#333;font-size:10px;margin-top:30px;">© 2026 Grab & Go Studio</p>
+              <p style="color:#888;font-size:12px;">Our team will contact you within 24 hours with return instructions.</p>
             </div>`,
         }),
-        // Business email
-        transporter.sendMail({
+        // Admin notification
+        process.env.BUSINESS_EMAIL ? transporter.sendMail({
           from: `"Grab & Go Returns" <${process.env.SMTP_USER}>`,
-          to: process.env.BUSINESS_EMAIL || process.env.SMTP_USER,
-          subject: `RETURN REQUEST: Order #${orderId.toUpperCase()}`,
-          html: `
-            <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:40px;">
-              <h2>↩️ New Return Request</h2>
-              <p><strong>Order ID:</strong> #${orderId.toUpperCase()}</p>
-              <p><strong>Customer Email:</strong> ${email}</p>
-              <p><strong>Return Method:</strong> ${returnMethod === 'instore' ? 'In-Store (Free)' : 'Online (R120)'}</p>
-              <p><strong>Reason:</strong> ${returnReason}</p>
-            </div>`,
-        }),
+          to: process.env.BUSINESS_EMAIL,
+          subject: `[RETURN] Order #${orderId.toUpperCase()} — ${returnMethod}`,
+          html: `<div style="font-family:sans-serif;padding:20px;">
+            <h3>Return Request</h3>
+            <p><strong>Order:</strong> ${orderId}</p>
+            <p><strong>Customer:</strong> ${email}</p>
+            <p><strong>Method:</strong> ${returnMethod}</p>
+            <p><strong>Reason:</strong> ${returnReason}</p>
+          </div>`,
+        }) : Promise.resolve(),
       ]);
       return res.status(200).json({ success: true });
     } catch (err: any) {
@@ -109,5 +122,5 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  return res.status(400).json({ error: `Unknown action: ${action}. Use ?action=health|send-product|return` });
+  return res.status(400).json({ error: `Unknown action: ${action}` });
 }
