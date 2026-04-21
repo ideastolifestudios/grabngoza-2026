@@ -1,3 +1,4 @@
+import './sentryClient';
 import AdminDashboard from './components/admin/AdminDashboard';
 import React, { useState, useEffect, useRef, useMemo, Component } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
