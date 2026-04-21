@@ -142,7 +142,7 @@ service cloud.firestore {
              isValidEmail(data.email) &&
              data.items is list && data.items.size() > 0 &&
              data.total is number && data.total >= 0 &&
-             data.status in ['pending', 'preparing', 'ready', 'completed', 'cancelled', 'returned'] &&
+             data.status in ['payment_pending', 'pending', 'preparing', 'ready', 'completed', 'cancelled', 'returned'] &&
              isValidTimestamp(data.date);
     }
 
@@ -174,7 +174,8 @@ service cloud.firestore {
     }
 
     match /brands/{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     match /products/{document=**} {
