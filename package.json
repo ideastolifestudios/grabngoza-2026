@@ -12,7 +12,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "npx tsx --test tests/payment-flow.test.ts",
+    "test:watch": "npx tsx --test --watch tests/payment-flow.test.ts"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
