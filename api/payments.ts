@@ -81,7 +81,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           headers: {
             'Authorization': `Bearer ${YOCO_SECRET_KEY}`,
             'Content-Type':  'application/json',
-            'Idempotency-Key': `${metadata.orderId}-${Date.now()}`,
+            // FIX: Stable idempotency key — ties to orderId, not timestamp
+            'Idempotency-Key': metadata.orderId || `GG-${Date.now()}`,
           },
           body: JSON.stringify(checkoutPayload),
         });
@@ -117,12 +118,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const orderId = order.id;
         const results: Record<string, any> = {};
 
+        // ─── SECURITY: Verify payment with Yoco before processing ─────
+        const orderDoc = await db.collection('orders').doc(orderId).get();
+        if (!orderDoc.exists) return err(res, 404, 'Order not found');
+
+        const orderData = orderDoc.data()!;
+        const checkoutId = orderData.yocoCheckoutId;
+
+        if (!checkoutId) {
+          console.error(`[payments/order-success] No yocoCheckoutId for order ${orderId}`);
+          return err(res, 400, 'No checkout ID linked to this order');
+        }
+
+        // Call Yoco API to verify checkout status
+        const verifyRes = await fetch(`${YOCO_API_BASE}/checkouts/${checkoutId}`, {
+          headers: { 'Authorization': `Bearer ${YOCO_SECRET_KEY}` },
+        });
+        const verifyData = await verifyRes.json();
+
+        if (!verifyRes.ok || verifyData.status !== 'completed') {
+          console.error(`[payments/order-success] Payment NOT verified for ${orderId}:`, verifyData);
+          return err(res, 402, 'Payment not verified', `Checkout status: ${verifyData.status || 'unknown'}`);
+        }
+
+        // ─── IDEMPOTENCY: Skip if already processed ──────────────────
+        if (orderData.paymentStatus === 'paid') {
+          console.log(`[payments/order-success] Order ${orderId} already processed — skipping`);
+          return res.status(200).json({ ok: true, orderId, alreadyProcessed: true });
+        }
+
         // ── 1. Update order status in Firestore ──────────────────────
         try {
           await db.collection('orders').doc(orderId).update({
             status:        'pending',
             paymentStatus: 'paid',
             paidAt:        new Date().toISOString(),
+            yocoPaymentId: verifyData.paymentId || verifyData.id || '',
           });
           results.orderUpdated = true;
         } catch (e: any) {
@@ -135,8 +166,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         try {
           const shipRes = await fetch(`${BASE_URL}/api/create-shipment`, {
             method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ orderId, order }),
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Internal-Secret': process.env.INTERNAL_API_SECRET || '',
+            },
+            body: JSON.stringify({ orderId, order }),
           });
           const shipData = await shipRes.json();
           results.shipment = shipData;
@@ -145,8 +179,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           results.shipmentError = e.message;
         }
 
-        // ── 3. Send confirmation email via EmailJS/Resend ────────────
-        // (Add your email service here — example uses Resend)
+        // ── 3. Send confirmation email via Resend ────────────────────
         const resendKey = process.env.RESEND_API_KEY;
         if (resendKey) {
           try {

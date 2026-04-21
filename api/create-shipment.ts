@@ -194,6 +194,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return err(res, 405, 'Method not allowed');
 
+  // ─── SECURITY: Internal auth guard ───────────────────────────────────
+  // Only api/payments.ts should call this endpoint (via X-Internal-Secret header)
+  const internalSecret = process.env.INTERNAL_API_SECRET;
+  if (!internalSecret) {
+    console.error('[create-shipment] INTERNAL_API_SECRET not configured');
+    return err(res, 503, 'Service not configured');
+  }
+  const providedSecret = req.headers['x-internal-secret'] as string;
+  if (providedSecret !== internalSecret) {
+    console.warn('[create-shipment] Unauthorized access attempt from:', req.headers.origin || 'unknown');
+    return err(res, 403, 'Forbidden');
+  }
+
   const { orderId, order } = req.body || {};
   if (!orderId || !order) return err(res, 400, 'Missing orderId or order');
 
