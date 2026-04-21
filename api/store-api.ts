@@ -16,7 +16,7 @@ import * as orderService from './_services/order.service';
 import * as customerService from './_services/customer.service';
 import * as productService from './_services/product.service';
 import * as shippingService from './_services/shipping.service';
-import { listZohoItems, getMappings } from './_services/zohoInventoryService.ts';
+import { listZohoItems, getMappings } from './_services/zohoInventoryService';
 
 function log(r: string, a: string, m: string, d?: any) {
   console.log(`[${new Date().toISOString()}] [${r}/${a}] ${m}`, d ? JSON.stringify(d) : '');

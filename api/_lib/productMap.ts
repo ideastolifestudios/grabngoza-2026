@@ -88,7 +88,7 @@ export function getMappingStats(): {
  * Expects a collection 'product_mappings' with docs: { localId, zohoItemId }
  *
  * Usage:
- *   import { db } from './firebase.ts';
+ *   import { db } from './firebase';
  *   await loadFromFirestore(db);
  */
 export async function loadFromFirestore(db: any): Promise<number> {
