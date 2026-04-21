@@ -12,6 +12,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { paymentLimiter } from '../middleware/upstashRateLimit';
 
 // ─── Firebase Admin init ────────────────────────────────────────────────────
 if (!getApps().length) {
@@ -95,6 +96,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Rate limiting (Upstash Redis)
+  const { limited } = await paymentLimiter.check(req, res);
+  if (limited) return; // 429 already sent
 
   const action = req.query.action as string;
   if (!action) return err(res, 400, 'Missing action parameter');
