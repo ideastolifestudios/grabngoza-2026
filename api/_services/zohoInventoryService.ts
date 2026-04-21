@@ -1,26 +1,20 @@
 /**
- * api/services/zohoInventoryService.ts — Zoho Inventory integration
+ * api/_services/zohoInventoryService.ts — Zoho Inventory integration
  *
- * Now uses shared auto-refresh OAuth from lib/zohoAuth.ts.
- * No more manual token management.
+ * Now uses shared productMap from _lib/ and shared auth from _lib/zohoAuth.
  */
 
 import type { Order } from '../_lib/types.ts';
 import { zohoApiFetch, ZOHO_REGION } from '../_lib/zohoAuth.ts';
+import { getZohoItemId, getAllMappings, getMappingStats } from '../_lib/productMap.ts';
 
 const BASE_URL = `https://inventory.zoho.${ZOHO_REGION}/api/v1`;
 const ORG_ID   = process.env.ZOHO_INVENTORY_ORG_ID || '';
 
-// ─── Product ID Mapping (Local → Zoho) ─────────────────────────
-const PRODUCT_MAP: Record<string, string> = {
-  // 'local-id': 'zoho-item-id',
-};
+// Re-export mapping functions for controller access
+export { getAllMappings as getMappings, getMappingStats };
+export { getZohoItemId, registerMapping, registerMappings } from '../_lib/productMap.ts';
 
-export function getZohoItemId(localId: string): string | null { return PRODUCT_MAP[localId] || null; }
-export function registerMapping(localId: string, zohoId: string) { PRODUCT_MAP[localId] = zohoId; }
-export function getMappings() { return { ...PRODUCT_MAP }; }
-
-// ─── Types ──────────────────────────────────────────────────────
 export interface ZohoSalesOrderResult {
   success: boolean;
   zohoSalesOrderId?: string;
@@ -30,7 +24,6 @@ export interface ZohoSalesOrderResult {
   skippedItems?: string[];
 }
 
-// ─── Create Sales Order ─────────────────────────────────────────
 export async function createZohoOrder(order: Order, zohoCustomerId?: string): Promise<ZohoSalesOrderResult> {
   if (!ORG_ID) return { success: false, error: 'ZOHO_INVENTORY_ORG_ID not set' };
 
@@ -45,9 +38,6 @@ export async function createZohoOrder(order: Order, zohoCustomerId?: string): Pr
         name: item.name,
         rate: item.price,
         quantity: item.quantity,
-        ...(item.selectedVariants
-          ? { description: Object.entries(item.selectedVariants).map(([k,v]) => `${k}: ${v}`).join(', ') }
-          : {}),
         ...(!zohoId ? { description: `[Unmapped] Local ID: ${item.productId}` } : {}),
       });
       if (!zohoId) skippedItems.push(item.productId);
@@ -66,24 +56,14 @@ export async function createZohoOrder(order: Order, zohoCustomerId?: string): Pr
     else payload.customer_name = `${order.firstName} ${order.lastName}`;
 
     console.log(`[zoho-inventory] Creating SO for ${order.id}`);
-
     const result = await zohoApiFetch(BASE_URL, '/salesorders', {
-      method: 'POST',
-      body: payload,
-      params: { organization_id: ORG_ID },
+      method: 'POST', body: payload, params: { organization_id: ORG_ID },
     });
 
     if (result.ok && result.data?.salesorder) {
       const so = result.data.salesorder;
-      console.log(`[zoho-inventory] SO created: ${so.salesorder_id}`);
-      return {
-        success: true,
-        zohoSalesOrderId: so.salesorder_id,
-        zohoSalesOrderNumber: so.salesorder_number,
-        ...(skippedItems.length > 0 ? { skippedItems } : {}),
-      };
+      return { success: true, zohoSalesOrderId: so.salesorder_id, zohoSalesOrderNumber: so.salesorder_number, ...(skippedItems.length ? { skippedItems } : {}) };
     }
-
     return { success: false, error: result.data?.message || `API ${result.status}`, details: result.data };
   } catch (err: any) {
     return { success: false, error: `Inventory sync: ${err.message}` };
@@ -92,9 +72,7 @@ export async function createZohoOrder(order: Order, zohoCustomerId?: string): Pr
 
 export async function listZohoItems(page = 1) {
   try {
-    const result = await zohoApiFetch(BASE_URL, '/items', {
-      params: { organization_id: ORG_ID, page: String(page), per_page: '50' },
-    });
+    const result = await zohoApiFetch(BASE_URL, '/items', { params: { organization_id: ORG_ID, page: String(page), per_page: '50' } });
     if (result.ok && result.data?.items)
       return { success: true, items: result.data.items.map((i: any) => ({ item_id: i.item_id, name: i.name, sku: i.sku || '', rate: i.rate || 0 })) };
     return { success: false, error: result.data?.message || 'Failed' };
