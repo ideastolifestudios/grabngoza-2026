@@ -4,16 +4,16 @@
  * Now uses shared productMap from _lib/ and shared auth from _lib/zohoAuth.
  */
 
-import type { Order } from '../_lib/types.ts';
-import { zohoApiFetch, ZOHO_REGION } from '../_lib/zohoAuth.ts';
-import { getZohoItemId, getAllMappings, getMappingStats } from '../_lib/productMap.ts';
+import type { Order } from '../_lib/types';
+import { zohoApiFetch, ZOHO_REGION } from '../_lib/zohoAuth';
+import { getZohoItemId, getAllMappings, getMappingStats } from '../_lib/productMap';
 
 const BASE_URL = `https://inventory.zoho.${ZOHO_REGION}/api/v1`;
 const ORG_ID   = process.env.ZOHO_INVENTORY_ORG_ID || '';
 
 // Re-export mapping functions for controller access
 export { getAllMappings as getMappings, getMappingStats };
-export { getZohoItemId, registerMapping, registerMappings } from '../_lib/productMap.ts';
+export { getZohoItemId, registerMapping, registerMappings } from '../_lib/productMap';
 
 export interface ZohoSalesOrderResult {
   success: boolean;

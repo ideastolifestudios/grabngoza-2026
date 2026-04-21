@@ -10,12 +10,12 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { setCors } from './_lib/cors.ts';
-import { success, error } from './_lib/response.ts';
-import * as orderService from './_services/order.service.ts';
-import * as customerService from './_services/customer.service.ts';
-import * as productService from './_services/product.service.ts';
-import * as shippingService from './_services/shipping.service.ts';
+import { setCors } from './_lib/cors';
+import { success, error } from './_lib/response';
+import * as orderService from './_services/order.service';
+import * as customerService from './_services/customer.service';
+import * as productService from './_services/product.service';
+import * as shippingService from './_services/shipping.service';
 import { listZohoItems, getMappings } from './_services/zohoInventoryService.ts';
 
 function log(r: string, a: string, m: string, d?: any) {

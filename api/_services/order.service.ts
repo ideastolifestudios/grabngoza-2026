@@ -9,9 +9,9 @@
  * This structure is ready for Yoco webhook: webhook calls confirmOrder().
  */
 
-import type { Order } from '../_lib/types.ts';
-import { createZohoOrder, type ZohoSalesOrderResult } from './zohoInventoryService.ts';
-import { createOrUpdateCustomer, type ZohoCRMResult } from './zohoCRMService.ts';
+import type { Order } from '../_lib/types';
+import { createZohoOrder, type ZohoSalesOrderResult } from './zohoInventoryService';
+import { createOrUpdateCustomer, type ZohoCRMResult } from './zohoCRMService';
 
 // ─── In-memory store ────────────────────────────────────────────
 const orders = new Map<string, Order>();
