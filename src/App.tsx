@@ -3,6 +3,7 @@ import AdminDashboard from './components/admin/AdminDashboard';
 import React, { useState, useEffect, useRef, useMemo, Component } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { Analytics } from '@vercel/analytics/react';
 import { 
   ShoppingBag,
   ShoppingCart, 
@@ -7503,6 +7504,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <Analytics />
         <AppContent />
       </BrowserRouter>
     </ErrorBoundary>
