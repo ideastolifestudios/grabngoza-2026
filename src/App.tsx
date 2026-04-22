@@ -1,5 +1,6 @@
 import './sentryClient';
 import AdminDashboard from './components/admin/AdminDashboard';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import React, { useState, useEffect, useRef, useMemo, Component } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -7504,6 +7505,7 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <AppContent />
+        <SpeedInsights />
       </BrowserRouter>
     </ErrorBoundary>
   );
