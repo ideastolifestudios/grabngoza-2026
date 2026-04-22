@@ -12,6 +12,17 @@ export interface OrderItem {
   variantId?: string;
 }
 
+export interface DeliveryAddress {
+  street_address?: string;
+  address?: string;
+  city?: string;
+  zone?: string;
+  province?: string;
+  code?: string;
+  postalCode?: string;
+  country?: string;
+}
+
 export interface Order {
   id: string;
   email: string;
@@ -34,13 +45,14 @@ export interface Order {
   paymentId?: string;
   paymentAmountCents?: number;
   paymentCurrency?: string;
-  // Shipping
+  // Shipping / Delivery
   address?: string;
   city?: string;
   province?: string;
   postalCode?: string;
   country?: string;
   deliveryMethod?: 'standard' | 'express' | 'pickup' | 'bobgo';
+  deliveryAddress?: DeliveryAddress;
   trackingNumber?: string;
   trackingUrl?: string;
   // Bob Go
