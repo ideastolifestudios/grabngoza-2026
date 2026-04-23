@@ -1,18 +1,13 @@
 /**
  * api/store-api.ts — Consolidated Store API
  *
- * Order flow (payment-gated):
- *   1. POST ?resource=orders&action=create        → pending order (no Zoho)
- *   2. POST ?resource=orders&action=confirm        → mark paid → CRM + Inventory
- *   3. POST ?resource=orders&action=simulate-payment → dev testing (success/failed)
- *
- * Ready for Yoco webhook: webhook hits ?resource=orders&action=confirm
+ * Order service is lazy-imported to prevent Redis bundling crash.
+ * All other services remain as static imports (they worked before).
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { setCors } from './_lib/cors';
 import { success, error } from './_lib/response';
-import * as orderService from './_services/order.service';
 import * as customerService from './_services/customer.service';
 import * as productService from './_services/product.service';
 import * as shippingService from './_services/shipping.service';
@@ -20,6 +15,11 @@ import { listZohoItems, getMappings } from './_services/zohoInventoryService';
 
 function log(r: string, a: string, m: string, d?: any) {
   console.log(`[${new Date().toISOString()}] [${r}/${a}] ${m}`, d ? JSON.stringify(d) : '');
+}
+
+// Lazy-import order service (avoids Redis bundling issues at module load)
+async function getOrderService() {
+  return await import('./_services/order.service');
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -43,9 +43,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // ORDERS (payment-gated)
       // ══════════════════════════════════════════════════════════
       case 'orders': {
+        const orderService = await getOrderService();
         switch (action) {
 
-          // List / Get / Stats
           case 'list': {
             const status = req.query.status as string | undefined;
             const limit = Math.min(Number(req.query.limit) || 50, 200);
@@ -60,7 +60,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           case 'stats':
             return success(res, { stats: await orderService.getStats() });
 
-          // Step 1: Create pending order (NO Zoho sync yet)
           case 'create': {
             if (req.method !== 'POST') return error(res, 405, 'POST required');
             const errs = orderService.validateCreateOrder(req.body || {});
@@ -72,7 +71,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return success(res, { order, message: 'Order created. Proceed to payment.' }, 201);
           }
 
-          // Step 2: Confirm after payment → triggers Zoho sync
           case 'confirm': {
             if (req.method !== 'POST') return error(res, 405, 'POST required');
             const { orderId, paymentRef } = req.body || {};
@@ -87,7 +85,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return success(res, { order: result.order, zoho: result.zoho, crm: result.crm });
           }
 
-          // Step 2 (alt): Simulate payment for dev/testing
           case 'simulate-payment': {
             if (req.method !== 'POST') return error(res, 405, 'POST required');
             const { orderId: simId, paymentStatus: simStatus } = req.body || {};
@@ -106,7 +103,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               });
             }
 
-            // Success → confirm order (same as real payment)
             const result = await orderService.confirmOrder(simId, 'SIM-' + Date.now());
             if (!result) return error(res, 404, `Order '${simId}' not found`);
             log('orders', 'simulate-payment', `${simId} → SUCCESS (simulated)`);
@@ -118,7 +114,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             });
           }
 
-          // Update / Delete
           case 'update': {
             if (req.method !== 'POST' || !id) return error(res, 400, 'POST + id required');
             const body = req.body || {};
