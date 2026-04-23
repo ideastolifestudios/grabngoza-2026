@@ -15,8 +15,13 @@ function optionalEnv(name: string, fallback = ''): string {
 }
 
 // ─── Payment config ────────────────────────────────────────────────────────
-export const YOCO_SECRET_KEY  = requireEnv('YOCO_SECRET_KEY');
-export const YOCO_API_BASE    = 'https://payments.yoco.com/api';
+export const YOCO_SECRET_KEY     = requireEnv('YOCO_SECRET_KEY');
+export const YOCO_WEBHOOK_SECRET = requireEnv('YOCO_WEBHOOK_SECRET');
+export const YOCO_API_BASE       = 'https://payments.yoco.com/api';
+
+// ─── Upstash Redis ─────────────────────────────────────────────────────────
+export const UPSTASH_REDIS_REST_URL   = requireEnv('UPSTASH_REDIS_REST_URL');
+export const UPSTASH_REDIS_REST_TOKEN = requireEnv('UPSTASH_REDIS_REST_TOKEN');
 
 // ─── Shipping config ───────────────────────────────────────────────────────
 export const SHIPLOGIC_API_KEY = requireEnv('SHIPLOGIC_API_KEY');
@@ -29,6 +34,17 @@ export const FIREBASE_PRIVATE_KEY  = requireEnv('FIREBASE_PRIVATE_KEY');
 
 // ─── Internal auth ─────────────────────────────────────────────────────────
 export const INTERNAL_API_SECRET = requireEnv('INTERNAL_API_SECRET');
+
+// ─── Twilio WhatsApp ───────────────────────────────────────────────────────
+export const TWILIO_SID              = optionalEnv('TWILIO_SID');
+export const TWILIO_AUTH_TOKEN       = optionalEnv('TWILIO_AUTH_TOKEN');
+export const TWILIO_WHATSAPP_NUMBER  = optionalEnv('TWILIO_WHATSAPP_NUMBER');
+export const ADMIN_WHATSAPP_NUMBER   = optionalEnv('ADMIN_WHATSAPP_NUMBER');
+
+// ─── Zoho ──────────────────────────────────────────────────────────────────
+export const ZOHO_CLIENT_ID     = optionalEnv('ZOHO_CLIENT_ID');
+export const ZOHO_CLIENT_SECRET = optionalEnv('ZOHO_CLIENT_SECRET');
+export const ZOHO_REFRESH_TOKEN = optionalEnv('ZOHO_REFRESH_TOKEN');
 
 // ─── Optional services ─────────────────────────────────────────────────────
 export const RESEND_API_KEY = optionalEnv('RESEND_API_KEY');

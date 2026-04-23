@@ -1,22 +1,51 @@
 /**
- * api/_services/order.service.ts — Payment-gated order flow
+ * api/_services/order.service.ts — Redis-backed persistent order storage
+ *
+ * UPGRADED from in-memory Map to Upstash Redis.
+ * Orders survive cold starts and scale across function instances.
+ *
+ * Storage layout:
+ *   order:{id}           → JSON order object
+ *   orders:list          → sorted set (score = timestamp, member = order id)
+ *   order:payment:{pid}  → order id (dedup by paymentId)
+ *   order:counter        → auto-increment counter
  *
  * Flow:
- *   1. createOrder()       → stores with status='pending_payment' (NO Zoho sync)
- *   2. confirmOrder()      → marks paid → triggers CRM + Inventory sync
- *   3. cancelOrder()       → marks cancelled (payment failed/timeout)
- *
- * This structure is ready for Yoco webhook: webhook calls confirmOrder().
+ *   1. createOrder()   → stores with status='pending' (NO Zoho sync)
+ *   2. confirmOrder()  → marks paid → triggers CRM + Inventory sync
+ *   3. cancelOrder()   → marks cancelled
  */
 
 import type { Order } from '../_lib/types';
+import { getRedis } from '../_lib/redis';
 import { createZohoOrder, type ZohoSalesOrderResult } from './zohoInventoryService';
 import { createOrUpdateCustomer, type ZohoCRMResult } from './zohoCRMService';
 
-// ─── In-memory store ────────────────────────────────────────────
-const orders = new Map<string, Order>();
-let counter = 1000;
-function nextId(): string { return `ORD-${++counter}`; }
+const ORDER_PREFIX    = 'order:';
+const ORDER_LIST      = 'orders:list';
+const PAYMENT_PREFIX  = 'order:payment:';
+const COUNTER_KEY     = 'order:counter';
+
+// ─── Helpers ────────────────────────────────────────────────────
+
+async function saveOrder(order: Order): Promise<void> {
+  const redis = getRedis();
+  const ts = new Date(order.createdAt).getTime();
+  await Promise.all([
+    redis.set(`${ORDER_PREFIX}${order.id}`, JSON.stringify(order)),
+    redis.zadd(ORDER_LIST, { score: ts, member: order.id }),
+  ]);
+  // Index by paymentId if present
+  if (order.paymentId) {
+    await redis.set(`${PAYMENT_PREFIX}${order.paymentId}`, order.id);
+  }
+}
+
+async function nextId(): Promise<string> {
+  const redis = getRedis();
+  const counter = await redis.incr(COUNTER_KEY);
+  return `ORD-${counter}`;
+}
 
 // ─── Validation ─────────────────────────────────────────────────
 
@@ -50,10 +79,19 @@ export interface ConfirmResult {
   crm: ZohoCRMResult;
 }
 
+// ─── Duplicate check by paymentId ───────────────────────────────
+
+export async function getOrderByPaymentId(paymentId: string): Promise<Order | null> {
+  const redis = getRedis();
+  const orderId = await redis.get<string>(`${PAYMENT_PREFIX}${paymentId}`);
+  if (!orderId) return null;
+  return getOrder(orderId);
+}
+
 // ─── 1. CREATE (pending_payment — no Zoho yet) ─────────────────
 
 export async function createOrder(data: any): Promise<Order> {
-  const id = nextId();
+  const id = await nextId();
   const now = new Date().toISOString();
 
   const order: Order = {
@@ -66,8 +104,8 @@ export async function createOrder(data: any): Promise<Order> {
     subtotal: data.items.reduce((s: number, i: any) => s + i.price * i.quantity, 0),
     shippingCost: data.shippingCost || 0,
     total: data.total,
-    status: 'pending',            // Will move to 'processing' after payment
-    paymentStatus: 'pending',     // Will move to 'paid' after confirmation
+    status: 'pending',
+    paymentStatus: 'pending',
     deliveryMethod: data.deliveryMethod || 'standard',
     deliveryAddress: data.deliveryAddress,
     notes: '',
@@ -75,7 +113,7 @@ export async function createOrder(data: any): Promise<Order> {
     updatedAt: now,
   };
 
-  orders.set(id, order);
+  await saveOrder(order);
   console.log(`[order.service] Order ${id} created (pending payment). Total: R${order.total}`);
   return order;
 }
@@ -83,11 +121,10 @@ export async function createOrder(data: any): Promise<Order> {
 // ─── 2. CONFIRM (payment success → Zoho sync) ──────────────────
 
 export async function confirmOrder(orderId: string, paymentRef?: string): Promise<ConfirmResult | null> {
-  const order = orders.get(orderId);
+  const order = await getOrder(orderId);
   if (!order) return null;
 
   if (order.paymentStatus === 'paid') {
-    // Already confirmed — return current state without re-syncing
     console.log(`[order.service] Order ${orderId} already confirmed, skipping`);
     return {
       order,
@@ -99,12 +136,16 @@ export async function confirmOrder(orderId: string, paymentRef?: string): Promis
   // Mark as paid
   order.paymentStatus = 'paid';
   order.status = 'processing';
+  order.paidAt = new Date().toISOString();
   order.updatedAt = new Date().toISOString();
-  if (paymentRef) order.notes = `Payment: ${paymentRef}`;
+  if (paymentRef) {
+    order.paymentId = paymentRef;
+    order.notes = `Payment: ${paymentRef}`;
+  }
 
   console.log(`[order.service] Order ${orderId} payment confirmed → syncing to Zoho`);
 
-  // ── CRM sync ──────────────────────────────────────────────────
+  // ── CRM sync (non-blocking) ───────────────────────────────────
   let crmResult: ZohoCRMResult;
   try {
     crmResult = await createOrUpdateCustomer(order);
@@ -113,11 +154,12 @@ export async function confirmOrder(orderId: string, paymentRef?: string): Promis
     crmResult = { success: false, error: err.message };
   }
 
-  // ── Inventory sync (linked to CRM contact if available) ───────
+  // ── Inventory sync ────────────────────────────────────────────
   let zohoResult: ZohoSalesOrderResult;
   try {
     zohoResult = await createZohoOrder(order, crmResult.zohoContactId || undefined);
     if (zohoResult.success && zohoResult.zohoSalesOrderId) {
+      order.zohoOrderId = zohoResult.zohoSalesOrderId;
       order.notes = [order.notes, `Zoho SO: ${zohoResult.zohoSalesOrderId}`].filter(Boolean).join(' | ');
     }
   } catch (err: any) {
@@ -126,22 +168,23 @@ export async function confirmOrder(orderId: string, paymentRef?: string): Promis
   }
 
   if (crmResult.zohoContactId) {
+    order.zohoCrmContactId = crmResult.zohoContactId;
     order.notes = [order.notes, `CRM: ${crmResult.zohoContactId}`].filter(Boolean).join(' | ');
   }
 
-  orders.set(orderId, order);
+  await saveOrder(order);
   return { order, zoho: zohoResult, crm: crmResult };
 }
 
-// ─── 3. CANCEL (payment failed) ────────────────────────────────
+// ─── 3. CANCEL ──────────────────────────────────────────────────
 
 export async function cancelOrder(orderId: string, reason?: string): Promise<Order | null> {
-  const order = orders.get(orderId);
+  const order = await getOrder(orderId);
   if (!order) return null;
 
   if (order.paymentStatus === 'paid') {
     console.log(`[order.service] Cannot cancel paid order ${orderId}`);
-    return null; // Can't cancel paid orders this way
+    return null;
   }
 
   order.status = 'cancelled';
@@ -149,7 +192,7 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<Ord
   order.updatedAt = new Date().toISOString();
   order.notes = [order.notes, `Cancelled: ${reason || 'payment failed'}`].filter(Boolean).join(' | ');
 
-  orders.set(orderId, order);
+  await saveOrder(order);
   console.log(`[order.service] Order ${orderId} cancelled: ${reason || 'payment failed'}`);
   return order;
 }
@@ -157,34 +200,66 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<Ord
 // ─── READ / LIST / STATS ────────────────────────────────────────
 
 export async function listOrders(limit = 50, status?: string): Promise<Order[]> {
-  let result = Array.from(orders.values());
-  if (status) result = result.filter(o => o.status === status);
-  result.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-  return result.slice(0, limit);
+  const redis = getRedis();
+  // Get newest first (highest score = most recent)
+  const ids = await redis.zrange(ORDER_LIST, '+inf', '-inf', {
+    byScore: true,
+    rev: true,
+    offset: 0,
+    count: Math.min(limit * 2, 200), // fetch extra to filter by status
+  });
+
+  if (!ids || ids.length === 0) return [];
+
+  const pipeline = redis.pipeline();
+  for (const id of ids) {
+    pipeline.get(`${ORDER_PREFIX}${id}`);
+  }
+  const results = await pipeline.exec<(string | null)[]>();
+
+  let orders: Order[] = results
+    .filter((r): r is string => r !== null)
+    .map(r => {
+      try { return typeof r === 'string' ? JSON.parse(r) : r; }
+      catch { return null; }
+    })
+    .filter((o): o is Order => o !== null);
+
+  if (status) orders = orders.filter(o => o.status === status);
+  return orders.slice(0, limit);
 }
 
 export async function getOrder(id: string): Promise<Order | null> {
-  return orders.get(id) || null;
+  const redis = getRedis();
+  const data = await redis.get<string>(`${ORDER_PREFIX}${id}`);
+  if (!data) return null;
+  try { return typeof data === 'string' ? JSON.parse(data) : data; }
+  catch { return null; }
 }
 
 export async function updateOrder(id: string, data: Partial<Order>): Promise<Order | null> {
-  const existing = orders.get(id);
+  const existing = await getOrder(id);
   if (!existing) return null;
   const updated = { ...existing, ...data, id, updatedAt: new Date().toISOString() };
-  orders.set(id, updated as Order);
+  await saveOrder(updated as Order);
   return updated as Order;
 }
 
 export async function deleteOrder(id: string): Promise<boolean> {
-  if (!orders.has(id)) return false;
-  orders.delete(id);
+  const redis = getRedis();
+  const exists = await redis.exists(`${ORDER_PREFIX}${id}`);
+  if (!exists) return false;
+  await Promise.all([
+    redis.del(`${ORDER_PREFIX}${id}`),
+    redis.zrem(ORDER_LIST, id),
+  ]);
   return true;
 }
 
 export async function getStats() {
-  const all = Array.from(orders.values());
+  const orders = await listOrders(500);
   const byStatus: Record<string, number> = {};
-  for (const o of all) byStatus[o.status] = (byStatus[o.status] || 0) + 1;
-  const revenue = all.filter(o => o.paymentStatus === 'paid').reduce((s, o) => s + o.total, 0);
-  return { total: all.length, byStatus, revenue };
+  for (const o of orders) byStatus[o.status] = (byStatus[o.status] || 0) + 1;
+  const revenue = orders.filter(o => o.paymentStatus === 'paid').reduce((s, o) => s + o.total, 0);
+  return { total: orders.length, byStatus, revenue };
 }
