@@ -1,0 +1,26 @@
+// ── ADD THIS BLOCK inside your existing firestore.rules ─────────────────────
+// Place it after the /orders/{orderId} block, before the closing braces.
+//
+// Paste from "match /returns..." to the end of the closing brace.
+
+    match /returns/{returnId} {
+      // Customer: read their own returns
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+
+      // Customer: create a return (must own the order, status must start as pending)
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.status == "pending" &&
+        request.resource.data.keys().hasAll(["orderId","userId","email","items","reason","status","refundAmount","createdAt"]) &&
+        request.resource.data.refundAmount is number &&
+        request.resource.data.refundAmount >= 0 &&
+        request.resource.data.items is list &&
+        request.resource.data.items.size() > 0;
+
+      // Only admin can update (approve/reject/refund)
+      allow update: if isAdmin();
+
+      // No deletes
+      allow delete: if false;
+    }
