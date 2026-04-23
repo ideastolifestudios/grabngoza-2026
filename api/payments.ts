@@ -12,16 +12,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { paymentLimiter } from '../middleware/upstashRateLimit';
+// Rate limiting disabled (no Upstash configured)
 
 // ─── Firebase Admin init ────────────────────────────────────────────────────
 if (!getApps().length) {
   initializeApp({
-    credential: cert({
-      projectId:   process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey:  (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-    }),
+    credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}')),
+    projectId: process.env.FIREBASE_PROJECT_ID,
   });
 }
 const db = getFirestore();
@@ -97,9 +94,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Rate limiting (Upstash Redis)
-  const { limited } = await paymentLimiter.check(req, res);
-  if (limited) return; // 429 already sent
+  // Rate limiting disabled
 
   const action = req.query.action as string;
   if (!action) return err(res, 400, 'Missing action parameter');
