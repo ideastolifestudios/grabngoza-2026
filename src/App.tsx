@@ -599,7 +599,7 @@ const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
   if (topCats.length === 0) return null;
 
   return (
-    <div className="bg-white border-b border-gray-100">
+    <div className="bg-white border-b-2 border-[#06402B]/15">
       <div className="max-w-[1800px] mx-auto">
         <nav className="flex items-center gap-1 px-4 md:px-10 py-2 overflow-x-auto scrollbar-hide">
           <Link
@@ -1203,19 +1203,19 @@ const Hero = () => {
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
         className="max-w-xl"
       >
-        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/50 mb-4">New Season · 2026</p>
+        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/50 mb-4">{slide.tagline}</p>
         <h1 className="text-5xl md:text-7xl font-display font-black uppercase tracking-tighter text-white leading-[0.9] mb-6">
-          Fresh<br />Drops.<br /><span className="text-[#e34234]">Daily.</span>
+          {slide.title}
         </h1>
         <p className="text-xs md:text-sm text-white/60 uppercase tracking-widest font-bold mb-10 max-w-xs leading-relaxed">
-          Premium streetwear & lifestyle essentials. Exclusive brands, delivered nationwide.
+          {slide.sub}
         </p>
         <div className="flex items-center gap-4 flex-wrap">
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => navigate('/')}
-            className="px-8 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white/90 transition-all flex items-center gap-3 shadow-2xl"
+            className="px-8 py-4 bg-[#06402B] text-white text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[#06402B]/90 transition-all flex items-center gap-3 shadow-2xl"
           >
             Shop Now <ArrowRight size={14} />
           </motion.button>
@@ -1229,6 +1229,17 @@ const Hero = () => {
           </motion.button>
         </div>
       </motion.div>
+    </div>
+
+    {/* Slide indicators */}
+    <div className="absolute bottom-8 left-6 md:left-10 flex gap-2 z-20">
+      {heroSlides.map((_, idx) => (
+        <button
+          key={idx}
+          onClick={() => setCurrentSlide(idx)}
+          className={`w-8 h-1 rounded-full transition-all duration-500 ${idx === currentSlide ? 'bg-white w-12' : 'bg-white/30'}`}
+        />
+      ))}
     </div>
 
     {/* Scroll indicator */}
@@ -1583,7 +1594,7 @@ const ProductDetailContent = ({
                     onClick={() => { if (!isOOS) onAddToCart(product, selectedVariants, quantity); }}
                     disabled={isCartLoading || isOOS}
                     className={`w-full h-14 font-black uppercase text-[11px] tracking-[0.3em] active:scale-[0.98] transition-all flex items-center justify-center gap-3 relative overflow-hidden ${
-                      isOOS ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-black text-white hover:opacity-90'
+                      isOOS ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-[#06402B] text-white hover:bg-[#06402B]/90'
                     }`}
                   >
                     {isCartLoading ? (
@@ -1597,7 +1608,7 @@ const ProductDetailContent = ({
                   <button 
                     onClick={() => { if (!isOOS) onBuyNow(product, selectedVariants); }}
                     disabled={isOOS}
-                    className={`w-full h-14 border-2 font-black uppercase text-[11px] tracking-[0.3em] active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${
+                    className={`w-full h-14 border-2 border-[#06402B] text-[#06402B] font-black uppercase text-[11px] tracking-[0.3em] active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${
                       isOOS ? 'border-gray-200 text-gray-300 cursor-not-allowed' : 'border-black text-black hover:bg-black hover:text-white'
                     }`}
                   >
@@ -1878,7 +1889,7 @@ const ProductCard = ({
 
         {/* Discount badge */}
         {discount > 0 && !isOutOfStock && (
-          <div className="absolute top-4 left-4 px-2 py-1 bg-red-500 text-white text-[7px] font-bold uppercase tracking-widest z-20">
+          <div className="absolute top-4 left-4 px-2 py-1 bg-[#06402B] text-white text-[7px] font-bold uppercase tracking-widest z-20">
             -{discount}%
           </div>
         )}
@@ -1887,7 +1898,7 @@ const ProductCard = ({
         {isOutOfStock && (
           <>
             <div className="absolute inset-0 bg-white/60 z-20 pointer-events-none" />
-            <div className="absolute top-4 left-4 px-2 py-1 bg-black text-white text-[7px] font-bold uppercase tracking-widest z-30">
+            <div className="absolute top-4 left-4 px-2 py-1 bg-[#FFA500] text-black text-[7px] font-bold uppercase tracking-widest z-30">
               Out of Stock
             </div>
           </>
@@ -1908,7 +1919,7 @@ const ProductCard = ({
           }}
           disabled={isOutOfStock}
           className={`absolute bottom-0 left-0 right-0 py-4 text-[9px] font-bold uppercase tracking-[0.2em] z-30 transition-transform duration-300 active:scale-95 md:translate-y-full md:group-hover:translate-y-0 translate-y-0 ${
-            isOutOfStock ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-black text-white'
+            isOutOfStock ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#06402B] text-white'
           }`}
         >
           {isOutOfStock ? 'Out of Stock' : 'Quick Add'}
@@ -2064,7 +2075,7 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
   };
 
   return (
-    <footer className="bg-[#fafafa]">
+    <footer className="bg-[#fafafa] border-t-[3px] border-[#06402B]">
       {/* Newsletter Section — Warm & Strategic */}
       <div className="bg-black text-white py-12 md:py-16 px-6 md:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
@@ -3383,7 +3394,6 @@ const AuthModal = ({
               ) : (
                 <>
                   <div className="space-y-2">
-                    <Logo className="h-8 mb-2" dark />
                     <h2 className="text-xl font-display font-bold uppercase tracking-tighter">
                       {mode === 'login' ? 'Welcome Back' : 'Create Account'}
                     </h2>
