@@ -25,6 +25,7 @@
     "@types/multer": "^1.4.12",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
+    "@vercel/analytics": "^2.0.1",
     "@vitejs/plugin-react": "^5.0.4",
     "axios": "^1.13.6",
     "axios-retry": "^4.5.0",
