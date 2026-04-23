@@ -1,28 +1,21 @@
 /**
  * api/store-api.ts — Consolidated Store API
  *
- * ALL service imports are LAZY — function always loads.
- * Individual service failures are caught and returned as 500s.
+ * Static imports for ALL local files (Vercel bundler requires this).
+ * Services handle their own internal errors gracefully.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { setCors } from './_lib/cors';
+import { success, error } from './_lib/response';
+import * as orderService from './_services/order.service';
+import * as customerService from './_services/customer.service';
+import * as productService from './_services/product.service';
+import * as shippingService from './_services/shipping.service';
+import { listZohoItems, getMappings } from './_services/zohoInventoryService';
 
 function log(r: string, a: string, m: string, d?: any) {
   console.log(`[${new Date().toISOString()}] [${r}/${a}] ${m}`, d ? JSON.stringify(d) : '');
-}
-
-function setCors(res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-}
-
-function success(res: VercelResponse, data: any, status = 200) {
-  return res.status(status).json({ ok: true, ...data });
-}
-
-function error(res: VercelResponse, status: number, message: string, details?: string) {
-  return res.status(status).json({ ok: false, error: message, details: details || undefined });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -44,7 +37,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // ══════════ ORDERS ══════════
       case 'orders': {
-        const orderService = await import('./_services/order.service');
         switch (action) {
           case 'list': {
             const status = req.query.status as string | undefined;
@@ -110,7 +102,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // ══════════ CUSTOMERS ══════════
       case 'customers': {
-        const customerService = await import('./_services/customer.service');
         switch (action) {
           case 'list': return success(res, { customers: await customerService.listCustomers(Number(req.query.limit) || 50) });
           case 'get': {
@@ -145,7 +136,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // ══════════ PRODUCTS ══════════
       case 'products': {
-        const productService = await import('./_services/product.service');
         switch (action) {
           case 'list': return success(res, { products: await productService.listProducts(Number(req.query.limit) || 100, req.query.category as string) });
           case 'get': {
@@ -179,7 +169,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // ══════════ SHIPPING ══════════
       case 'shipping': {
-        const shippingService = await import('./_services/shipping.service');
         switch (action) {
           case 'calculate': {
             if (req.method !== 'POST') return error(res, 405, 'POST required');
@@ -195,7 +184,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // ══════════ ZOHO ══════════
       case 'zoho': {
-        const { listZohoItems, getMappings } = await import('./_services/zohoInventoryService');
         if (action === 'items') return success(res, { ...(await listZohoItems(Number(req.query.page) || 1)), currentMappings: getMappings() });
         return error(res, 400, `Unknown zoho action: '${action}'`);
       }
