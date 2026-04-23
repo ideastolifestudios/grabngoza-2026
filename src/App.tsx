@@ -1397,29 +1397,6 @@ const ProductDetailContent = ({
             </div>
 
             <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden group">
-              {/* Wishlist Button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (product) onToggleWishlist(product.id);
-                }}
-                className={`absolute top-6 right-6 z-30 w-14 h-14 flex items-center justify-center rounded-full shadow-2xl transition-all duration-300 border ${
-                  wishlist.includes(product?.id || '')
-                    ? 'bg-black text-white border-black'
-                    : 'bg-white/90 text-black border-transparent hover:bg-black hover:text-white'
-                }`}
-                title={wishlist.includes(product?.id || '') ? "Remove from Wishlist" : "Add to Wishlist"}
-              >
-                <motion.div
-                  animate={{ scale: wishlist.includes(product?.id || '') ? [1, 1.4, 1] : 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Heart size={24} fill={wishlist.includes(product?.id || '') ? "currentColor" : "none"} strokeWidth={2.5} />
-                </motion.div>
-              </motion.button>
-
               <div ref={imageScrollRef} className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full">
                 {allImages.map((img, idx) => (
                   <div key={idx} className="min-w-full h-full snap-center">
@@ -1520,32 +1497,6 @@ const ProductDetailContent = ({
                   </>
                 );
               })()}
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center border border-black p-1">
-                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-1 hover:bg-black/5 transition-colors"><Minus size={12} /></button>
-                  <span className="px-4 text-xs font-black">{quantity}</span>
-                  <button onClick={() => setQuantity(quantity + 1)} className="px-3 py-1 hover:bg-black/5 transition-colors"><Plus size={12} /></button>
-                </div>
-                <div className="flex gap-4 text-[10px] font-black uppercase tracking-widest">
-                  {(() => {
-                    const s = (() => {
-                      if (!product.stock) return Infinity;
-                      if (Object.keys(selectedVariants).length > 0) {
-                        let min = Infinity;
-                        for (const [k, v] of Object.entries(selectedVariants)) {
-                          const key = `${k}:${v}`;
-                          if (product.stock[key] !== undefined) min = Math.min(min, product.stock[key]);
-                        }
-                        return min;
-                      }
-                      return product.stock['_default'] ?? Infinity;
-                    })();
-                    if (s === 0) return <span className="text-red-500 border-b-2 border-red-500 pb-1">Out of stock</span>;
-                    if (s <= 5) return <span className="text-amber-600 border-b-2 border-amber-500 pb-1">{s} left</span>;
-                    return <span className="text-green-600 border-b-2 border-green-600 pb-1">In stock</span>;
-                  })()}
-                </div>
-              </div>
 
               <h1 className="text-xl md:text-2xl font-bold uppercase tracking-tighter mb-1 leading-tight">{product.name}</h1>
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-30 mb-6">{product.brand || 'Grab & Go'}</p>
@@ -1563,7 +1514,11 @@ const ProductDetailContent = ({
 
             {/* Variants */}
             <div className="space-y-4 mb-6">
-              {product.variants?.map(v => (
+              {[...(product.variants || [])].sort((a, b) => {
+                const aColor = a.name.toLowerCase() === 'color' || a.name.toLowerCase() === 'colour';
+                const bColor = b.name.toLowerCase() === 'color' || b.name.toLowerCase() === 'colour';
+                return aColor === bColor ? 0 : aColor ? -1 : 1;
+              }).map(v => (
                 <div key={v.id} className="space-y-4">
                   <div className="flex justify-between items-baseline">
                     <label className="text-[10px] font-black uppercase tracking-widest opacity-40">
@@ -1599,6 +1554,33 @@ const ProductDetailContent = ({
               ))}
             </div>
 
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center border border-black p-1">
+                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-1 hover:bg-black/5 transition-colors"><Minus size={12} /></button>
+                  <span className="px-4 text-xs font-black">{quantity}</span>
+                  <button onClick={() => setQuantity(quantity + 1)} className="px-3 py-1 hover:bg-black/5 transition-colors"><Plus size={12} /></button>
+                </div>
+                <div className="flex gap-4 text-[10px] font-black uppercase tracking-widest">
+                  {(() => {
+                    const s = (() => {
+                      if (!product.stock) return Infinity;
+                      if (Object.keys(selectedVariants).length > 0) {
+                        let min = Infinity;
+                        for (const [k, v] of Object.entries(selectedVariants)) {
+                          const key = `${k}:${v}`;
+                          if (product.stock[key] !== undefined) min = Math.min(min, product.stock[key]);
+                        }
+                        return min;
+                      }
+                      return product.stock['_default'] ?? Infinity;
+                    })();
+                    if (s === 0) return <span className="text-red-500 border-b-2 border-red-500 pb-1">Out of stock</span>;
+                    if (s <= 5) return <span className="text-amber-600 border-b-2 border-amber-500 pb-1">{s} left</span>;
+                    return <span className="text-green-600 border-b-2 border-green-600 pb-1">In stock</span>;
+                  })()}
+                </div>
+              </div>
+
             {/* Actions */}
             {(() => {
               const currentStock = (() => {
@@ -1616,21 +1598,41 @@ const ProductDetailContent = ({
               const isOOS = currentStock === 0;
               return (
                 <div className="space-y-3 mb-6">
-                  <button
-                    onClick={() => { if (!isOOS) onAddToCart(product, selectedVariants, quantity); }}
-                    disabled={isCartLoading || isOOS}
-                    className={`w-full h-14 font-black uppercase text-[11px] tracking-[0.3em] active:scale-[0.98] transition-all flex items-center justify-center gap-3 relative overflow-hidden ${
-                      isOOS ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-[#06402B] text-white hover:bg-[#06402B]/90'
-                    }`}
-                  >
-                    {isCartLoading ? (
-                      <Loader2 className="animate-spin" size={20} />
-                    ) : isOOS ? (
-                      <>Out of Stock <AlertCircle size={16} /></>
-                    ) : (
-                      <>Add to cart <ShoppingBag size={16} /></>
-                    )}
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => { if (!isOOS) onAddToCart(product, selectedVariants, quantity); }}
+                      disabled={isCartLoading || isOOS}
+                      className={`flex-1 h-14 font-black uppercase text-[11px] tracking-[0.3em] active:scale-[0.98] transition-all flex items-center justify-center gap-3 relative overflow-hidden ${
+                        isOOS ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-[#06402B] text-white hover:bg-[#06402B]/90'
+                      }`}
+                    >
+                      {isCartLoading ? (
+                        <Loader2 className="animate-spin" size={20} />
+                      ) : isOOS ? (
+                        <>Out of Stock <AlertCircle size={16} /></>
+                      ) : (
+                        <>Add to cart <ShoppingBag size={16} /></>
+                      )}
+                    </button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => { if (product) onToggleWishlist(product.id); }}
+                      className={`w-14 h-14 flex items-center justify-center rounded-none border-2 transition-all duration-300 ${
+                        wishlist.includes(product?.id || '')
+                          ? 'bg-black text-white border-black'
+                          : 'border-black text-black hover:bg-black hover:text-white'
+                      }`}
+                      title={wishlist.includes(product?.id || '') ? "Remove from Wishlist" : "Add to Wishlist"}
+                    >
+                      <motion.div
+                        animate={{ scale: wishlist.includes(product?.id || '') ? [1, 1.3, 1] : 1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Heart size={20} fill={wishlist.includes(product?.id || '') ? "currentColor" : "none"} strokeWidth={2.5} />
+                      </motion.div>
+                    </motion.button>
+                  </div>
                   <button
                     onClick={() => { if (!isOOS) onBuyNow(product, selectedVariants); }}
                     disabled={isOOS}
@@ -1864,7 +1866,7 @@ const ProductCard = ({
         )}
 
         {/* Action Icons */}
-        <div className="absolute right-3 bottom-3 flex flex-col gap-2 z-30 transition-all duration-300">
+        <div className="absolute right-3 top-3 flex flex-col gap-2 z-30 transition-all duration-300">
           <motion.button
             key={isWishlisted ? 'wishlisted' : 'not-wishlisted'}
             initial={{ scale: 0.8 }}
