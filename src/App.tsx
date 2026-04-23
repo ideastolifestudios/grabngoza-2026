@@ -414,7 +414,7 @@ const WelcomePopup = () => {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-black uppercase tracking-wider">Free Delivery</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">On orders over R650.</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">On orders over R1,000.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -637,7 +637,7 @@ const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
 };
 
 const FreeDeliveryBar = ({ cartTotal }: { cartTotal: number }) => {
-  const FREE_DELIVERY_THRESHOLD = 650;
+  const FREE_DELIVERY_THRESHOLD = 1000;
   const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - cartTotal);
   const progress = Math.min(100, (cartTotal / FREE_DELIVERY_THRESHOLD) * 100);
 
@@ -2122,7 +2122,7 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
               </div>
               <div className="flex items-center gap-2">
                 <Truck size={12} className="text-[#FFA500]" />
-                <span className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Free Delivery 650+</span>
+                <span className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Free Delivery R1,000+</span>
               </div>
             </div>
           </div>
@@ -6045,7 +6045,7 @@ const HybridCheckoutModal = ({
                           <Truck size={14} className="md:w-4 md:h-4" /> Standard
                         </button>
                         <button
-                          onClick={() => { setDeliveryMethod('bobgo'); setCountry('South Africa'); setSelectedPickupPoint(null); }}
+                          style={{display:'none'}} onClick={() => { setDeliveryMethod('bobgo'); setCountry('South Africa'); setSelectedPickupPoint(null); }}
                           className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold transition-all ${deliveryMethod === 'bobgo' ? 'bg-gray-50 shadow-inner' : 'bg-white hover:bg-gray-50'}`}
                         >
                           <Package size={14} className="md:w-4 md:h-4" /> Bob Go

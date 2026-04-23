@@ -7,7 +7,7 @@ type FreeDeliveryBarProps = {
   threshold?: number; // default R500
 };
 
-export default function FreeDeliveryBar({ amount, threshold = 500 }: FreeDeliveryBarProps) {
+export default function FreeDeliveryBar({ amount, threshold = 1000 }: FreeDeliveryBarProps) {
   const remaining = Math.max(0, threshold - amount);
   const progress  = Math.min(100, (amount / threshold) * 100);
   const achieved  = remaining === 0;
