@@ -25,9 +25,6 @@ try {
 }
 const db = getFirestore();
 const col = db.collection('customers');        }),
-      });
-    }
-  }
 } catch (e: any) {
   console.error('[firebase-init]', e.message);
 }
