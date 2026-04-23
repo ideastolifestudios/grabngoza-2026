@@ -5,14 +5,14 @@ import { isOrderReturnable } from './services/returnService';
 import React, { useState, useEffect, useRef, useMemo, Component } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
+import {
   ShoppingBag,
-  ShoppingCart, 
-  Zap, 
-  MessageSquare, 
-  Instagram, 
-  ArrowRight, 
-  X, 
+  ShoppingCart,
+  Zap,
+  MessageSquare,
+  Instagram,
+  ArrowRight,
+  X,
   Check,
   CheckCircle2,
   Truck,
@@ -88,10 +88,10 @@ const BOBGO_FALLBACK_POINTS: BobGoPickupPoint[] = [
   { id: 'bg-pta-001', name: 'PUDO Counter – Menlyn Park', address: 'Menlyn Park Shopping Centre, Atterbury Rd', suburb: 'Menlyn', city: 'Pretoria', province: 'Gauteng', postal_code: '0181', lat: -25.7836, lng: 28.277, operating_hours: 'Mon–Sat 09:00–21:00', type: 'counter' },
 ];
 
-import { 
-  productService, 
-  orderService, 
-  authService, 
+import {
+  productService,
+  orderService,
+  authService,
   supportService,
   categoryService,
   brandService,
@@ -101,9 +101,9 @@ import {
 import { emailService } from './services/emailService';
 import SEO from './components/SEO';
 import { auth, googleProvider, facebookProvider } from './firebase';
-import { 
-  onAuthStateChanged, 
-  signInWithPopup, 
+import {
+  onAuthStateChanged,
+  signInWithPopup,
   signOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -190,11 +190,11 @@ function useDebounce<T>(value: T, delay: number): T {
 
 const Highlight = ({ text, query }: { text: string; query: string }) => {
   if (!query.trim()) return <span>{text}</span>;
-  
+
   const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
   return (
     <span>
-      {parts.map((part, i) => 
+      {parts.map((part, i) =>
         part.toLowerCase() === query.toLowerCase() ? (
           <mark key={i} className="bg-yellow-200 text-black px-0.5 rounded-sm font-bold">{part}</mark>
         ) : (
@@ -237,18 +237,18 @@ const Toast = ({ message, type = 'success', onClose }: { message: string, type?:
   );
 };
 
-const WishlistDrawer = ({ 
-  isOpen, 
-  onClose, 
-  wishlist, 
-  products, 
-  onAddToCart, 
-  onToggleWishlist 
-}: { 
-  isOpen: boolean, 
-  onClose: () => void, 
-  wishlist: string[], 
-  products: Product[], 
+const WishlistDrawer = ({
+  isOpen,
+  onClose,
+  wishlist,
+  products,
+  onAddToCart,
+  onToggleWishlist
+}: {
+  isOpen: boolean,
+  onClose: () => void,
+  wishlist: string[],
+  products: Product[],
   onAddToCart: (p: Product) => void,
   onToggleWishlist: (id: string) => void
 }) => {
@@ -258,17 +258,17 @@ const WishlistDrawer = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }} 
-            onClick={onClose} 
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150]" 
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150]"
           />
-          <motion.div 
-            initial={{ x: '100%' }} 
-            animate={{ x: 0 }} 
-            exit={{ x: '100%' }} 
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed top-0 right-0 bottom-0 w-full md:w-[450px] bg-white z-[160] flex flex-col shadow-2xl"
           >
@@ -302,13 +302,13 @@ const WishlistDrawer = ({
                           <p className="text-[10px] font-bold text-gray-400">{formatPrice(item.price)}</p>
                         </div>
                         <div className="flex gap-2">
-                          <button 
+                          <button
                             onClick={() => onAddToCart(item)}
                             className="flex-grow py-2 bg-black text-white text-[8px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-colors"
                           >
                             Add to Cart
                           </button>
-                          <button 
+                          <button
                             onClick={() => onToggleWishlist(item.id)}
                             className="p-2 border border-gray-100 hover:bg-red-50 hover:text-red-500 transition-colors"
                           >
@@ -363,14 +363,14 @@ const WelcomePopup = () => {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6">
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }} 
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -380,7 +380,7 @@ const WelcomePopup = () => {
             {/* Top accent line */}
             <div className="h-1 w-full bg-black" />
 
-            <button 
+            <button
               onClick={handleClose}
               className="absolute top-4 right-4 z-10 p-2 hover:bg-black/5 rounded-full transition-colors text-black"
             >
@@ -390,10 +390,10 @@ const WelcomePopup = () => {
             <div className="p-8 md:p-10">
               {/* Warm greeting */}
               <h2 className="text-3xl md:text-4xl font-black tracking-tight text-black mb-2">
-                What's good! 
+                What's good!
               </h2>
               <p className="text-sm text-gray-500 leading-relaxed mb-8">
-                Welcome to Grab & Go — premium streetwear, curated drops, and a community 
+                Welcome to Grab & Go — premium streetwear, curated drops, and a community
                 that moves different. We're glad you're here.
               </p>
 
@@ -439,15 +439,15 @@ const WelcomePopup = () => {
 
               {/* Email form */}
               <form onSubmit={handleClaim} className="space-y-3">
-                <input 
-                  type="email" 
-                  placeholder="Drop your email..." 
+                <input
+                  type="email"
+                  placeholder="Drop your email..."
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full border border-gray-200 px-4 py-3.5 text-sm focus:ring-2 focus:ring-black focus:border-black focus:outline-none transition-all rounded-sm"
                 />
-                <button 
+                <button
                   type="submit"
                   className="w-full py-3.5 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-gray-900 transition-colors"
                 >
@@ -455,7 +455,7 @@ const WelcomePopup = () => {
                 </button>
               </form>
 
-              <button 
+              <button
                 onClick={handleClose}
                 className="mt-4 w-full text-center text-[10px] font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-colors py-2"
               >
@@ -475,7 +475,7 @@ const WelcomePopup = () => {
 
 const Logo = ({ className = "h-8 w-auto", light = false, dark = false }: { className?: string, light?: boolean, dark?: boolean }) => {
   const [error, setError] = useState(false);
-  
+
   if (error) {
     return (
       <span className={`font-semibold uppercase tracking-tight ${light ? 'text-white' : 'text-black'} text-sm md:text-base whitespace-nowrap ${className}`}>
@@ -487,9 +487,9 @@ const Logo = ({ className = "h-8 w-auto", light = false, dark = false }: { class
   const filterClass = light ? 'brightness-0 invert' : dark ? 'brightness-0' : '';
 
   return (
-    <img 
-      src="https://lh3.googleusercontent.com/d/1XP5_on-4-KRIfs0EpPZtjWQhNRix6WzN" 
-      alt="Grab & Go" 
+    <img
+      src="https://lh3.googleusercontent.com/d/1XP5_on-4-KRIfs0EpPZtjWQhNRix6WzN"
+      alt="Grab & Go"
       className={`${className} object-contain ${filterClass}`}
       onError={() => setError(true)}
       referrerPolicy="no-referrer"
@@ -499,7 +499,7 @@ const Logo = ({ className = "h-8 w-auto", light = false, dark = false }: { class
 
 const HowToOrderDrawer = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   return (
-    <motion.div 
+    <motion.div
       initial={{ x: '100%' }}
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
@@ -512,7 +512,7 @@ const HowToOrderDrawer = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
           <X size={24} />
         </button>
       </div>
-      
+
       <div className="flex-grow overflow-y-auto p-6 md:p-10 custom-scrollbar">
         <div className="prose prose-sm max-w-none space-y-10">
           <section className="space-y-4">
@@ -597,7 +597,7 @@ const HowToOrderDrawer = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
 const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
   const location = useLocation();
   const topCats = categories.filter(c => !c.parentId);
-  
+
   if (topCats.length === 0) return null;
 
   return (
@@ -607,8 +607,8 @@ const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
           <Link
             to="/"
             className={`flex-shrink-0 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-full ${
-              location.pathname === '/' 
-                ? 'bg-[#06402B] text-white' 
+              location.pathname === '/'
+                ? 'bg-[#06402B] text-white'
                 : 'text-gray-400 hover:text-[#06402B] hover:bg-[#06402B]/5'
             }`}
           >
@@ -621,8 +621,8 @@ const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
                 key={cat.id}
                 to={`/category/${encodeURIComponent(cat.name.toLowerCase())}`}
                 className={`flex-shrink-0 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-full whitespace-nowrap ${
-                  isActive 
-                    ? 'bg-black text-white' 
+                  isActive
+                    ? 'bg-black text-white'
                     : 'text-gray-400 hover:text-black hover:bg-black/5'
                 }`}
               >
@@ -669,14 +669,15 @@ const FreeDeliveryBar = ({ cartTotal }: { cartTotal: number }) => {
   );
 };
 
-const Header = ({ 
-  cartCount, 
-  onOpenCart, 
+const Header = ({
+  cartCount,
+  cartTotal,
+  onOpenCart,
   onOpenWishlist,
-  onOpenOrders, 
+  onOpenOrders,
   onOpenProducts,
   onOpenMenu,
-  user, 
+  user,
   onOpenAuth,
   onLogout,
   searchQuery,
@@ -684,9 +685,10 @@ const Header = ({
   products,
   onOpenHowToOrder,
   categories = []
-}: { 
-  cartCount: number, 
-  onOpenCart: () => void, 
+}: {
+  cartCount: number,
+  cartTotal: number,
+  onOpenCart: () => void,
   onOpenWishlist: () => void,
   onOpenOrders: () => void,
   onOpenProducts: () => void,
@@ -725,7 +727,7 @@ const Header = ({
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
+
       // Hide on scroll down, show on scroll up
       // Only hide if we've scrolled past a certain threshold
       if (currentScrollY > lastScrollY && currentScrollY > 150) {
@@ -733,7 +735,7 @@ const Header = ({
       } else {
         setIsVisible(true);
       }
-      
+
       setLastScrollY(currentScrollY);
       setScrolled(currentScrollY > 50);
     };
@@ -752,7 +754,7 @@ const Header = ({
   const suggestions = useMemo(() => {
     if (!localSearch.trim()) return [];
     return products
-      .filter(p => 
+      .filter(p =>
         p.name.toLowerCase().includes(localSearch.toLowerCase()) ||
         (p.categories || []).some(c => c.toLowerCase().includes(localSearch.toLowerCase())) ||
         p.brand?.toLowerCase().includes(localSearch.toLowerCase())
@@ -761,9 +763,9 @@ const Header = ({
   }, [products, localSearch]);
 
   return (
-      <motion.header 
+      <motion.header
         initial={false}
-        animate={{ 
+        animate={{
           y: isVisible ? 0 : -100,
           opacity: isVisible ? 1 : 0
         }}
@@ -772,7 +774,7 @@ const Header = ({
       >
         {/* Top bar: Logo + Actions */}
         <div className="max-w-[1800px] mx-auto px-4 md:px-10 flex items-center justify-between gap-4 py-2 md:py-3">
-        
+
         {/* Left: Logo */}
         <div className="flex-shrink-0">
           <Link to="/" className="block group">
@@ -886,7 +888,7 @@ const Header = ({
             )}
           </div>
 
-          <button 
+          <button
             onClick={onOpenWishlist}
             className="p-2 hover:bg-black/5 rounded-full transition-colors text-black hidden sm:block relative"
             title="Wishlist"
@@ -894,14 +896,14 @@ const Header = ({
             <Heart size={20} />
           </button>
 
-          <button 
-            onClick={onOpenCart} 
-            className="relative p-2 hover:bg-black/5 rounded-full transition-colors text-black active:scale-90 overflow-visible" 
+          <button
+            onClick={onOpenCart}
+            className="relative p-2 hover:bg-black/5 rounded-full transition-colors text-black active:scale-90 overflow-visible"
             title="Cart"
           >
             <ShoppingCart size={22} />
             {cartCount > 0 && (
-              <motion.span 
+              <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-[#FFA500] text-white text-[8px] font-bold rounded-full flex items-center justify-center px-1 shadow-[0_2px_10px_rgba(227,66,52,0.4)]"
@@ -930,19 +932,19 @@ const Header = ({
           )}
         </div>
       </div>
-      <FreeDeliveryBar cartTotal={cartCount} />
+      <FreeDeliveryBar cartTotal={cartTotal} />
       <CategoryBar categories={categories} />
     </motion.header>
   );
 };
 
-const Sidebar = ({ 
-  isOpen, 
-  onClose, 
-  onOpenOrders, 
-  onOpenAuth, 
+const Sidebar = ({
+  isOpen,
+  onClose,
+  onOpenOrders,
+  onOpenAuth,
   onOpenWishlist,
-  onLogout, 
+  onLogout,
   onOpenCart,
   onOpenProducts,
   cartCount,
@@ -952,13 +954,13 @@ const Sidebar = ({
   setSearchQuery,
   setFilterCategory,
   categories = []
-}: { 
-  isOpen: boolean, 
-  onClose: () => void, 
-  onOpenOrders: () => void, 
-  onOpenAuth: () => void, 
+}: {
+  isOpen: boolean,
+  onClose: () => void,
+  onOpenOrders: () => void,
+  onOpenAuth: () => void,
   onOpenWishlist: () => void,
-  onLogout: () => void, 
+  onLogout: () => void,
   onOpenCart: () => void,
   onOpenProducts: () => void,
   cartCount: number,
@@ -991,17 +993,17 @@ const Sidebar = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }} 
-            onClick={onClose} 
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[180]" 
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[180]"
           />
-          <motion.div 
-            initial={{ x: '100%' }} 
-            animate={{ x: 0 }} 
-            exit={{ x: '100%' }} 
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-white text-black z-[190] flex flex-col shadow-2xl"
           >
@@ -1017,8 +1019,8 @@ const Sidebar = ({
               {/* Search Bar */}
               <div className="relative group">
                 <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={18} />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -1030,14 +1032,14 @@ const Sidebar = ({
               <div className="flex flex-col">
                 {/* Shop Dropdown */}
                 <div className="border-b border-gray-50 last:border-0 mb-2">
-                  <button 
+                  <button
                     onClick={() => setIsShopOpen(!isShopOpen)}
                     className="w-full py-4 flex items-center justify-between text-2xl font-bold tracking-tight hover:opacity-100 transition-all"
                   >
                     <span>Shop</span>
                     <ChevronDown size={20} className={`text-gray-300 transition-transform duration-300 ${isShopOpen ? 'rotate-180 text-black' : ''}`} />
                   </button>
-                  
+
                   <AnimatePresence>
                     {isShopOpen && (
                       <motion.div
@@ -1047,7 +1049,7 @@ const Sidebar = ({
                         className="overflow-hidden flex flex-col pl-4 pb-4"
                       >
                         {navLinks.map((link) => (
-                          <button 
+                          <button
                             key={link.name}
                             onClick={() => {
                               onClose();
@@ -1082,13 +1084,13 @@ const Sidebar = ({
                       Become a G&G Member for the best products and inspiration.
                     </p>
                     <div className="flex items-center gap-3">
-                      <button 
+                      <button
                         onClick={() => { onClose(); onOpenAuth(); }}
                         className="flex-1 py-3 bg-black text-white text-[9px] font-bold uppercase tracking-widest rounded-full hover:shadow-lg transition-all"
                       >
                         Join Us
                       </button>
-                      <button 
+                      <button
                         onClick={() => { onClose(); onOpenAuth(); }}
                         className="flex-1 py-3 bg-white text-black text-[9px] font-bold uppercase tracking-widest rounded-full border border-gray-200 hover:border-black transition-all"
                       >
@@ -1111,7 +1113,7 @@ const Sidebar = ({
                         <span className="text-[8px] opacity-40 uppercase tracking-widest mt-1">G&G Member</span>
                       </div>
                     </div>
-                    <button 
+                    <button
                       onClick={() => { onClose(); onLogout(); }}
                       className="p-2.5 hover:bg-gray-100 text-black rounded-full transition-colors border border-gray-100"
                       title="Logout"
@@ -1148,7 +1150,7 @@ const Sidebar = ({
                   </div>
                   <span>Support</span>
                 </button>
-                
+
   {user?.role === 'admin' && (
                   <>
                     <button onClick={() => { onClose(); onOpenProducts(); }} className="flex items-center gap-4 text-sm font-bold text-red-500 hover:text-red-700 transition-all">
@@ -1194,16 +1196,16 @@ const Hero = () => {
   return (
   <section className="relative h-[70vh] md:h-[88vh] flex items-end overflow-hidden bg-black">
     <div className="absolute inset-0 z-0">
-      <img 
-        src="https://picsum.photos/seed/streetwear-hero/1920/1080" 
-        alt="HeroBackground" 
+      <img
+        src="https://picsum.photos/seed/streetwear-hero/1920/1080"
+        alt="HeroBackground"
         className="w-full h-full object-cover opacity-70 scale-105"
         style={{ objectPosition: 'center 30%' }}
         referrerPolicy="no-referrer"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
     </div>
-    
+
     {/* Hero Content */}
     <div className="relative z-10 w-full max-w-[1800px] mx-auto px-6 md:px-10 pb-12 md:pb-20">
       <motion.div
@@ -1255,7 +1257,7 @@ const Hero = () => {
     <div className="absolute bottom-8 right-10 hidden lg:flex flex-col items-center gap-2 opacity-40 text-white">
       <span className="text-[8px] font-black uppercase tracking-widest rotate-90 mb-4">Scroll</span>
       <div className="w-[1px] h-20 bg-white/30 relative overflow-hidden">
-        <motion.div 
+        <motion.div
           animate={{ y: [0, 80] }}
           transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
           className="absolute top-0 left-0 w-full h-1/2 bg-white"
@@ -1275,8 +1277,8 @@ const PAYMENT_LOGOS = {
   yoco: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882870/yoco_ekl84d.svg"
 };
 
-const ProductDetailContent = ({ 
-  product, 
+const ProductDetailContent = ({
+  product,
   allProducts,
   onAddToCart,
   onBuyNow,
@@ -1287,8 +1289,8 @@ const ProductDetailContent = ({
   isCartLoading = false,
   categories = [],
   brands = []
-}: { 
-  product: Product | null; 
+}: {
+  product: Product | null;
   allProducts: Product[];
   onAddToCart: (p: Product, variants?: Record<string, string>, quantity?: number) => void;
   onBuyNow: (p: Product, variants?: Record<string, string>) => void;
@@ -1306,6 +1308,7 @@ const ProductDetailContent = ({
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const navigate = useNavigate();
   const relatedScrollRef = useRef<HTMLDivElement>(null);
+  const imageScrollRef = useRef<HTMLDivElement>(null);
 
   const scrollRelated = (direction: 'left' | 'right') => {
     if (relatedScrollRef.current) {
@@ -1345,6 +1348,13 @@ const ProductDetailContent = ({
     } catch {}
   }, [product?.id]);
 
+  // Scroll gallery to active image
+  useEffect(() => {
+    if (imageScrollRef.current) {
+      imageScrollRef.current.scrollTo({ left: activeImage * imageScrollRef.current.clientWidth, behavior: 'smooth' });
+    }
+  }, [activeImage]);
+
   if (!product) return (
     <div className="min-h-screen flex items-center justify-center pt-24">
       <div className="text-center">
@@ -1356,7 +1366,7 @@ const ProductDetailContent = ({
 
   const allImages = [product.image, ...(product.images || [])];
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
-  
+
   const relatedProducts = allProducts
     .filter(p => p.id !== product.id && ((p.categories || []).some(c => (product.categories || []).includes(c)) || p.isDrop))
     .slice(0, 12);
@@ -1370,20 +1380,25 @@ const ProductDetailContent = ({
   return (
     <div className="pt-16 md:pt-20 pb-12">
       <div className="max-w-7xl mx-auto px-6">
+        {/* Back navigation */}
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 mb-6 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors group">
+          <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+          Back
+        </button>
         <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
           {/* Left: Image Gallery */}
           <div className="w-full md:w-[55%] flex flex-col gap-6">
             {/* Breadcrumbs (Mobile) */}
             <div className="md:hidden">
-              <Breadcrumbs 
-                categories={categories} 
+              <Breadcrumbs
+                categories={categories}
                 product={product}
               />
             </div>
 
             <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden group">
               {/* Wishlist Button */}
-              <motion.button 
+              <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={(e) => {
@@ -1391,8 +1406,8 @@ const ProductDetailContent = ({
                   if (product) onToggleWishlist(product.id);
                 }}
                 className={`absolute top-6 right-6 z-30 w-14 h-14 flex items-center justify-center rounded-full shadow-2xl transition-all duration-300 border ${
-                  wishlist.includes(product?.id || '') 
-                    ? 'bg-black text-white border-black' 
+                  wishlist.includes(product?.id || '')
+                    ? 'bg-black text-white border-black'
                     : 'bg-white/90 text-black border-transparent hover:bg-black hover:text-white'
                 }`}
                 title={wishlist.includes(product?.id || '') ? "Remove from Wishlist" : "Add to Wishlist"}
@@ -1405,28 +1420,28 @@ const ProductDetailContent = ({
                 </motion.div>
               </motion.button>
 
-              <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full">
+              <div ref={imageScrollRef} className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full">
                 {allImages.map((img, idx) => (
                   <div key={idx} className="min-w-full h-full snap-center">
-                    <img 
-                      src={img || null} 
-                      alt={`${product.name} ${idx + 1}`} 
+                    <img
+                      src={img || null}
+                      alt={`${product.name} ${idx + 1}`}
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                     />
                   </div>
                 ))}
               </div>
-              
+
               {allImages.length > 1 && (
                 <>
-                  <button 
+                  <button
                     onClick={() => setActiveImage(prev => (prev === 0 ? allImages.length - 1 : prev - 1))}
                     className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white shadow-lg flex items-center justify-center rounded-full opacity-0 md:group-hover:opacity-100 transition-opacity hidden md:flex"
                   >
                     <ChevronLeft size={20} />
                   </button>
-                  <button 
+                  <button
                     onClick={() => setActiveImage(prev => (prev === allImages.length - 1 ? 0 : prev + 1))}
                     className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white shadow-lg flex items-center justify-center rounded-full opacity-0 md:group-hover:opacity-100 transition-opacity hidden md:flex"
                   >
@@ -1444,7 +1459,7 @@ const ProductDetailContent = ({
 
             <div className="flex gap-3 overflow-x-auto no-scrollbar">
               {allImages.map((img, idx) => (
-                <button 
+                <button
                   key={idx}
                   onClick={() => setActiveImage(idx)}
                   className={`w-20 aspect-[4/5] flex-shrink-0 border-2 transition-all ${activeImage === idx ? 'border-black' : 'border-transparent opacity-50 hover:opacity-100'}`}
@@ -1459,7 +1474,7 @@ const ProductDetailContent = ({
           <div className="w-full md:w-[45%] flex flex-col">
             {/* Breadcrumbs (Desktop) */}
             <div className="hidden md:block">
-              <Breadcrumbs 
+              <Breadcrumbs
                 categories={categories}
                 product={product}
               />
@@ -1534,7 +1549,7 @@ const ProductDetailContent = ({
 
               <h1 className="text-xl md:text-2xl font-bold uppercase tracking-tighter mb-1 leading-tight">{product.name}</h1>
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-30 mb-6">{product.brand || 'Grab & Go'}</p>
-              
+
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-xl font-bold">R {product.price.toFixed(2)}</span>
                 {product.originalPrice && (
@@ -1555,24 +1570,26 @@ const ProductDetailContent = ({
                       {v.name} <span className="text-black font-black ml-2">{selectedVariants[v.name]}</span>
                     </label>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-2">
                     {v.options.map(opt => {
                       const isColor = v.name.toLowerCase() === 'color' || v.name.toLowerCase() === 'colour';
                       return (
-                        <button 
+                        <button
                           key={opt}
                           onClick={() => setSelectedVariants(prev => ({ ...prev, [v.name]: opt }))}
                           className={`
                             min-w-[48px] h-12 flex items-center justify-center text-[10px] font-black uppercase border transition-all
-                            ${selectedVariants[v.name] === opt 
-                              ? 'border-black bg-gray-50' 
+                            ${selectedVariants[v.name] === opt
+                              ? 'border-black bg-gray-50'
                               : 'border-gray-200 hover:border-black text-gray-400 hover:text-black'}
-                            ${isColor ? 'w-12 rounded-sm' : 'px-4'}
+                            ${isColor ? 'w-12 rounded-full p-0.5' : 'px-4'}
                           `}
                         >
                           {isColor ? (
-                            <div className="w-8 h-8 rounded-sm bg-gray-200" style={{ backgroundColor: opt.toLowerCase() }} />
+                            <div className="relative w-full h-full rounded-full" style={{ backgroundColor: opt.toLowerCase() }}>
+                              {selectedVariants[v.name] === opt && <Check size={14} className="absolute inset-0 m-auto text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />}
+                            </div>
                           ) : opt}
                         </button>
                       );
@@ -1599,7 +1616,7 @@ const ProductDetailContent = ({
               const isOOS = currentStock === 0;
               return (
                 <div className="space-y-3 mb-6">
-                  <button 
+                  <button
                     onClick={() => { if (!isOOS) onAddToCart(product, selectedVariants, quantity); }}
                     disabled={isCartLoading || isOOS}
                     className={`w-full h-14 font-black uppercase text-[11px] tracking-[0.3em] active:scale-[0.98] transition-all flex items-center justify-center gap-3 relative overflow-hidden ${
@@ -1614,7 +1631,7 @@ const ProductDetailContent = ({
                       <>Add to cart <ShoppingBag size={16} /></>
                     )}
                   </button>
-                  <button 
+                  <button
                     onClick={() => { if (!isOOS) onBuyNow(product, selectedVariants); }}
                     disabled={isOOS}
                     className={`w-full h-14 border-2 border-[#06402B] text-[#06402B] font-black uppercase text-[11px] tracking-[0.3em] active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${
@@ -1628,18 +1645,18 @@ const ProductDetailContent = ({
             })()}
 
             {/* Mobile Sticky Bar */}
-            <motion.div 
+            <motion.div
               initial={{ y: 100 }}
               animate={{ y: 0 }}
               className="fixed bottom-0 left-0 right-0 z-40 p-4 md:hidden bg-white/90 backdrop-blur-md border-t border-gray-100 flex gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]"
             >
-              <button 
+              <button
                 onClick={() => onAddToCart(product, selectedVariants, 1)}
                 className="flex-[1] h-12 bg-black text-white font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-transform"
               >
                 Add <Plus size={14} />
               </button>
-              <button 
+              <button
                 onClick={() => onBuyNow(product, selectedVariants)}
                 className="flex-[2] h-12 bg-white border-2 border-black text-black font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-transform"
               >
@@ -1691,11 +1708,11 @@ const ProductDetailContent = ({
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                 <div className="h-16 px-8 border border-gray-100 flex items-center justify-center rounded-sm bg-white shadow-sm">
                   {(product.soldByLogo || product.brandLogo || brandInfo?.logo) ? (
-                    <img 
-                      src={product.soldByLogo || product.brandLogo || brandInfo?.logo || undefined} 
-                      alt={product.soldBy || product.brand} 
-                      className="h-10 w-auto object-contain" 
-                      referrerPolicy="no-referrer" 
+                    <img
+                      src={product.soldByLogo || product.brandLogo || brandInfo?.logo || undefined}
+                      alt={product.soldBy || product.brand}
+                      className="h-10 w-auto object-contain"
+                      referrerPolicy="no-referrer"
                     />
                   ) : (
                     <span className="font-black text-sm uppercase tracking-[0.3em] text-black">
@@ -1713,13 +1730,13 @@ const ProductDetailContent = ({
           <div className="flex justify-between items-center mb-4 md:mb-6">
             <h4 className="text-sm md:text-lg font-bold uppercase tracking-tighter">Pairs well with</h4>
             <div className="flex gap-2">
-              <button 
+              <button
                 onClick={() => scrollRelated('left')}
                 className="w-8 h-8 border border-gray-100 flex items-center justify-center rounded-full hover:bg-black hover:text-white transition-all group/btn"
               >
                 <ChevronLeft size={14} className="group-hover/btn:-translate-x-0.5 transition-transform" />
               </button>
-              <button 
+              <button
                 onClick={() => scrollRelated('right')}
                 className="w-8 h-8 border border-gray-100 flex items-center justify-center rounded-full hover:bg-black hover:text-white transition-all group/btn"
               >
@@ -1727,14 +1744,14 @@ const ProductDetailContent = ({
               </button>
             </div>
           </div>
-          
-          <div 
+
+          <div
             ref={relatedScrollRef}
             className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 md:gap-6 pb-8 scroll-smooth"
           >
             {relatedProducts.map(p => (
               <div key={p.id} className="min-w-[70vw] sm:min-w-[40vw] md:min-w-[22vw] lg:min-w-[15vw] snap-center">
-                <ProductCard 
+                <ProductCard
                   product={p}
                   onAddToCart={onAddToCart}
                   onEmailDetails={onEmailDetails}
@@ -1774,21 +1791,21 @@ const ProductDetailContent = ({
   );
 };
 
-const ProductCard = ({ 
-  product, 
-  onAddToCart, 
-  onEmailDetails, 
-  onBuyNow, 
+const ProductCard = ({
+  product,
+  onAddToCart,
+  onEmailDetails,
+  onBuyNow,
   searchQuery = '',
   isWishlisted,
   onToggleWishlist,
   isLoading = false
-}: { 
-  product: Product, 
-  onAddToCart: (p: Product, variants?: Record<string, string>) => void, 
-  onEmailDetails: (p: Product) => void, 
-  onBuyNow: (p: Product, variants?: Record<string, string>) => void, 
-  searchQuery?: string, 
+}: {
+  product: Product,
+  onAddToCart: (p: Product, variants?: Record<string, string>) => void,
+  onEmailDetails: (p: Product) => void,
+  onBuyNow: (p: Product, variants?: Record<string, string>) => void,
+  searchQuery?: string,
   isWishlisted: boolean,
   onToggleWishlist: (productId: string) => void,
   key?: string,
@@ -1796,6 +1813,12 @@ const ProductCard = ({
 }) => {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const allImages = useMemo(() => [product.image, ...(product.images || [])], [product.image, product.images]);
+  const [imgIdx, setImgIdx] = useState(0);
+  useEffect(() => {
+    if (allImages.length <= 1) return;
+    const interval = setInterval(() => setImgIdx(prev => (prev + 1) % allImages.length), 3000);
+    return () => clearInterval(interval);
+  }, [allImages.length]);
   const navigate = useNavigate();
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
 
@@ -1827,7 +1850,7 @@ const ProductCard = ({
   }, [product.variants]);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -1841,8 +1864,8 @@ const ProductCard = ({
         )}
 
         {/* Action Icons */}
-        <div className="absolute right-3 top-3 flex flex-col gap-2 z-30 transition-all duration-300">
-          <motion.button 
+        <div className="absolute right-3 bottom-3 flex flex-col gap-2 z-30 transition-all duration-300">
+          <motion.button
             key={isWishlisted ? 'wishlisted' : 'not-wishlisted'}
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
@@ -1853,8 +1876,8 @@ const ProductCard = ({
               onToggleWishlist(product.id);
             }}
             className={`w-9 h-9 flex items-center justify-center rounded-full shadow-lg backdrop-blur-md transition-all duration-300 ${
-              isWishlisted 
-                ? 'bg-black text-white border-black' 
+              isWishlisted
+                ? 'bg-black text-white border-black'
                 : 'bg-white/90 text-black border-transparent hover:bg-black hover:text-white md:opacity-0 md:group-hover:opacity-100'
             } border`}
           >
@@ -1868,32 +1891,27 @@ const ProductCard = ({
           </motion.button>
         </div>
 
-        {/* Primary Image */}
-        <img 
-          src={allImages[0] || null} 
-          alt={product.name} 
-          onClick={() => navigate(`/product/${product.id}`)}
-          onError={(e) => {
-            e.currentTarget.src = `https://picsum.photos/seed/${product.id}/800/1000`;
-          }}
-          loading="lazy"
-          className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-1000 ease-out ${allImages.length > 1 ? 'group-hover:opacity-0' : ''}`}
-          referrerPolicy="no-referrer"
-        />
-        
-        {/* Secondary Image on Hover */}
-        {allImages.length > 1 && (
-          <img 
-            src={allImages[1] || null} 
-            alt={`${product.name} alternate`} 
+        {/* Auto-cycling product images */}
+        {allImages.map((img, i) => (
+          <img
+            key={i}
+            src={img || null}
+            alt={i === 0 ? product.name : `${product.name} ${i + 1}`}
             onClick={() => navigate(`/product/${product.id}`)}
             onError={(e) => {
-              e.currentTarget.src = `https://picsum.photos/seed/${product.id}-alt/800/1000`;
+              e.currentTarget.src = `https://picsum.photos/seed/${product.id}-${i}/800/1000`;
             }}
-            loading="lazy"
-            className="absolute inset-0 w-full h-full object-cover scale-105 opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-1000 ease-out"
+            loading={i === 0 ? undefined : "lazy"}
+            className={`${i === 0 ? '' : 'absolute inset-0'} w-full h-full object-cover transition-opacity duration-700 ease-in-out group-hover:scale-105 ${i === imgIdx ? 'opacity-100' : 'opacity-0'}`}
             referrerPolicy="no-referrer"
           />
+        ))}
+        {allImages.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-20">
+            {allImages.map((_, i) => (
+              <div key={i} className={`w-1 h-1 rounded-full transition-all duration-300 ${i === imgIdx ? 'bg-black w-3' : 'bg-black/30'}`} />
+            ))}
+          </div>
         )}
 
         {/* Discount badge */}
@@ -1921,7 +1939,7 @@ const ProductCard = ({
         )}
 
         {/* Quick Add Button — disabled if out of stock */}
-        <button 
+        <button
           onClick={(e) => {
             e.stopPropagation();
             if (!isOutOfStock) onAddToCart(product, selectedVariants);
@@ -2022,17 +2040,17 @@ const PartnershipHub = ({ partners }: { partners: Partner[] }) => (
           </p>
           <div className="space-y-3 md:space-y-4">
             {(partners.length > 0 ? partners : []).map(p => (
-              <div 
-                key={p.id} 
+              <div
+                key={p.id}
                 onClick={() => document.getElementById('drops')?.scrollIntoView({ behavior: 'smooth' })}
                 className="flex items-center gap-3 md:gap-4 p-2 md:p-3 hover:bg-black/5 transition-colors border-l border-black/10 cursor-pointer group"
               >
                 <div className="w-10 h-10 bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden rounded-md">
-                   <img 
-                     src={p.logo || null} 
-                     alt={p.name} 
-                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" 
-                     referrerPolicy="no-referrer" 
+                   <img
+                     src={p.logo || null}
+                     alt={p.name}
+                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                     referrerPolicy="no-referrer"
                    />
                 </div>
                 <div>
@@ -2044,9 +2062,9 @@ const PartnershipHub = ({ partners }: { partners: Partner[] }) => (
           </div>
         </div>
         <div className="relative aspect-square">
-          <img 
-            src="https://picsum.photos/seed/culture/1000/1000" 
-            alt="Culture" 
+          <img
+            src="https://picsum.photos/seed/culture/1000/1000"
+            alt="Culture"
             className="w-full h-full object-cover grayscale rounded-2xl"
             referrerPolicy="no-referrer"
           />
@@ -2092,7 +2110,7 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
             <Logo className="h-8 mb-4 brightness-0 invert" />
             <h3 className="text-xl md:text-2xl font-black tracking-tight mb-2">Join the Grab & Go Fam</h3>
             <p className="text-xs text-white/50 leading-relaxed">
-              Be the first to know about exclusive drops, restocks, and member-only offers. 
+              Be the first to know about exclusive drops, restocks, and member-only offers.
               No spam — just the freshest gear, delivered to your inbox.
             </p>
             <div className="flex items-center gap-4 mt-4">
@@ -2109,7 +2127,7 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
           <div className="w-full md:w-auto md:min-w-[360px]">
             <AnimatePresence mode="wait">
               {subscribed ? (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -2120,15 +2138,15 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
                 </motion.div>
               ) : (
                 <form className="flex gap-2" onSubmit={handleSubmit}>
-                  <input 
-                    type="email" 
-                    placeholder="Your email..." 
+                  <input
+                    type="email"
+                    placeholder="Your email..."
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="flex-grow bg-white/10 border border-white/20 rounded-sm px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/50 transition-colors"
                   />
-                  <button 
+                  <button
                     type="submit"
                     className="px-6 py-3 bg-[#FFA500] text-black text-xs font-bold uppercase tracking-wider rounded-sm hover:bg-[#e69500] transition-colors flex-shrink-0"
                   >
@@ -2144,7 +2162,7 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
       {/* Footer Content — No Shopping Nav */}
       <div className="max-w-7xl mx-auto py-10 md:py-14 px-6 md:px-8">
         <div className="flex flex-col md:flex-row justify-between items-start gap-10 md:gap-16">
-          
+
           {/* Brand + Socials */}
           <div className="space-y-4 md:space-y-5">
             <Logo className="h-10 md:h-12" dark />
@@ -2152,20 +2170,20 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
               Premium streetwear, curated drops, and a community that moves different. Based in South Africa, shipping nationwide.
             </p>
             <div className="flex gap-3">
-              <motion.a 
+              <motion.a
                 whileHover={{ scale: 1.1 }}
-                href="https://www.instagram.com/grabngoza" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+                href="https://www.instagram.com/grabngoza"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center text-black hover:bg-black hover:text-white transition-all"
               >
                 <Instagram size={14} />
               </motion.a>
-              <motion.a 
+              <motion.a
                 whileHover={{ scale: 1.1 }}
-                href="https://www.facebook.com/grabngoza" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+                href="https://www.facebook.com/grabngoza"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center text-black hover:bg-black hover:text-white transition-all"
               >
                 <Facebook size={14} />
@@ -2266,7 +2284,7 @@ const SystemHealthDashboard = () => {
 
           {/* Table Rows */}
           {systems.map((system, idx) => (
-            <motion.div 
+            <motion.div
               key={system.name}
               whileHover={{ backgroundColor: '#141414', color: '#E4E3E0' }}
               className="grid grid-cols-[40px_1fr_1.5fr_1fr] bg-[#E4E3E0] p-4 items-center transition-colors cursor-default group"
@@ -2282,9 +2300,9 @@ const SystemHealthDashboard = () => {
               </div>
               <div className="text-right">
                 {system.action ? (
-                  <a 
-                    href={system.action} 
-                    target="_blank" 
+                  <a
+                    href={system.action}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border border-current px-2 py-1 hover:bg-white hover:text-black transition-colors"
                   >
@@ -2338,7 +2356,7 @@ const HelpDeskPage = () => {
 
     try {
       await supportService.submitHelpDesk(formData);
-      
+
       // Send Help Desk Notification Email
       try {
         await emailService.sendHelpDeskNotification(formData);
@@ -2357,8 +2375,8 @@ const HelpDeskPage = () => {
 
   return (
     <div className="min-h-screen pt-32 pb-20 px-6 bg-white">
-      <SEO 
-        title="Help Desk | Customer Support" 
+      <SEO
+        title="Help Desk | Customer Support"
         description="Need help? Contact Grab & Go's customer support for any inquiries regarding orders, shipping, or products."
         url="https://grabandgo.co.za/helpdesk"
       />
@@ -2373,9 +2391,9 @@ const HelpDeskPage = () => {
           <div className="space-y-8">
             <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100">
               <h2 className="text-xl font-bold uppercase tracking-tight mb-6">Send us a message</h2>
-              
+
               {status === 'success' ? (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-center py-8"
@@ -2385,7 +2403,7 @@ const HelpDeskPage = () => {
                   </div>
                   <h3 className="text-lg font-bold mb-2">Message Sent!</h3>
                   <p className="text-xs text-gray-500 mb-6">We've received your inquiry and will get back to you within 24-48 hours.</p>
-                  <button 
+                  <button
                     onClick={() => setStatus('idle')}
                     className="text-[10px] font-black uppercase tracking-widest underline"
                   >
@@ -2397,8 +2415,8 @@ const HelpDeskPage = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Name</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -2407,8 +2425,8 @@ const HelpDeskPage = () => {
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Email</label>
-                      <input 
-                        type="email" 
+                      <input
+                        type="email"
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
@@ -2418,8 +2436,8 @@ const HelpDeskPage = () => {
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Subject</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       value={formData.subject}
                       onChange={(e) => setFormData({...formData, subject: e.target.value})}
@@ -2428,7 +2446,7 @@ const HelpDeskPage = () => {
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Message</label>
-                    <textarea 
+                    <textarea
                       required
                       rows={5}
                       value={formData.message}
@@ -2441,7 +2459,7 @@ const HelpDeskPage = () => {
                     <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{errorMessage}</p>
                   )}
 
-                  <button 
+                  <button
                     type="submit"
                     disabled={status === 'loading'}
                     className="w-full py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
@@ -2501,7 +2519,7 @@ const HelpDeskPage = () => {
                 </div>
               ))}
             </div>
-            
+
             <div className="pt-8 border-t border-gray-100">
               <Link to="/faq" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] hover:gap-4 transition-all">
                 View All FAQs <ArrowRight size={14} />
@@ -2601,12 +2619,12 @@ const FAQPage = () => {
 
   return (
     <div className="pt-24 pb-16 px-6 md:px-12 max-w-3xl mx-auto">
-      <SEO 
-        title="FAQ | Frequently Asked Questions" 
+      <SEO
+        title="FAQ | Frequently Asked Questions"
         description="Find answers to common questions about orders, shipping, payments, and returns at Grab & Go."
         url="https://grabandgo.co.za/faq"
       />
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="space-y-12"
@@ -2636,7 +2654,7 @@ const FAQPage = () => {
 
         <footer className="pt-8 border-t border-gray-50 text-center">
           <p className="text-sm text-gray-500">
-            Still have questions? Contact us on 
+            Still have questions? Contact us on
             <Link to="/helpdesk" className="underline font-semibold ml-1">Help Desk</Link>.
           </p>
         </footer>
@@ -2652,12 +2670,12 @@ const ShippingPolicyPage = () => {
 
   return (
     <div className="pt-24 pb-16 px-6 md:px-12 max-w-3xl mx-auto">
-      <SEO 
-        title="Shipping Policy | Delivery Information" 
+      <SEO
+        title="Shipping Policy | Delivery Information"
         description="Detailed information about shipping methods, costs, and delivery times for Grab & Go orders across South Africa."
         url="https://grabandgo.co.za/shipping"
       />
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="space-y-12"
@@ -2669,7 +2687,7 @@ const ShippingPolicyPage = () => {
 
         <section className="space-y-4">
           <p className="text-sm leading-relaxed text-gray-500">
-            To ensure your experience is "shopped in seconds" and avoids the "slow and clunky" feel of traditional e-commerce, 
+            To ensure your experience is "shopped in seconds" and avoids the "slow and clunky" feel of traditional e-commerce,
             Grab & Go has built delivery and collection directly into your everyday customer flow.
           </p>
         </section>
@@ -2712,7 +2730,7 @@ const ShippingPolicyPage = () => {
 
         <footer className="pt-8 border-t border-gray-50 text-center">
           <p className="text-sm text-gray-500">
-            For any further assistance, please contact our support team through our 
+            For any further assistance, please contact our support team through our
             <Link to="/helpdesk" className="underline font-semibold ml-1">Help Desk</Link>.
           </p>
         </footer>
@@ -2728,12 +2746,12 @@ const RefundPolicyPage = () => {
 
   return (
     <div className="pt-24 pb-16 px-6 md:px-12 max-w-3xl mx-auto">
-      <SEO 
-        title="Refund Policy | Returns & Exchanges" 
+      <SEO
+        title="Refund Policy | Returns & Exchanges"
         description="Learn about our returns and refund policy. We offer easy exchanges and returns within 14 days of delivery."
         url="https://grabandgo.co.za/refunds"
       />
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="space-y-12"
@@ -2745,7 +2763,7 @@ const RefundPolicyPage = () => {
 
         <section className="space-y-4">
           <p className="text-sm leading-relaxed text-gray-500">
-            We want to ensure our customers are happy with their "premium products" and their overall experience. 
+            We want to ensure our customers are happy with their "premium products" and their overall experience.
             To support our goal of providing a "seamless and stylish" service, the following terms apply to all returns and exchanges.
           </p>
         </section>
@@ -2801,7 +2819,7 @@ const RefundPolicyPage = () => {
 
         <footer className="pt-8 border-t border-gray-50 text-center">
           <p className="text-sm text-gray-500">
-            For any further assistance, please contact our support team through our 
+            For any further assistance, please contact our support team through our
             <Link to="/helpdesk" className="underline font-semibold ml-1">Help Desk</Link>.
           </p>
         </footer>
@@ -2817,12 +2835,12 @@ const LegalPage = () => {
 
   return (
     <div className="pt-24 pb-16 px-6 md:px-12 max-w-3xl mx-auto">
-      <SEO 
-        title="Legal | Terms & Conditions" 
+      <SEO
+        title="Legal | Terms & Conditions"
         description="Terms of service, privacy policy, and other legal information for the Grab & Go website."
         url="https://grabandgo.co.za/legal"
       />
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="space-y-12"
@@ -2908,12 +2926,12 @@ const OurStoryPage = () => {
 
   return (
     <div className="pt-24 pb-16 px-6 md:px-12 max-w-3xl mx-auto">
-      <SEO 
-        title="Our Story | About Grab & Go" 
+      <SEO
+        title="Our Story | About Grab & Go"
         description="Discover the vision and journey behind Grab & Go. Premium streetwear curation for the modern South African landscape."
         url="https://grabandgo.co.za/story"
       />
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="space-y-12"
@@ -2925,24 +2943,24 @@ const OurStoryPage = () => {
 
         <div className="space-y-6 text-base md:text-lg leading-relaxed text-black/80 font-normal">
           <p>
-            Grab & Go ZA is a ready-to-wear streetwear brand designed by <span className="font-semibold">IDEAS TO LIFE Studios</span>, 
-            a creative house known for bold visuals and meaningful design & print solutions. 
+            Grab & Go ZA is a ready-to-wear streetwear brand designed by <span className="font-semibold">IDEAS TO LIFE Studios</span>,
+            a creative house known for bold visuals and meaningful design & print solutions.
           </p>
-          
+
           <p>
-            After years of producing various custom gear/clothing for others, we flipped the script and created something for the fast movers - 
+            After years of producing various custom gear/clothing for others, we flipped the script and created something for the fast movers -
             no approvals, no waiting & best of all <span className="font-semibold underline">100% South African products</span>.
           </p>
 
           <p>
-            We design and drop retail-ready merch that’s crafted, limited, and always on point. Each piece is made with intention - 
-            from the fit and feel, to the colorways and artwork. 
+            We design and drop retail-ready merch that’s crafted, limited, and always on point. Each piece is made with intention -
+            from the fit and feel, to the colorways and artwork.
           </p>
 
           <p className="text-xl md:text-2xl font-semibold uppercase tracking-tight pt-6 border-t border-gray-50">
-            What you see is what you get. 
+            What you see is what you get.
           </p>
-          
+
           <p>
             No endless back-and-forth. Just fresh, finished fashion that’s ready to move when you are.
           </p>
@@ -2950,17 +2968,17 @@ const OurStoryPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8">
           <div className="aspect-[4/5] bg-gray-50 overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 rounded-lg">
-            <img 
-              src="https://picsum.photos/seed/studio/800/1000" 
-              alt="Studio" 
+            <img
+              src="https://picsum.photos/seed/studio/800/1000"
+              alt="Studio"
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
           </div>
           <div className="aspect-[4/5] bg-gray-50 overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 rounded-lg">
-            <img 
-              src="https://picsum.photos/seed/street/800/1000" 
-              alt="Street" 
+            <img
+              src="https://picsum.photos/seed/street/800/1000"
+              alt="Street"
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
@@ -3007,9 +3025,9 @@ const TrackingTimeline = ({ trackingNumber, trackingUrl }: { trackingNumber: str
           </div>
         </div>
         {trackingUrl && (
-          <a 
-            href={trackingUrl} 
-            target="_blank" 
+          <a
+            href={trackingUrl}
+            target="_blank"
             rel="noopener noreferrer"
             className="text-[10px] font-black uppercase tracking-widest underline hover:text-emerald-700"
           >
@@ -3039,8 +3057,8 @@ const TrackingTimeline = ({ trackingNumber, trackingUrl }: { trackingNumber: str
                   )}
                   {event.timestamp && (
                     <p className="text-[10px] text-gray-400">
-                      {new Date(event.timestamp).toLocaleDateString('en-ZA', { 
-                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                      {new Date(event.timestamp).toLocaleDateString('en-ZA', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                       })}
                     </p>
                   )}
@@ -3098,8 +3116,8 @@ const OrderTrackingPage = () => {
 
   return (
     <div className="min-h-screen bg-white pt-32 pb-20 px-6">
-      <SEO 
-        title="Track Order | Real-time Updates" 
+      <SEO
+        title="Track Order | Real-time Updates"
         description="Track your Grab & Go order in real-time. Enter your order number to see the current status and location."
         url="https://grabandgo.co.za/track-order"
       />
@@ -3113,9 +3131,9 @@ const OrderTrackingPage = () => {
           <div className="space-y-4">
             <div>
               <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-2 text-black">Order ID</label>
-              <input 
-                type="text" 
-                placeholder="e.g. #ABC12345" 
+              <input
+                type="text"
+                placeholder="e.g. #ABC12345"
                 value={orderId}
                 onChange={(e) => setOrderId(e.target.value)}
                 required
@@ -3124,9 +3142,9 @@ const OrderTrackingPage = () => {
             </div>
             <div>
               <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-2 text-black">Email Address</label>
-              <input 
-                type="email" 
-                placeholder="The email used at checkout" 
+              <input
+                type="email"
+                placeholder="The email used at checkout"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -3135,8 +3153,8 @@ const OrderTrackingPage = () => {
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             className="w-full py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
           >
@@ -3146,7 +3164,7 @@ const OrderTrackingPage = () => {
 
         <AnimatePresence>
           {error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
@@ -3159,7 +3177,7 @@ const OrderTrackingPage = () => {
         </AnimatePresence>
 
         {order && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="border border-gray-100 p-8 space-y-8 text-black"
@@ -3211,8 +3229,8 @@ const NotFoundPage = () => {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-      <SEO 
-        title="404 | Page Not Found" 
+      <SEO
+        title="404 | Page Not Found"
         description="The page you are looking for doesn't exist. Head back to Grab & Go home for the latest streetwear."
       />
       <motion.div
@@ -3225,7 +3243,7 @@ const NotFoundPage = () => {
           <h2 className="text-xl md:text-2xl font-semibold uppercase tracking-tight">Need Help?</h2>
           <p className="text-[10px] font-mono uppercase tracking-wider opacity-30">The page you're looking for doesn't exist or has been moved.</p>
         </div>
-        <button 
+        <button
           onClick={() => navigate('/')}
           className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white text-[10px] font-semibold uppercase tracking-wider hover:opacity-90 transition-opacity"
         >
@@ -3236,14 +3254,14 @@ const NotFoundPage = () => {
   );
 };
 
-const AuthModal = ({ 
-  isOpen, 
-  onClose, 
-  onSuccess 
-}: { 
-  isOpen: boolean, 
-  onClose: () => void, 
-  onSuccess: () => void 
+const AuthModal = ({
+  isOpen,
+  onClose,
+  onSuccess
+}: {
+  isOpen: boolean,
+  onClose: () => void,
+  onSuccess: () => void
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -3342,14 +3360,14 @@ const AuthModal = ({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6">
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }} 
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -3375,7 +3393,7 @@ const AuthModal = ({
                     </div>
                   ) : (
                     <form onSubmit={handleForgotPassword} className="space-y-4">
-                      <input 
+                      <input
                         type="email"
                         placeholder="Email Address"
                         value={email}
@@ -3383,14 +3401,14 @@ const AuthModal = ({
                         required
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
                       />
-                      <button 
+                      <button
                         type="submit"
                         disabled={loading}
                         className="w-full py-4 bg-black text-white font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-gray-900 transition-all disabled:opacity-50"
                       >
                         {loading ? <Loader2 className="animate-spin" size={16} /> : 'Send Reset Link'}
                       </button>
-                      <button 
+                      <button
                         type="button"
                         onClick={() => setShowForgotPassword(false)}
                         className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
@@ -3407,8 +3425,8 @@ const AuthModal = ({
                       {mode === 'login' ? 'Welcome Back' : 'Create Account'}
                     </h2>
                     <p className="text-xs text-gray-500 leading-relaxed">
-                      {mode === 'login' 
-                        ? 'Sign in to track your orders and manage your account.' 
+                      {mode === 'login'
+                        ? 'Sign in to track your orders and manage your account.'
                         : 'Join Grab & Go to save your details and track your orders.'}
                     </p>
                   </div>
@@ -3422,7 +3440,7 @@ const AuthModal = ({
 
                   <form onSubmit={handleEmailAuth} className="space-y-3">
                     {mode === 'signup' && (
-                      <input 
+                      <input
                         type="text"
                         placeholder="Full Name"
                         value={name}
@@ -3431,7 +3449,7 @@ const AuthModal = ({
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
                       />
                     )}
-                    <input 
+                    <input
                       type="email"
                       placeholder="Email Address"
                       value={email}
@@ -3439,7 +3457,7 @@ const AuthModal = ({
                       required
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-100 text-xs focus:border-black outline-none transition-all text-black"
                     />
-                    <input 
+                    <input
                       type="password"
                       placeholder="Password"
                       value={password}
@@ -3449,7 +3467,7 @@ const AuthModal = ({
                     />
                     {mode === 'login' && (
                       <div className="text-right">
-                        <button 
+                        <button
                           type="button"
                           onClick={() => setShowForgotPassword(true)}
                           className="text-[9px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
@@ -3458,7 +3476,7 @@ const AuthModal = ({
                         </button>
                       </div>
                     )}
-                    <button 
+                    <button
                       type="submit"
                       disabled={loading}
                       className="w-full py-4 bg-black text-white font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-gray-900 transition-all disabled:opacity-50"
@@ -3477,7 +3495,7 @@ const AuthModal = ({
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <button 
+                    <button
                       onClick={handleGoogleLogin}
                       disabled={loading}
                       title="Google"
@@ -3491,7 +3509,7 @@ const AuthModal = ({
                       </svg>
                     </button>
 
-                    <button 
+                    <button
                       onClick={handleFacebookLogin}
                       disabled={loading}
                       title="Facebook"
@@ -3502,7 +3520,7 @@ const AuthModal = ({
                   </div>
 
                   <div className="pt-2">
-                    <button 
+                    <button
                       onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
                       className="text-[10px] font-bold uppercase tracking-widest text-black hover:opacity-70 transition-opacity"
                     >
@@ -3517,7 +3535,7 @@ const AuthModal = ({
               </p>
             </div>
 
-            <button 
+            <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 hover:bg-black/5 rounded-full transition-colors text-black"
             >
@@ -3563,7 +3581,7 @@ const LabelDownloadButton = ({ order }: { order: Order }) => {
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
         const res = await fetch(labelEndpoint);
-        
+
         if (res.status === 202) {
           // Server says label not ready yet — wait and retry
           if (attempt < MAX_ATTEMPTS) await new Promise(r => setTimeout(r, DELAY_MS));
@@ -3628,15 +3646,15 @@ const LabelDownloadButton = ({ order }: { order: Order }) => {
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
-const OrdersDrawer = ({ 
-  isOpen, 
-  onClose, 
+const OrdersDrawer = ({
+  isOpen,
+  onClose,
   orders,
   user,
   onUpdateOrder
-}: { 
-  isOpen: boolean, 
-  onClose: () => void, 
+}: {
+  isOpen: boolean,
+  onClose: () => void,
   orders: Order[],
   user: User | null,
   onUpdateOrder?: (id: string, updates: Partial<Order>) => void
@@ -3685,14 +3703,14 @@ const OrdersDrawer = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[60]"
           />
-          <motion.div 
+          <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -3766,9 +3784,9 @@ const OrdersDrawer = ({
                             <p className="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-1">Tracking Number</p>
                             <p className="text-xs font-mono">{order.trackingNumber || (order as any).trackingReference || 'N/A'}</p>
                           </div>
-                          <a 
+                          <a
                             href={order.trackingUrl || `/track-order?id=${order.id}&email=${encodeURIComponent(order.email)}`}
-                            target="_blank" 
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-black/80 transition-colors"
                           >
@@ -3797,22 +3815,22 @@ const OrdersDrawer = ({
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             placeholder="Tracking #"
                             value={trackingInputs[order.id]?.number ?? order.trackingNumber ?? ''}
                             onChange={(e) => setTrackingInputs(prev => ({ ...prev, [order.id]: { ...prev[order.id], number: e.target.value, url: prev[order.id]?.url ?? order.trackingUrl ?? '' } }))}
                             className="text-[10px] p-2 border border-gray-200 focus:border-black outline-none transition-colors"
                           />
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             placeholder="Tracking URL"
                             value={trackingInputs[order.id]?.url ?? order.trackingUrl ?? ''}
                             onChange={(e) => setTrackingInputs(prev => ({ ...prev, [order.id]: { ...prev[order.id], url: e.target.value, number: prev[order.id]?.number ?? order.trackingNumber ?? '' } }))}
                             className="text-[10px] p-2 border border-gray-200 focus:border-black outline-none transition-colors"
                           />
-                          <button 
-                            onClick={() => onUpdateOrder(order.id, { 
+                          <button
+                            onClick={() => onUpdateOrder(order.id, {
                               trackingNumber: trackingInputs[order.id]?.number ?? order.trackingNumber,
                               trackingUrl: trackingInputs[order.id]?.url ?? order.trackingUrl
                             })}
@@ -3834,15 +3852,15 @@ const OrdersDrawer = ({
   );
 };
 
-const CategoryManagementDrawer = ({ 
-  isOpen, 
-  onClose, 
+const CategoryManagementDrawer = ({
+  isOpen,
+  onClose,
   categories,
   onSave,
   onDelete
-}: { 
-  isOpen: boolean, 
-  onClose: () => void, 
+}: {
+  isOpen: boolean,
+  onClose: () => void,
   categories: Category[],
   onSave: (c: Partial<Category>) => Promise<void>,
   onDelete: (id: string) => Promise<void>
@@ -3895,14 +3913,14 @@ const CategoryManagementDrawer = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]"
           />
-          <motion.div 
+          <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -3917,7 +3935,7 @@ const CategoryManagementDrawer = ({
             </div>
 
             <div className="mb-6">
-              <button 
+              <button
                 onClick={() => setEditingCategory({ name: '', description: '', image: '' })}
                 className="w-full py-3 border border-dashed border-gray-200 hover:border-black/20 transition-colors flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-black"
               >
@@ -3941,13 +3959,13 @@ const CategoryManagementDrawer = ({
                       )}
                     </div>
                     <div className="flex gap-1">
-                      <button 
+                      <button
                         onClick={() => setEditingCategory(mainCat)}
                         className="p-1.5 hover:bg-black/5 rounded-full transition-colors"
                       >
                         <Edit3 size={14} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => setDeletingId(mainCat.id)}
                         className="p-1.5 hover:bg-red-50 rounded-full transition-colors text-red-500"
                       >
@@ -3955,7 +3973,7 @@ const CategoryManagementDrawer = ({
                       </button>
                     </div>
                   </div>
-                  
+
                   {/* Sub-categories */}
                   <div className="pl-6 space-y-2">
                     {categories.filter(c => c.parentId === mainCat.id).map(subCat => (
@@ -3967,13 +3985,13 @@ const CategoryManagementDrawer = ({
                           <h4 className="text-[10px] font-bold uppercase tracking-tight">{subCat.name}</h4>
                         </div>
                         <div className="flex gap-1">
-                          <button 
+                          <button
                             onClick={() => setEditingCategory(subCat)}
                             className="p-1 hover:bg-black/5 rounded-full transition-colors"
                           >
                             <Edit3 size={12} />
                           </button>
-                          <button 
+                          <button
                             onClick={() => setDeletingId(subCat.id)}
                             className="p-1 hover:bg-red-50 rounded-full transition-colors text-red-500"
                           >
@@ -3985,7 +4003,7 @@ const CategoryManagementDrawer = ({
                   </div>
                 </div>
               ))}
-              
+
               {/* Orphaned sub-categories (if any) */}
               {categories.filter(c => c.parentId && !categories.find(p => p.id === c.parentId)).map(orphan => (
                 <div key={orphan.id} className="p-3 border border-red-50 bg-red-50/10 flex gap-3 items-center text-black group">
@@ -4004,14 +4022,14 @@ const CategoryManagementDrawer = ({
             <AnimatePresence>
               {editingCategory && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => setEditingCategory(null)}
                     className="absolute inset-0 bg-white/80 backdrop-blur-sm"
                   />
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
@@ -4023,8 +4041,8 @@ const CategoryManagementDrawer = ({
                     <form onSubmit={handleSave} className="space-y-4">
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Category Name</label>
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           required
                           value={editingCategory.name}
                           onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
@@ -4033,7 +4051,7 @@ const CategoryManagementDrawer = ({
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Description</label>
-                        <textarea 
+                        <textarea
                           value={editingCategory.description || ''}
                           onChange={(e) => setEditingCategory({ ...editingCategory, description: e.target.value })}
                           className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none h-20 resize-none"
@@ -4042,20 +4060,20 @@ const CategoryManagementDrawer = ({
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Image</label>
                         <div className="flex gap-2">
-                          <div 
+                          <div
                             onClick={() => fileInputRef.current?.click()}
                             className="w-12 h-12 border border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-black transition-colors"
                           >
                             {isUploading ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
                           </div>
-                          <input 
+                          <input
                             type="text"
                             placeholder="Image URL"
                             value={editingCategory.image || ''}
                             onChange={(e) => setEditingCategory({ ...editingCategory, image: e.target.value })}
                             className="flex-grow bg-gray-50 border border-gray-100 px-4 py-2 text-[10px] focus:border-black outline-none"
                           />
-                          <input 
+                          <input
                             type="file"
                             ref={fileInputRef}
                             onChange={handleFileUpload}
@@ -4065,7 +4083,7 @@ const CategoryManagementDrawer = ({
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Parent Category</label>
-                        <select 
+                        <select
                           value={editingCategory.parentId || ''}
                           onChange={(e) => setEditingCategory({ ...editingCategory, parentId: e.target.value || undefined })}
                           className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none appearance-none"
@@ -4077,14 +4095,14 @@ const CategoryManagementDrawer = ({
                         </select>
                       </div>
                       <div className="flex gap-3 pt-4">
-                        <button 
+                        <button
                           type="button"
                           onClick={() => setEditingCategory(null)}
                           className="flex-grow py-2 border border-gray-100 font-bold uppercase tracking-widest text-[10px]"
                         >
                           Cancel
                         </button>
-                        <button 
+                        <button
                           type="submit"
                           disabled={isSaving}
                           className="flex-grow py-2 bg-black text-white font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
@@ -4102,14 +4120,14 @@ const CategoryManagementDrawer = ({
             <AnimatePresence>
               {deletingId && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => setDeletingId(null)}
                     className="absolute inset-0 bg-white/80 backdrop-blur-sm"
                   />
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
@@ -4119,7 +4137,7 @@ const CategoryManagementDrawer = ({
                     <p className="text-[10px] text-gray-500 mb-6 uppercase tracking-widest">This may affect products in this category.</p>
                     <div className="flex gap-3">
                       <button onClick={() => setDeletingId(null)} className="flex-grow py-2 border border-gray-100 font-bold uppercase tracking-widest text-[10px]">Cancel</button>
-                      <button 
+                      <button
                         onClick={async () => {
                           await onDelete(deletingId);
                           setDeletingId(null);
@@ -4140,15 +4158,15 @@ const CategoryManagementDrawer = ({
   );
 };
 
-const BrandManagementDrawer = ({ 
-  isOpen, 
-  onClose, 
+const BrandManagementDrawer = ({
+  isOpen,
+  onClose,
   brands,
   onSave,
   onDelete
-}: { 
-  isOpen: boolean, 
-  onClose: () => void, 
+}: {
+  isOpen: boolean,
+  onClose: () => void,
   brands: Brand[],
   onSave: (b: Partial<Brand>) => Promise<void>,
   onDelete: (id: string) => Promise<void>
@@ -4203,14 +4221,14 @@ const BrandManagementDrawer = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]"
           />
-          <motion.div 
+          <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -4225,7 +4243,7 @@ const BrandManagementDrawer = ({
             </div>
 
             <div className="mb-6">
-              <button 
+              <button
                 onClick={() => setEditingBrand({ name: '', description: '', logo: '', banner: '', soldBy: '' })}
                 className="w-full py-3 border border-dashed border-gray-200 hover:border-black/20 transition-colors flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-black"
               >
@@ -4243,13 +4261,13 @@ const BrandManagementDrawer = ({
                     <h4 className="text-xs font-bold uppercase tracking-tight">{brand.name}</h4>
                   </div>
                   <div className="flex gap-1">
-                    <button 
+                    <button
                       onClick={() => setEditingBrand(brand)}
                       className="p-1.5 hover:bg-black/5 rounded-full transition-colors"
                     >
                       <Edit3 size={14} />
                     </button>
-                    <button 
+                    <button
                       onClick={() => setDeletingId(brand.id!)}
                       className="p-1.5 hover:bg-red-50 rounded-full transition-colors text-red-500"
                     >
@@ -4264,14 +4282,14 @@ const BrandManagementDrawer = ({
             <AnimatePresence>
               {editingBrand && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => setEditingBrand(null)}
                     className="absolute inset-0 bg-white/80 backdrop-blur-sm"
                   />
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
@@ -4283,8 +4301,8 @@ const BrandManagementDrawer = ({
                     <form onSubmit={handleSave} className="space-y-4">
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Brand Name</label>
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           required
                           value={editingBrand.name}
                           onChange={(e) => setEditingBrand({ ...editingBrand, name: e.target.value })}
@@ -4293,7 +4311,7 @@ const BrandManagementDrawer = ({
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Description</label>
-                        <textarea 
+                        <textarea
                           value={editingBrand.description || ''}
                           onChange={(e) => setEditingBrand({ ...editingBrand, description: e.target.value })}
                           className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none h-20 resize-none"
@@ -4302,20 +4320,20 @@ const BrandManagementDrawer = ({
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Logo</label>
                         <div className="flex gap-2">
-                          <div 
+                          <div
                             onClick={() => fileInputRef.current?.click()}
                             className="w-12 h-12 border border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-black transition-colors"
                           >
                             {isUploading ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
                           </div>
-                          <input 
+                          <input
                             type="text"
                             placeholder="Logo URL"
                             value={editingBrand.logo || ''}
                             onChange={(e) => setEditingBrand({ ...editingBrand, logo: e.target.value })}
                             className="flex-grow bg-gray-50 border border-gray-100 px-4 py-2 text-[10px] focus:border-black outline-none"
                           />
-                          <input 
+                          <input
                             type="file"
                             ref={fileInputRef}
                             onChange={handleFileUpload}
@@ -4324,14 +4342,14 @@ const BrandManagementDrawer = ({
                         </div>
                       </div>
                       <div className="flex gap-3 pt-4">
-                        <button 
+                        <button
                           type="button"
                           onClick={() => setEditingBrand(null)}
                           className="flex-grow py-2 border border-gray-100 font-bold uppercase tracking-widest text-[10px]"
                         >
                           Cancel
                         </button>
-                        <button 
+                        <button
                           type="submit"
                           disabled={isSaving}
                           className="flex-grow py-2 bg-black text-white font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
@@ -4349,14 +4367,14 @@ const BrandManagementDrawer = ({
             <AnimatePresence>
               {deletingId && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => setDeletingId(null)}
                     className="absolute inset-0 bg-white/80 backdrop-blur-sm"
                   />
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
@@ -4366,7 +4384,7 @@ const BrandManagementDrawer = ({
                     <p className="text-[10px] text-gray-500 mb-6 uppercase tracking-widest">This may affect products associated with this brand.</p>
                     <div className="flex gap-3">
                       <button onClick={() => setDeletingId(null)} className="flex-grow py-2 border border-gray-100 font-bold uppercase tracking-widest text-[10px]">Cancel</button>
-                      <button 
+                      <button
                         onClick={async () => {
                           await onDelete(deletingId);
                           setDeletingId(null);
@@ -4387,9 +4405,9 @@ const BrandManagementDrawer = ({
   );
 };
 
-const ProductManagementDrawer = ({ 
-  isOpen, 
-  onClose, 
+const ProductManagementDrawer = ({
+  isOpen,
+  onClose,
   products,
   categories,
   brands,
@@ -4397,9 +4415,9 @@ const ProductManagementDrawer = ({
   onDelete,
   onOpenCategories,
   onOpenBrands
-}: { 
-  isOpen: boolean, 
-  onClose: () => void, 
+}: {
+  isOpen: boolean,
+  onClose: () => void,
   products: Product[],
   categories: Category[],
   brands: Brand[],
@@ -4430,15 +4448,15 @@ const ProductManagementDrawer = ({
   const filteredProducts = useMemo(() => {
     if (!Array.isArray(products)) return [];
     return products.filter(p => {
-      const matchesSearch = 
+      const matchesSearch =
         p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (p.categories || []).some(c => c.toLowerCase().includes(searchQuery.toLowerCase())) ||
         p.brand?.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
       const matchesCategory = filterCategory === 'All' || (p.categories || []).includes(filterCategory);
       const matchesGender = filterGender === 'All' || p.gender === filterGender;
       const matchesSub = filterSubCategory === 'All' || p.subCategory === filterSubCategory;
-      
+
       return matchesSearch && matchesCategory && matchesGender && matchesSub;
     });
   }, [products, searchQuery, filterCategory, filterGender, filterSubCategory]);
@@ -4520,7 +4538,7 @@ const ProductManagementDrawer = ({
     }
   };
 
-  
+
 
   const removeGalleryImage = (url: string) => {
     setEditingProduct(prev => {
@@ -4538,7 +4556,7 @@ const ProductManagementDrawer = ({
 
   const updateVariant = (vId: string, updates: Partial<ProductVariant>) => {
     if (!editingProduct) return;
-    const variants = (editingProduct.variants || []).map(v => 
+    const variants = (editingProduct.variants || []).map(v =>
       v.id === vId ? { ...v, ...updates } : v
     );
     setEditingProduct({ ...editingProduct, variants });
@@ -4564,7 +4582,7 @@ const ProductManagementDrawer = ({
 
   const removeOption = (vId: string, option: string) => {
     if (!editingProduct) return;
-    const variants = (editingProduct.variants || []).map(v => 
+    const variants = (editingProduct.variants || []).map(v =>
       v.id === vId ? { ...v, options: v.options.filter(o => o !== option) } : v
     );
     setEditingProduct({ ...editingProduct, variants });
@@ -4574,14 +4592,14 @@ const ProductManagementDrawer = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
           />
-          <motion.div 
+          <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -4605,7 +4623,7 @@ const ProductManagementDrawer = ({
                 <div className="flex gap-2">
                   <div className="relative flex-grow">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-black/30" size={16} />
-                    <input 
+                    <input
                       type="text"
                       placeholder="Search products..."
                       value={searchQuery}
@@ -4613,7 +4631,7 @@ const ProductManagementDrawer = ({
                       className="w-full bg-gray-50 border border-gray-100 pl-12 pr-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-black outline-none transition-all text-black"
                     />
                   </div>
-                  <select 
+                  <select
                     value={filterCategory}
                     onChange={(e) => setFilterCategory(e.target.value)}
                     className="bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-bold uppercase tracking-widest focus:border-black outline-none appearance-none text-black min-w-[120px]"
@@ -4625,7 +4643,7 @@ const ProductManagementDrawer = ({
                   </select>
                 </div>
                 <div className="flex gap-2">
-                  <select 
+                  <select
                     value={filterGender}
                     onChange={(e) => setFilterGender(e.target.value)}
                     className="flex-1 bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-bold uppercase tracking-widest focus:border-black outline-none appearance-none text-black"
@@ -4636,7 +4654,7 @@ const ProductManagementDrawer = ({
                     <option value="Kids">Kids</option>
                     <option value="Unisex">Unisex</option>
                   </select>
-                  <select 
+                  <select
                     value={filterSubCategory}
                     onChange={(e) => setFilterSubCategory(e.target.value)}
                     className="flex-1 bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-bold uppercase tracking-widest focus:border-black outline-none appearance-none text-black"
@@ -4649,13 +4667,13 @@ const ProductManagementDrawer = ({
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <button 
+                <button
                   onClick={() => setEditingProduct({ name: '', price: 0, category: categories[0]?.name || 'Apparel', image: '', description: '', variants: [] })}
                   className="py-4 border border-dashed border-gray-200 hover:border-black/20 transition-colors flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-black"
                 >
                   <Plus size={16} /> Add Product
                 </button>
-                <button 
+                <button
                   onClick={onOpenCategories}
                   className="py-4 border border-dashed border-gray-200 hover:border-black/20 transition-colors flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-black"
                 >
@@ -4667,24 +4685,24 @@ const ProductManagementDrawer = ({
             <div className="flex-grow overflow-y-auto space-y-4 pr-4 custom-scrollbar">
               {filteredProducts.map((product) => (
                 <div key={product.id} className="p-4 border border-gray-50 bg-gray-50/30 flex gap-4 items-center text-black group">
-                  <img 
-                    src={product.image || null} 
-                    alt={product.name} 
-                    className="w-12 h-16 object-cover grayscale" 
-                    referrerPolicy="no-referrer" 
+                  <img
+                    src={product.image || null}
+                    alt={product.name}
+                    className="w-12 h-16 object-cover grayscale"
+                    referrerPolicy="no-referrer"
                   />
                   <div className="flex-grow">
                     <h4 className="text-sm font-bold uppercase tracking-tight">{product.name}</h4>
                     <p className="text-[10px] opacity-50 uppercase tracking-widest">{formatPrice(product.price)} • {(product.categories || []).join(', ')}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button 
+                    <button
                       onClick={() => setEditingProduct(product)}
                       className="p-2 hover:bg-black/5 rounded-full transition-colors"
                     >
                       <Edit3 size={16} />
                     </button>
-                    <button 
+                    <button
                       onClick={() => setDeletingId(product.id)}
                       className="p-2 hover:bg-red-50 rounded-full transition-colors text-red-500"
                     >
@@ -4699,14 +4717,14 @@ const ProductManagementDrawer = ({
             <AnimatePresence>
               {deletingId && (
                 <div className="fixed inset-0 z-[90] flex items-center justify-center p-6">
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => setDeletingId(null)}
                     className="absolute inset-0 bg-white/80 backdrop-blur-sm"
                   />
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
@@ -4718,13 +4736,13 @@ const ProductManagementDrawer = ({
                     <h3 className="text-lg font-display font-bold uppercase tracking-tighter mb-2">Delete Product?</h3>
                     <p className="text-[10px] text-gray-500 mb-6 uppercase tracking-widest">This action cannot be undone.</p>
                     <div className="flex gap-3">
-                      <button 
+                      <button
                         onClick={() => setDeletingId(null)}
                         className="flex-grow py-2.5 border border-gray-100 font-bold uppercase tracking-widest text-[10px]"
                       >
                         Cancel
                       </button>
-                      <button 
+                      <button
                         onClick={async () => {
                           if (deletingId) {
                             await onDelete(deletingId);
@@ -4745,14 +4763,14 @@ const ProductManagementDrawer = ({
             <AnimatePresence>
               {editingProduct && (
                 <div className="fixed inset-0 z-[80] flex items-center justify-center p-6">
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => setEditingProduct(null)}
                     className="absolute inset-0 bg-white/80 backdrop-blur-sm"
                   />
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
@@ -4792,8 +4810,8 @@ const ProductManagementDrawer = ({
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Product Name</label>
-                              <input 
-                                type="text" 
+                              <input
+                                type="text"
                                 required
                                 value={editingProduct.name}
                                 onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
@@ -4809,7 +4827,7 @@ const ProductManagementDrawer = ({
                                     {(editingProduct.categories || []).map(catName => (
                                       <span key={catName} className="px-2 py-1 bg-black text-white text-[8px] font-black uppercase tracking-widest flex items-center gap-2">
                                         {catName}
-                                        <button 
+                                        <button
                                           type="button"
                                           onClick={() => {
                                             const newCats = (editingProduct.categories || []).filter(c => c !== catName);
@@ -4825,7 +4843,7 @@ const ProductManagementDrawer = ({
                                       <span className="text-[10px] opacity-30 uppercase tracking-widest">No categories selected</span>
                                     )}
                                   </div>
-                                  <button 
+                                  <button
                                     type="button"
                                     onClick={onOpenCategories}
                                     className="px-4 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-black/80 transition-colors"
@@ -4833,7 +4851,7 @@ const ProductManagementDrawer = ({
                                     Manage
                                   </button>
                                 </div>
-                                
+
                                 <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
                                   {categories.map(c => {
                                     const isSelected = (editingProduct.categories || []).includes(c.name);
@@ -4865,7 +4883,7 @@ const ProductManagementDrawer = ({
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Gender / Target</label>
-                              <select 
+                              <select
                                 value={editingProduct.gender || 'Unisex'}
                                 onChange={(e) => setEditingProduct({ ...editingProduct, gender: e.target.value as any })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all text-black"
@@ -4878,8 +4896,8 @@ const ProductManagementDrawer = ({
                             </div>
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sub-category</label>
-                              <input 
-                                type="text" 
+                              <input
+                                type="text"
                                 value={editingProduct.subCategory || ''}
                                 onChange={(e) => setEditingProduct({ ...editingProduct, subCategory: e.target.value })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all text-black"
@@ -4891,8 +4909,8 @@ const ProductManagementDrawer = ({
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sale Price (R)</label>
-                              <input 
-                                type="number" 
+                              <input
+                                type="number"
                                 required
                                 value={editingProduct.price}
                                 onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
@@ -4901,8 +4919,8 @@ const ProductManagementDrawer = ({
                             </div>
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Compare at Price (R)</label>
-                              <input 
-                                type="number" 
+                              <input
+                                type="number"
                                 value={editingProduct.originalPrice || ''}
                                 onChange={(e) => setEditingProduct({ ...editingProduct, originalPrice: Number(e.target.value) })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
@@ -4913,7 +4931,7 @@ const ProductManagementDrawer = ({
 
                           <div className="space-y-1">
                             <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Description</label>
-                            <textarea 
+                            <textarea
                               required
                               value={editingProduct.description}
                               onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
@@ -4925,8 +4943,8 @@ const ProductManagementDrawer = ({
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Weight (kg)</label>
-                              <input 
-                                type="number" 
+                              <input
+                                type="number"
                                 step="0.1"
                                 value={editingProduct.weight || ''}
                                 onChange={(e) => setEditingProduct({ ...editingProduct, weight: Number(e.target.value) })}
@@ -4935,7 +4953,7 @@ const ProductManagementDrawer = ({
                             </div>
                             <div className="flex items-center gap-4 pt-6">
                               <label className="flex items-center gap-2 cursor-pointer group">
-                                <input 
+                                <input
                                   type="checkbox"
                                   checked={editingProduct.isDrop}
                                   onChange={(e) => setEditingProduct({ ...editingProduct, isDrop: e.target.checked })}
@@ -4952,7 +4970,7 @@ const ProductManagementDrawer = ({
                         <div className="space-y-6">
                           <div className="space-y-1">
                             <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Main Product Image</label>
-                            <div 
+                            <div
                               onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-black'); }}
                               onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-black'); }}
                               onDrop={(e) => {
@@ -4993,8 +5011,8 @@ const ProductManagementDrawer = ({
                                   <Loader2 className="animate-spin text-black" size={32} />
                                 </div>
                               )}
-                              <input 
-                                type="file" 
+                              <input
+                                type="file"
                                 accept="image/*"
                                 ref={fileInputRef}
                                 onChange={handleFileUpload}
@@ -5003,8 +5021,8 @@ const ProductManagementDrawer = ({
                             </div>
                             <div className="mt-4">
                               <label className="text-[8px] font-bold uppercase tracking-widest opacity-30">Or use URL</label>
-                              <input 
-                                type="text" 
+                              <input
+                                type="text"
                                 placeholder="https://image-url.com/photo.jpg"
                                 value={editingProduct.image}
                                 onChange={(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
@@ -5020,7 +5038,7 @@ const ProductManagementDrawer = ({
                                   {editingProduct.images?.length || 0} / 10 Images
                                 </span>
                               </div>
-                              <div 
+                              <div
                                 onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-black'); }}
                                 onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-black'); }}
                                 onDrop={(e) => {
@@ -5039,7 +5057,7 @@ const ProductManagementDrawer = ({
                                     <div key={idx} className="relative aspect-[4/5] group/img bg-gray-50 rounded-lg overflow-hidden border border-gray-100 shadow-sm">
                                       <img src={img || undefined} alt={`Gallery ${idx}`} className="w-full h-full object-cover grayscale group-hover/img:grayscale-0 transition-all" referrerPolicy="no-referrer" />
                                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                        <button 
+                                        <button
                                           type="button"
                                           onClick={() => removeGalleryImage(img)}
                                           className="p-1.5 bg-white text-red-500 rounded-full hover:scale-110 transition-transform shadow-lg"
@@ -5052,7 +5070,7 @@ const ProductManagementDrawer = ({
                                       </div>
                                     </div>
                                   ))}
-                                  <button 
+                                  <button
                                     type="button"
                                     onClick={() => multipleFileInputRef.current?.click()}
                                     className={`aspect-[4/5] border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-black hover:bg-white transition-all bg-white/50 ${isUploadingMultiple ? 'opacity-50 pointer-events-none' : ''}`}
@@ -5069,11 +5087,11 @@ const ProductManagementDrawer = ({
                                     )}
                                   </button>
                                 </div>
-                                
+
                                 <div className="flex items-center justify-between">
                                   <p className="text-[8px] opacity-40 uppercase tracking-widest">Drag images here or click to add</p>
                                   {editingProduct.images && editingProduct.images.length > 0 && (
-                                    <button 
+                                    <button
                                       type="button"
                                       onClick={() => setEditingProduct({ ...editingProduct, images: [] })}
                                       className="text-[8px] font-black uppercase tracking-widest text-red-500 hover:underline"
@@ -5083,19 +5101,19 @@ const ProductManagementDrawer = ({
                                   )}
                                 </div>
                               </div>
-                            
-                            <input 
-                              type="file" 
+
+                            <input
+                              type="file"
                               multiple
                               accept="image/*"
                               ref={multipleFileInputRef}
                               onChange={handleMultipleFileUpload}
                               className="hidden"
                             />
-                            
+
                             <div className="mt-6">
                               <label className="text-[8px] font-bold uppercase tracking-widest opacity-30">Gallery URLs (Comma separated)</label>
-                              <textarea 
+                              <textarea
                                 placeholder="https://image1.jpg, https://image2.jpg"
                                 value={editingProduct.images?.join(', ') || ''}
                                 onChange={(e) => setEditingProduct({ ...editingProduct, images: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
@@ -5113,7 +5131,7 @@ const ProductManagementDrawer = ({
                               <h4 className="text-[10px] font-black uppercase tracking-widest">Product Variants</h4>
                               <p className="text-[8px] opacity-40 uppercase tracking-widest mt-1">Add sizes, colors, or materials</p>
                             </div>
-                            <button 
+                            <button
                               type="button"
                               onClick={addVariant}
                               className="px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:opacity-80 transition-all flex items-center gap-2"
@@ -5121,11 +5139,11 @@ const ProductManagementDrawer = ({
                               <Plus size={14} /> Add Variant
                             </button>
                           </div>
-                          
+
                           <div className="space-y-4">
                             {editingProduct.variants?.map((variant) => (
                               <div key={variant.id} className="p-6 bg-gray-50 border border-gray-100 space-y-4 relative group">
-                                <button 
+                                <button
                                   type="button"
                                   onClick={() => removeVariant(variant.id)}
                                   className="absolute top-4 right-4 p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
@@ -5135,7 +5153,7 @@ const ProductManagementDrawer = ({
 
                                 <div className="space-y-1">
                                   <label className="text-[8px] font-black uppercase tracking-widest opacity-30">Variant Name</label>
-                                  <input 
+                                  <input
                                     type="text"
                                     placeholder="e.g. Size or Color"
                                     value={variant.name}
@@ -5143,14 +5161,14 @@ const ProductManagementDrawer = ({
                                     className="w-full bg-white border border-gray-100 px-4 py-2 text-xs font-bold focus:border-black outline-none text-black transition-all"
                                   />
                                 </div>
-                                
+
                                 <div className="space-y-2">
                                   <label className="text-[8px] font-black uppercase tracking-widest opacity-30">Options (Press Enter to add)</label>
                                   <div className="flex flex-wrap gap-2">
                                     {variant.options.map((opt) => (
                                       <span key={opt} className="pl-3 pr-2 py-1.5 bg-white border border-gray-100 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-black shadow-sm">
                                         {opt}
-                                        <button 
+                                        <button
                                           type="button"
                                           onClick={() => removeOption(variant.id, opt)}
                                           className="text-gray-300 hover:text-red-500 transition-colors"
@@ -5159,7 +5177,7 @@ const ProductManagementDrawer = ({
                                         </button>
                                       </span>
                                     ))}
-                                    <input 
+                                    <input
                                       type="text"
                                       placeholder="Add option..."
                                       className="bg-white border border-gray-100 px-4 py-1.5 text-[10px] font-bold outline-none focus:border-black w-32 text-black shadow-sm"
@@ -5192,7 +5210,7 @@ const ProductManagementDrawer = ({
                               <p className="text-[8px] opacity-40 uppercase tracking-widest mt-1">Set stock levels per variant</p>
                             </div>
                           </div>
-                          
+
                           {editingProduct.variants && editingProduct.variants.length > 0 ? (
                             <div className="space-y-4">
                               {editingProduct.variants.map((variant) => (
@@ -5246,7 +5264,7 @@ const ProductManagementDrawer = ({
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Select Brand</label>
                               <div className="flex gap-2">
-                                <select 
+                                <select
                                   value={editingProduct.brandId || ''}
                                   onChange={(e) => {
                                     if (e.target.value === 'new') {
@@ -5255,8 +5273,8 @@ const ProductManagementDrawer = ({
                                     }
                                     const selectedBrand = brands.find(b => b.id === e.target.value);
                                     if (selectedBrand) {
-                                      setEditingProduct({ 
-                                        ...editingProduct, 
+                                      setEditingProduct({
+                                        ...editingProduct,
                                         brandId: selectedBrand.id,
                                         brand: selectedBrand.name,
                                         brandBanner: selectedBrand.banner,
@@ -5275,7 +5293,7 @@ const ProductManagementDrawer = ({
                                   ))}
                                   <option value="new">+ Add New Brand</option>
                                 </select>
-                                <button 
+                                <button
                                   type="button"
                                   onClick={onOpenBrands}
                                   className="px-4 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-black/80 transition-colors"
@@ -5286,8 +5304,8 @@ const ProductManagementDrawer = ({
                             </div>
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Brand Name (Display)</label>
-                              <input 
-                                type="text" 
+                              <input
+                                type="text"
                                 placeholder="e.g. Anatomy"
                                 value={editingProduct.brand || ''}
                                 onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
@@ -5300,7 +5318,7 @@ const ProductManagementDrawer = ({
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Brand Banner</label>
                               <div className="flex gap-2">
-                                <button 
+                                <button
                                   type="button"
                                   onClick={() => {
                                     const input = document.createElement('input');
@@ -5313,8 +5331,8 @@ const ProductManagementDrawer = ({
                                 >
                                   {isUploading ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
                                 </button>
-                                <input 
-                                  type="text" 
+                                <input
+                                  type="text"
                                   placeholder="Banner Image URL"
                                   value={editingProduct.brandBanner || ''}
                                   onChange={(e) => setEditingProduct({ ...editingProduct, brandBanner: e.target.value })}
@@ -5324,8 +5342,8 @@ const ProductManagementDrawer = ({
                             </div>
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sold By</label>
-                              <input 
-                                type="text" 
+                              <input
+                                type="text"
                                 placeholder="e.g. Sportscene"
                                 value={editingProduct.soldBy || ''}
                                 onChange={(e) => setEditingProduct({ ...editingProduct, soldBy: e.target.value })}
@@ -5336,7 +5354,7 @@ const ProductManagementDrawer = ({
 
                           <div className="space-y-1">
                             <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Brand Description</label>
-                            <textarea 
+                            <textarea
                               placeholder="Briefly introduce the brand..."
                               value={editingProduct.brandDescription || ''}
                               onChange={(e) => setEditingProduct({ ...editingProduct, brandDescription: e.target.value })}
@@ -5348,7 +5366,7 @@ const ProductManagementDrawer = ({
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sold By Logo</label>
                               <div className="flex gap-2">
-                                <button 
+                                <button
                                   type="button"
                                   onClick={() => {
                                     const input = document.createElement('input');
@@ -5361,8 +5379,8 @@ const ProductManagementDrawer = ({
                                 >
                                   {isUploading ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
                                 </button>
-                                <input 
-                                  type="text" 
+                                <input
+                                  type="text"
                                   placeholder="Logo URL"
                                   value={editingProduct.soldByLogo || ''}
                                   onChange={(e) => setEditingProduct({ ...editingProduct, soldByLogo: e.target.value })}
@@ -5372,8 +5390,8 @@ const ProductManagementDrawer = ({
                             </div>
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Tags (Comma separated)</label>
-                              <input 
-                                type="text" 
+                              <input
+                                type="text"
                                 placeholder="Summer, Streetwear, Limited"
                                 value={editingProduct.tags?.join(', ') || ''}
                                 onChange={(e) => setEditingProduct({ ...editingProduct, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
@@ -5386,14 +5404,14 @@ const ProductManagementDrawer = ({
                     </form>
 
                     <div className="p-6 border-t border-gray-100 flex gap-4 bg-white">
-                      <button 
+                      <button
                         type="button"
                         onClick={() => setEditingProduct(null)}
                         className="flex-grow py-4 border border-gray-100 font-bold uppercase tracking-widest text-[10px] text-black hover:bg-gray-50 transition-all"
                       >
                         Discard Changes
                       </button>
-                      <button 
+                      <button
                         onClick={handleSave}
                         disabled={isSaving}
                         className="flex-grow py-4 bg-black text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:opacity-90 transition-all disabled:opacity-50"
@@ -5412,17 +5430,17 @@ const ProductManagementDrawer = ({
   );
 };
 
-const CartDrawer = ({ 
-  isOpen, 
-  onClose, 
-  cartItems, 
+const CartDrawer = ({
+  isOpen,
+  onClose,
+  cartItems,
   onUpdateQuantity,
   onRemove,
   onCheckout,
   isLoading = false
-}: { 
-  isOpen: boolean, 
-  onClose: () => void, 
+}: {
+  isOpen: boolean,
+  onClose: () => void,
   cartItems: CartItem[],
   onUpdateQuantity: (id: string, delta: number, variants?: Record<string, string>) => void,
   onRemove: (id: string, variants?: Record<string, string>) => void,
@@ -5432,14 +5450,14 @@ const CartDrawer = ({
   <AnimatePresence>
     {isOpen && (
       <>
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
           className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[60]"
         />
-          <motion.div 
+          <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -5471,12 +5489,12 @@ const CartDrawer = ({
               </div>
             ) : (
               cartItems.map((item) => (
-                <motion.div 
+                <motion.div
                   layout
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  key={`${item.id}-${item.selectedVariants ? JSON.stringify(item.selectedVariants) : ''}`} 
+                  key={`${item.id}-${item.selectedVariants ? JSON.stringify(item.selectedVariants) : ''}`}
                   className="flex gap-4 group text-black"
                 >
                   <div className="w-24 h-32 bg-gray-50 border border-gray-100 flex-shrink-0 overflow-hidden">
@@ -5497,24 +5515,24 @@ const CartDrawer = ({
                           </div>
                         )}
                       </div>
-                      <button 
+                      <button
                         onClick={() => onRemove(item.id, item.selectedVariants)}
                         className="p-1 opacity-0 group-hover:opacity-30 hover:opacity-100 transition-opacity"
                       >
                         <Trash2 size={14} />
                       </button>
                     </div>
-                    
+
                     <div className="flex justify-between items-end">
                       <div className="flex items-center border border-gray-100 rounded-sm">
-                        <button 
+                        <button
                           onClick={() => onUpdateQuantity(item.id, -1, item.selectedVariants)}
                           className="p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                         >
                           <Minus size={14} />
                         </button>
                         <span className="w-10 text-center text-sm font-mono font-bold">{item.quantity}</span>
-                        <button 
+                        <button
                           onClick={() => onUpdateQuantity(item.id, 1, item.selectedVariants)}
                           className="p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                         >
@@ -5545,7 +5563,7 @@ const CartDrawer = ({
                   <span className="text-3xl font-mono font-bold">{formatPrice(cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0))}</span>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={onCheckout}
                 className="w-full py-5 bg-black text-white font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
@@ -5562,17 +5580,17 @@ const CartDrawer = ({
   </AnimatePresence>
 );
 
-const HybridCheckoutModal = ({ 
-  isOpen, 
-  onClose, 
+const HybridCheckoutModal = ({
+  isOpen,
+  onClose,
   cartItems,
   total,
   paymentStatus,
   onPaymentStatusChange,
   user,
   onOpenAuth
-}: { 
-  isOpen: boolean, 
+}: {
+  isOpen: boolean,
   onClose: () => void,
   cartItems: CartItem[],
   total: number,
@@ -5776,12 +5794,12 @@ const HybridCheckoutModal = ({
 
       // In a production environment, this would integrate with a payment gateway
       // For now, we save the order to Firestore to finalize the purchase
-      
+
       // Set to processing state for better UX
       onPaymentStatusChange('processing');
-      
+
       const savedOrder = await orderService.createOrder(orderData);
-      
+
       // Store order data in localStorage key grab_go_pending_order
       localStorage.setItem('grab_go_pending_order', JSON.stringify({
         ...orderData,
@@ -5814,7 +5832,7 @@ const HybridCheckoutModal = ({
       } else {
         throw new Error('Payment initialization failed: No redirect URL');
       }
-      
+
     } catch (err: any) {
       onPaymentStatusChange(null);
       setPaymentError(err.message || 'Failed to place order');
@@ -5829,10 +5847,10 @@ const HybridCheckoutModal = ({
         {isOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[150]" />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              exit={{ opacity: 0, scale: 0.9 }} 
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
               className="fixed inset-0 md:inset-20 bg-white text-black z-[160] flex flex-col items-center justify-center p-6 md:rounded-xl text-center"
             >
               <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-black border-t-transparent rounded-full animate-spin mb-6" />
@@ -5851,10 +5869,10 @@ const HybridCheckoutModal = ({
         {isOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-white/80 backdrop-blur-md z-[150]" />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              exit={{ opacity: 0, scale: 0.9 }} 
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
               className="fixed inset-0 md:inset-20 bg-white text-black z-[160] flex flex-col items-center justify-center p-6 md:rounded-xl text-center"
             >
               <div className="w-12 h-12 md:w-16 md:h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-6">
@@ -5862,12 +5880,12 @@ const HybridCheckoutModal = ({
               </div>
               <h2 className="text-xl md:text-2xl font-display font-bold uppercase tracking-tighter mb-4">Order Confirmed!</h2>
               <p className="text-xs md:text-sm text-gray-500 max-w-md mb-6 px-4">Thank you for your order. We've sent a confirmation email to {email}.</p>
-              
+
               {!user && (
                 <div className="mb-8 p-6 bg-gray-50 border border-gray-100 rounded-xl max-w-md mx-4 text-center">
                   <h4 className="text-xs font-bold uppercase tracking-widest mb-2">Save your details for next time?</h4>
                   <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-4">Create an account to track your orders and checkout faster.</p>
-                  <button 
+                  <button
                     onClick={() => {
                       onClose();
                       onOpenAuth();
@@ -5885,7 +5903,7 @@ const HybridCheckoutModal = ({
                 </div>
               )}
 
-              <button 
+              <button
                 onClick={() => {
                   window.history.replaceState({}, document.title, "/");
                   onClose();
@@ -5907,10 +5925,10 @@ const HybridCheckoutModal = ({
         {isOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[150]" />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              exit={{ opacity: 0, scale: 0.9 }} 
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
               className="fixed inset-0 md:inset-20 bg-white text-black z-[160] flex flex-col items-center justify-center p-6 md:rounded-xl text-center"
             >
               <div className="w-12 h-12 md:w-16 md:h-16 bg-red-500 text-white rounded-full flex items-center justify-center mb-6 shadow-lg shadow-red-500/20">
@@ -5919,7 +5937,7 @@ const HybridCheckoutModal = ({
               <h2 className="text-xl md:text-2xl font-display font-bold uppercase tracking-tighter mb-4">Payment Cancelled</h2>
               <p className="text-xs md:text-sm text-gray-500 max-w-md mb-6 px-4">The payment process was cancelled. No funds were deducted. You can try again or contact support if you're having issues.</p>
               <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto px-4">
-                <button 
+                <button
                   onClick={() => {
                     window.history.replaceState({}, document.title, "/");
                     onClose();
@@ -5928,7 +5946,7 @@ const HybridCheckoutModal = ({
                 >
                   Back to Shop
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     window.history.replaceState({}, document.title, "/");
                     onPaymentStatusChange(null);
@@ -5949,14 +5967,14 @@ const HybridCheckoutModal = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 bg-black/90 backdrop-blur-md z-[150]"
           />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
@@ -5972,7 +5990,7 @@ const HybridCheckoutModal = ({
 
               <div className="flex-grow overflow-y-auto">
                 <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-[1fr_400px] h-full">
-                  
+
                   {/* Left Column: Form */}
                   <div className="p-6 md:p-8 space-y-6 md:space-y-8 border-b md:border-b-0 md:border-r border-gray-100">
                     {/* Contact */}
@@ -5984,7 +6002,7 @@ const HybridCheckoutModal = ({
                         {!user && (
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] opacity-40 uppercase tracking-widest font-bold">Have an account?</span>
-                            <button 
+                            <button
                               onClick={onOpenAuth}
                               className="text-[10px] md:text-xs underline font-bold hover:text-gray-600 transition-colors uppercase tracking-widest"
                             >
@@ -5995,9 +6013,9 @@ const HybridCheckoutModal = ({
                       </div>
                       <div className="space-y-4">
                         <div className="relative">
-                          <input 
-                            type="email" 
-                            placeholder="Email Address" 
+                          <input
+                            type="email"
+                            placeholder="Email Address"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -6015,28 +6033,28 @@ const HybridCheckoutModal = ({
                       {/* Delivery */}
                     <section>
                       <h3 className="text-base md:text-lg font-bold tracking-tight mb-4">Delivery</h3>
-                      
+
                       {/* Delivery Method Toggle */}
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-0 border border-gray-200 rounded-md overflow-hidden mb-6">
-                        <button 
+                        <button
                           onClick={() => { setDeliveryMethod('standard'); setCountry('South Africa'); setSelectedPickupPoint(null); }}
                           className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold transition-all ${deliveryMethod === 'standard' ? 'bg-gray-50 shadow-inner' : 'bg-white hover:bg-gray-50'}`}
                         >
                           <Truck size={14} className="md:w-4 md:h-4" /> Standard
                         </button>
-                        <button 
+                        <button
                           onClick={() => { setDeliveryMethod('bobgo'); setCountry('South Africa'); setSelectedPickupPoint(null); }}
                           className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold transition-all ${deliveryMethod === 'bobgo' ? 'bg-gray-50 shadow-inner' : 'bg-white hover:bg-gray-50'}`}
                         >
                           <Package size={14} className="md:w-4 md:h-4" /> Bob Go
                         </button>
-                        <button 
+                        <button
                           onClick={() => { setDeliveryMethod('pickup'); setCountry('South Africa'); setSelectedPickupPoint(null); }}
                           className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold transition-all ${deliveryMethod === 'pickup' ? 'bg-gray-50 shadow-inner' : 'bg-white hover:bg-gray-50'}`}
                         >
                           <MapPin size={14} className="md:w-4 md:h-4" /> Pickup
                         </button>
-                        <button 
+                        <button
                           onClick={() => { setDeliveryMethod('international'); setSelectedPickupPoint(null); }}
                           className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold transition-all ${deliveryMethod === 'international' ? 'bg-gray-50 shadow-inner' : 'bg-white hover:bg-gray-50'}`}
                         >
@@ -6048,7 +6066,7 @@ const HybridCheckoutModal = ({
                       {deliveryMethod === 'standard' || deliveryMethod === 'international' ? (
                         <>
                           <div className="relative">
-                            <select 
+                            <select
                               value={country}
                               onChange={(e) => setCountry(e.target.value)}
                               disabled={deliveryMethod === 'standard'}
@@ -6065,84 +6083,84 @@ const HybridCheckoutModal = ({
                             </select>
                             <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 opacity-50" size={16} />
                           </div>
-                          
+
                           <div className="grid grid-cols-2 gap-4">
-                            <input 
-                              type="text" 
+                            <input
+                              type="text"
                               name="fname"
                               autoComplete="given-name"
-                              placeholder="First name" 
+                              placeholder="First name"
                               value={firstName}
                               onChange={(e) => setFirstName(e.target.value)}
                               required
-                              className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                              className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                             />
-                            <input 
-                              type="text" 
+                            <input
+                              type="text"
                               name="lname"
                               autoComplete="family-name"
-                              placeholder="Last name" 
+                              placeholder="Last name"
                               value={lastName}
                               onChange={(e) => setLastName(e.target.value)}
                               required
-                              className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                              className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                             />
                           </div>
 
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             name="address"
                             autoComplete="street-address"
-                            placeholder="Address" 
+                            placeholder="Address"
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
                             required
-                            className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                            className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                           />
-                          
+
                           <div className="grid grid-cols-3 gap-4">
-                            <input 
-                              type="text" 
+                            <input
+                              type="text"
                               name="city"
                               autoComplete="address-level2"
-                              placeholder="City" 
+                              placeholder="City"
                               value={city}
                               onChange={(e) => setCity(e.target.value)}
                               required
-                              className="col-span-1 w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                              className="col-span-1 w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                             />
-                            <input 
-                              type="text" 
+                            <input
+                              type="text"
                               name="province"
                               autoComplete="address-level1"
-                              placeholder="Province" 
+                              placeholder="Province"
                               value={province}
                               onChange={(e) => setProvince(e.target.value)}
                               required
-                              className="col-span-1 w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                              className="col-span-1 w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                             />
-                            <input 
-                              type="text" 
+                            <input
+                              type="text"
                               name="postal"
                               autoComplete="postal-code"
                               inputMode="numeric"
-                              placeholder="Postal code" 
+                              placeholder="Postal code"
                               value={postalCode}
                               onChange={(e) => setPostalCode(e.target.value)}
                               required
-                              className="col-span-1 w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                              className="col-span-1 w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                             />
                           </div>
 
-                          <input 
-                            type="tel" 
+                          <input
+                            type="tel"
                             name="tel"
                             autoComplete="tel"
-                            placeholder="Phone number" 
+                            placeholder="Phone number"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             required
-                            className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                            className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                           />
                             {/* Shipping Rate Selector — Standard & International */}
                           {(deliveryMethod === 'standard' || deliveryMethod === 'international') && (
@@ -6306,30 +6324,30 @@ const HybridCheckoutModal = ({
                             <p className="text-[10px] text-gray-500 uppercase tracking-widest">1104 Tugela Street, Klipfontein view, Midrand</p>
                           </div>
                           <div className="grid grid-cols-2 gap-4">
-                            <input 
-                              type="text" 
-                              placeholder="First name" 
+                            <input
+                              type="text"
+                              placeholder="First name"
                               value={firstName}
                               onChange={(e) => setFirstName(e.target.value)}
                               required
-                              className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                              className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                             />
-                            <input 
-                              type="text" 
-                              placeholder="Last name" 
+                            <input
+                              type="text"
+                              placeholder="Last name"
                               value={lastName}
                               onChange={(e) => setLastName(e.target.value)}
                               required
-                              className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                              className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                             />
                           </div>
-                          <input 
-                            type="tel" 
-                            placeholder="Phone number" 
+                          <input
+                            type="tel"
+                            placeholder="Phone number"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             required
-                            className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all" 
+                            className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                           />
                         </div>
                       )}
@@ -6340,7 +6358,7 @@ const HybridCheckoutModal = ({
                   <section>
                     <h3 className="text-lg md:text-xl font-bold tracking-tight mb-4">Payment Method</h3>
                     <div className="space-y-3">
-                      <div 
+                      <div
                         className="w-full p-4 border border-black bg-gray-50 rounded-md flex items-center justify-between transition-all"
                       >
                         <div className="flex items-center gap-3">
@@ -6353,7 +6371,7 @@ const HybridCheckoutModal = ({
                         </div>
                       </div>
                     </div>
-                    
+
                     <p className="text-[10px] text-gray-400 mt-4 text-center uppercase tracking-widest">All transactions are secure and encrypted.</p>
                     <p className="text-[10px] text-gray-400 mt-4 text-center uppercase tracking-widest">
                       By placing an order, you agree to our <Link to="/legal" className="underline font-bold text-black">Terms & Conditions</Link>.
@@ -6364,7 +6382,7 @@ const HybridCheckoutModal = ({
                     {paymentError && (
                       <p className="text-xs text-red-500 font-medium text-center">{paymentError}</p>
                     )}
-                    <button 
+                    <button
                       onClick={handleFinalize}
                       disabled={isPaying}
                       className="w-full py-5 md:py-6 bg-black text-white font-black uppercase tracking-[0.2em] rounded-md hover:opacity-90 transition-opacity flex items-center justify-center gap-3 disabled:opacity-50"
@@ -6414,9 +6432,9 @@ const HybridCheckoutModal = ({
                   </div>
 
                   <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Discount code" 
+                    <input
+                      type="text"
+                      placeholder="Discount code"
                       value={discountCode}
                       onChange={(e) => setDiscountCode(e.target.value)}
                       className="flex-grow border border-gray-200 rounded-md px-3 md:px-4 py-3 text-xs md:text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all bg-white"
@@ -6465,14 +6483,14 @@ const HybridCheckoutModal = ({
 };
 
 
-const EmailProductModal = ({ 
-  isOpen, 
-  onClose, 
-  product 
-}: { 
-  isOpen: boolean, 
-  onClose: () => void, 
-  product: Product | null 
+const EmailProductModal = ({
+  isOpen,
+  onClose,
+  product
+}: {
+  isOpen: boolean,
+  onClose: () => void,
+  product: Product | null
 }) => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
@@ -6505,14 +6523,14 @@ const EmailProductModal = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 bg-white/80 backdrop-blur-md z-[100]"
           />
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -6524,7 +6542,7 @@ const EmailProductModal = ({
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="flex gap-4 mb-6 p-4 bg-gray-50 border border-gray-100 text-black">
               <img src={product.image || undefined} alt={product.name} className="w-12 h-16 md:w-16 md:h-20 object-cover grayscale" />
               <div className="min-w-0">
@@ -6537,8 +6555,8 @@ const EmailProductModal = ({
             <form onSubmit={handleSend} className="space-y-6">
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-50 text-black">Customer Email</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -6547,15 +6565,15 @@ const EmailProductModal = ({
                 />
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={status === 'sending' || status === 'success'}
                 className={`w-full py-5 font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all ${
                   status === 'success' ? 'bg-emerald-500 text-white' : 'bg-black text-white hover:scale-[1.02]'
                 }`}
               >
-                {status === 'sending' ? <Loader2 className="animate-spin" size={20} /> : 
-                 status === 'success' ? <CheckCircle2 size={20} /> : 
+                {status === 'sending' ? <Loader2 className="animate-spin" size={20} /> :
+                 status === 'success' ? <CheckCircle2 size={20} /> :
                  <><Send size={18} /> Send Product Details</>}
               </button>
 
@@ -6583,21 +6601,21 @@ const EmailProductModal = ({
 
 const BrandBanner = ({ brand, banner, description, logo }: { brand: string, banner?: string, description?: string, logo?: string }) => (
   <div className="relative w-full h-[30vh] md:h-[40vh] mb-12 group overflow-visible">
-    <motion.div 
+    <motion.div
       initial={{ clipPath: 'inset(10% 0% 10% 0%)' }}
       whileInView={{ clipPath: 'inset(0% 0% 0% 0%)' }}
       transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
       className="absolute inset-0 bg-gray-50 overflow-hidden shadow-2xl skew-y-1 md:skew-y-2"
     >
       <div className="absolute inset-0 bg-black/40 z-10 group-hover:bg-black/30 transition-all duration-700" />
-      <img 
-        src={banner || `https://picsum.photos/seed/${brand}/1920/1080?grayscale`} 
-        alt={brand} 
+      <img
+        src={banner || `https://picsum.photos/seed/${brand}/1920/1080?grayscale`}
+        alt={brand}
         className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000 -skew-y-1 md:-skew-y-2"
         referrerPolicy="no-referrer"
       />
     </motion.div>
-    
+
     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -6607,16 +6625,16 @@ const BrandBanner = ({ brand, banner, description, logo }: { brand: string, bann
         className="flex flex-col items-center"
       >
         {logo ? (
-          <img 
-            src={logo} 
-            alt={brand} 
-            className="h-16 md:h-24 w-auto object-contain mb-8 brightness-0 invert drop-shadow-2xl" 
+          <img
+            src={logo}
+            alt={brand}
+            className="h-16 md:h-24 w-auto object-contain mb-8 brightness-0 invert drop-shadow-2xl"
             referrerPolicy="no-referrer"
           />
         ) : (
           <h2 className="text-4xl md:text-7xl font-display font-bold uppercase tracking-tighter text-white mb-6 leading-none drop-shadow-2xl">{brand}</h2>
         )}
-        
+
         {description && (
           <p className="max-w-xl text-white/80 text-[10px] md:text-xs uppercase tracking-widest font-bold leading-relaxed hidden md:block border-l border-white/20 pl-6">
             {description}
@@ -6627,28 +6645,28 @@ const BrandBanner = ({ brand, banner, description, logo }: { brand: string, bann
   </div>
 );
 
-const Breadcrumbs = ({ 
-  categories, 
-  currentCategory, 
+const Breadcrumbs = ({
+  categories,
+  currentCategory,
   product,
   onCategorySelect
-}: { 
-  categories: Category[], 
-  currentCategory?: string, 
+}: {
+  categories: Category[],
+  currentCategory?: string,
   product?: Product,
   onCategorySelect?: (name: string) => void
 }) => {
   const getPath = () => {
     const path: { name: string; id?: string }[] = [];
-    
+
     if (product) {
       // Find the most specific category for the product
       const productCatNames = product.categories || [];
       const productCats = categories.filter(c => productCatNames.includes(c.name));
-      
+
       // Prefer sub-categories (those with parentId)
       let targetCat = productCats.find(c => c.parentId) || productCats[0];
-      
+
       if (targetCat) {
         const buildPath = (cat: Category) => {
           path.unshift({ name: cat.name, id: cat.id });
@@ -6672,7 +6690,7 @@ const Breadcrumbs = ({
         buildPath(cat);
       }
     }
-    
+
     return path;
   };
 
@@ -6684,7 +6702,7 @@ const Breadcrumbs = ({
       {path.map((item, idx) => (
         <React.Fragment key={idx}>
           <ChevronRight size={8} className="flex-shrink-0" />
-          <Link 
+          <Link
             to={idx === path.length - 1 && !product ? '#' : `/category/${encodeURIComponent(item.name.toLowerCase())}`}
             onClick={() => onCategorySelect?.(item.name)}
             className={`hover:text-black transition-colors ${idx === path.length - 1 && !product ? 'text-black pointer-events-none' : ''}`}
@@ -6703,14 +6721,14 @@ const Breadcrumbs = ({
   );
 };
 
-const CategoryPanel = ({ 
-  categories, 
-  activeCategory, 
-  onSelect 
-}: { 
-  categories: Category[], 
-  activeCategory: string, 
-  onSelect: (c: string) => void 
+const CategoryPanel = ({
+  categories,
+  activeCategory,
+  onSelect
+}: {
+  categories: Category[],
+  activeCategory: string,
+  onSelect: (c: string) => void
 }) => {
   return null;
 };
@@ -6776,7 +6794,7 @@ const PromoGrid = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
         {promos.map((promo) => (
-          <motion.div 
+          <motion.div
             key={promo.id}
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -6788,9 +6806,9 @@ const PromoGrid = () => {
             <div className={`relative aspect-square md:aspect-[16/9] flex items-stretch overflow-hidden shadow-2xl ${promo.shape} transition-all duration-500 group-hover:shadow-black/20`}>
               {/* Image Side */}
               <div className="relative w-1/2 h-full bg-gray-100 overflow-hidden">
-                <img 
-                  src={promo.image} 
-                  alt={promo.label} 
+                <img
+                  src={promo.image}
+                  alt={promo.label}
                   className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110"
                   referrerPolicy="no-referrer"
                 />
@@ -6801,7 +6819,7 @@ const PromoGrid = () => {
               <div className={`w-1/2 h-full flex flex-col justify-center p-6 md:p-12 ${promo.color} text-white relative`}>
                 {/* Background Shapes (Image 2 style) */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-                
+
                 <div className="relative z-10">
                   {promo.brands && (
                     <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mb-3 text-white/60">{promo.brands}</p>
@@ -6825,7 +6843,7 @@ const PromoGrid = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-6 flex justify-between items-end border-b border-gray-100 pb-4">
               <div>
                 <h4 className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-black transition-colors group-hover:text-[#e34234]">{promo.label}</h4>
@@ -6842,20 +6860,20 @@ const PromoGrid = () => {
   );
 };
 
-const FilterDropdown = ({ 
-  label, 
-  value, 
-  options, 
-  onChange, 
+const FilterDropdown = ({
+  label,
+  value,
+  options,
+  onChange,
   onClear,
   displayValue,
   isOpen,
   onToggle
-}: { 
-  label: string, 
-  value: any, 
-  options: { value: any, label: string | React.ReactNode }[], 
-  onChange: (v: any) => void, 
+}: {
+  label: string,
+  value: any,
+  options: { value: any, label: string | React.ReactNode }[],
+  onChange: (v: any) => void,
   onClear: () => void,
   displayValue?: string | React.ReactNode,
   isOpen: boolean,
@@ -6865,7 +6883,7 @@ const FilterDropdown = ({
 
   return (
     <div className="relative">
-      <button 
+      <button
         onClick={(e) => { e.stopPropagation(); onToggle(); }}
         className={`group flex items-center justify-between gap-4 py-2 border-b-2 transition-all duration-300 w-full md:w-56 text-left ${isOpen ? 'border-[#e34234]' : 'border-gray-200 hover:border-black'}`}
       >
@@ -6893,7 +6911,7 @@ const FilterDropdown = ({
                   {displayValue || 'All'}
                 </span>
               </div>
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); onClear(); }}
                 className="px-5 py-2.5 border-2 border-black text-[9px] font-medium uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-all transform active:scale-95"
               >
@@ -6927,17 +6945,17 @@ const FilterDropdown = ({
   );
 };
 
-const HomePage = ({ 
-  filteredAndSortedProducts, 
-  filterCategory, 
-  setFilterCategory, 
+const HomePage = ({
+  filteredAndSortedProducts,
+  filterCategory,
+  setFilterCategory,
   maxPrice,
   setMaxPrice,
-  sortBy, 
-  setSortBy, 
-  scrollProducts, 
-  productScrollRef, 
-  addToCart, 
+  sortBy,
+  setSortBy,
+  scrollProducts,
+  productScrollRef,
+  addToCart,
   handleBuyNow,
   onEmailDetails,
   searchQuery,
@@ -7047,17 +7065,17 @@ const HomePage = ({
 
   return (
     <main className="bg-white text-black">
-      <SEO 
-        title="Home | Premium Streetwear & Lifestyle Store" 
+      <SEO
+        title="Home | Premium Streetwear & Lifestyle Store"
         description="Grab & Go is your destination for premium streetwear, sneakers, and lifestyle essentials in South Africa. Exclusive brands, fast delivery, and high-quality gear."
         schema={organizationSchema}
       />
       <Hero />
 
       {/* Category & Filter Bar */}
-      <motion.div 
+      <motion.div
         initial={false}
-        animate={{ 
+        animate={{
           y: isBarVisible ? 0 : -100,
           opacity: isBarVisible ? 1 : 0
         }}
@@ -7066,7 +7084,7 @@ const HomePage = ({
       >
         <div className="max-w-[1800px] mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div className="flex flex-wrap items-center gap-6 md:gap-12 w-full md:w-auto" onClick={e => e.stopPropagation()}>
-            <FilterDropdown 
+            <FilterDropdown
               label="Sort"
               value={sortBy}
               options={sortOptions}
@@ -7077,7 +7095,7 @@ const HomePage = ({
               onToggle={() => setActiveDropdown(activeDropdown === 'sort' ? null : 'sort')}
             />
 
-            <FilterDropdown 
+            <FilterDropdown
               label="Categories"
               value={filterCategory}
               options={catOptions}
@@ -7088,7 +7106,7 @@ const HomePage = ({
               onToggle={() => setActiveDropdown(activeDropdown === 'categories' ? null : 'categories')}
             />
 
-            <FilterDropdown 
+            <FilterDropdown
               label="Price"
               value={maxPrice}
               options={priceOptions}
@@ -7099,7 +7117,7 @@ const HomePage = ({
               onToggle={() => setActiveDropdown(activeDropdown === 'price' ? null : 'price')}
             />
           </div>
-          
+
           {searchQuery && (
             <div className="flex items-center gap-3">
               <Search size={12} className="opacity-30" />
@@ -7120,13 +7138,13 @@ const HomePage = ({
       {brandNames.map(brandName => {
         const brandProducts = filteredAndSortedProducts.filter(p => p.brand === brandName);
         const brandInfo = brands.find(b => b.name === brandName || b.id === brandProducts[0]?.brandId);
-        
+
         return (
           <section key={brandName} className="pb-8">
-            <BrandBanner 
-              brand={brandName} 
-              banner={brandInfo?.banner || brandProducts[0]?.brandBanner} 
-              description={brandInfo?.description || brandProducts[0]?.brandDescription} 
+            <BrandBanner
+              brand={brandName}
+              banner={brandInfo?.banner || brandProducts[0]?.brandBanner}
+              description={brandInfo?.description || brandProducts[0]?.brandDescription}
               logo={brandInfo?.logo || brandProducts[0]?.soldByLogo}
             />
             <div className="max-w-[1800px] mx-auto px-4 md:px-10">
@@ -7143,10 +7161,10 @@ const HomePage = ({
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-6">
                         {catProducts.map((product, idx) => (
-                          <ProductCard 
+                          <ProductCard
                             key={product.id ? `brand-${brandName}-${product.id}` : `brand-${brandName}-${idx}`}
-                            product={product} 
-                            onAddToCart={addToCart} 
+                            product={product}
+                            onAddToCart={addToCart}
                             onEmailDetails={onEmailDetails}
                             onBuyNow={handleBuyNow}
                             isWishlisted={wishlist.includes(product.id)}
@@ -7175,10 +7193,10 @@ const HomePage = ({
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10">
               {filteredAndSortedProducts.filter(p => !p.brand).map((product, idx) => (
-                <ProductCard 
+                <ProductCard
                   key={product.id ? `grid-${product.id}` : `grid-fallback-${idx}`}
-                  product={product} 
-                  onAddToCart={addToCart} 
+                  product={product}
+                  onAddToCart={addToCart}
                   onEmailDetails={onEmailDetails}
                   onBuyNow={handleBuyNow}
                   isWishlisted={wishlist.includes(product.id)}
@@ -7190,7 +7208,7 @@ const HomePage = ({
           </div>
         </section>
       )}
-      
+
       {filteredAndSortedProducts.length === 0 && (
         <div className="py-40 text-center">
           <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -7199,7 +7217,7 @@ const HomePage = ({
           <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 text-black">
             No products match your selection
           </p>
-          <button 
+          <button
             onClick={() => { setFilterCategory('All'); setSortBy('default'); }}
             className="mt-6 text-[10px] font-black uppercase tracking-widest underline underline-offset-4 hover:opacity-60 transition-opacity"
           >
@@ -7326,7 +7344,7 @@ const CategoryPage = ({
     return () => window.removeEventListener('click', close);
   }, [activeDropdown]);
 
-  useEffect(() => { 
+  useEffect(() => {
     window.scrollTo(0, 0);
     setMaxPrice(Infinity);
     setSortBy('default');
@@ -7522,9 +7540,9 @@ const CategoryPage = ({
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ProductPage = ({ 
-  products, 
-  addToCart, 
+const ProductPage = ({
+  products,
+  addToCart,
   handleBuyNow,
   onEmailDetails,
   searchQuery,
@@ -7533,9 +7551,9 @@ const ProductPage = ({
   isCartLoading = false,
   categories,
   brands
-}: { 
-  products: Product[], 
-  addToCart: (p: Product, v?: Record<string, string>, q?: number) => void, 
+}: {
+  products: Product[],
+  addToCart: (p: Product, v?: Record<string, string>, q?: number) => void,
   handleBuyNow: (p: Product, v?: Record<string, string>) => void,
   onEmailDetails: (p: Product) => void,
   searchQuery: string,
@@ -7604,7 +7622,7 @@ const ProductPage = ({
 
   return (
     <main>
-      <SEO 
+      <SEO
         title={product.name}
         description={product.description.substring(0, 160)}
         image={product.image}
@@ -7612,18 +7630,18 @@ const ProductPage = ({
         type="product"
         schema={[productSchema, breadcrumbSchema]}
       />
-      <ProductDetailContent 
-        product={product} 
-        allProducts={products} 
-        onAddToCart={addToCart} 
-        onBuyNow={handleBuyNow} 
-        onEmailDetails={onEmailDetails} 
-        searchQuery={searchQuery} 
-        wishlist={wishlist} 
-        onToggleWishlist={onToggleWishlist} 
-        isCartLoading={isCartLoading} 
-        categories={categories} 
-        brands={brands} 
+      <ProductDetailContent
+        product={product}
+        allProducts={products}
+        onAddToCart={addToCart}
+        onBuyNow={handleBuyNow}
+        onEmailDetails={onEmailDetails}
+        searchQuery={searchQuery}
+        wishlist={wishlist}
+        onToggleWishlist={onToggleWishlist}
+        isCartLoading={isCartLoading}
+        categories={categories}
+        brands={brands}
       />
     </main>
   );
@@ -7682,7 +7700,7 @@ function AppContent() {
           setUser(userData);
         } catch (error: any) {
           console.error("Error fetching user profile:", error);
-          
+
           let errorMessage = "Profile fetch failed";
           try {
             const parsed = JSON.parse(error.message);
@@ -7744,13 +7762,13 @@ function AppContent() {
             return [];
           })
         ]);
-        
+
         console.log("Products received:", productsData?.length || 0);
         console.log("Categories received:", categoriesData?.length || 0);
         console.log("Brands received:", brandsData?.length || 0);
         console.log("Testimonials received:", testimonialsData?.length || 0);
         console.log("Partners received:", partnersData?.length || 0);
-        
+
         setProducts(Array.isArray(productsData) ? productsData : []);
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         setBrands(Array.isArray(brandsData) ? brandsData : []);
@@ -7775,7 +7793,7 @@ function AppContent() {
       setOrders([]);
       return;
     }
-    
+
     const fetchOrders = async () => {
       try {
         const data = await orderService.getOrders();
@@ -7807,13 +7825,13 @@ function AppContent() {
     const newWishlist = isAdding
       ? [...wishlist, productId]
       : wishlist.filter(id => id !== productId);
-    
+
     setWishlist(newWishlist);
     try {
       await authService.updateWishlist(newWishlist);
-      setToast({ 
-        message: isAdding ? "Added to wishlist" : "Removed from wishlist", 
-        type: 'success' 
+      setToast({
+        message: isAdding ? "Added to wishlist" : "Removed from wishlist",
+        type: 'success'
       });
     } catch (error) {
       console.error("Failed to update wishlist:", error);
@@ -7860,7 +7878,7 @@ function AppContent() {
       setToast({ message: `Welcome back, ${userData.firstName}!`, type: 'success' });
     } catch (err: any) {
       console.error("Failed to fetch user after login:", err);
-      
+
       let message = "Failed to load user profile.";
       try {
         const parsed = JSON.parse(err.message);
@@ -7870,7 +7888,7 @@ function AppContent() {
       } catch (e) {
         message = err.message || message;
       }
-      
+
       setUser(null);
       setToast({ message, type: 'error' });
       console.error(message);
@@ -7994,7 +8012,7 @@ function AppContent() {
         setPaymentStatus('success');
         setIsCheckoutOpen(true);
         setToast({ message: '🎉 Order placed successfully!', type: 'success' });
-        
+
         // Clean up URL
         window.history.replaceState({}, '', '/');
       } catch (err) {
@@ -8025,13 +8043,13 @@ function AppContent() {
     const handleOpenMenu = () => setIsMenuOpen(true);
     const handleSelectProduct = (e: any) => setSelectedProduct(e.detail);
     const handleGrabToast = (e: any) => setToast({ message: e.detail.message, type: e.detail.type || 'error' });
-    
+
     window.addEventListener('open-orders', handleOpenOrders);
     window.addEventListener('open-cart', handleOpenCart);
     window.addEventListener('open-menu', handleOpenMenu);
     window.addEventListener('select-product', handleSelectProduct);
     window.addEventListener('grab-toast', handleGrabToast);
-    
+
     return () => {
       window.removeEventListener('open-orders', handleOpenOrders);
       window.removeEventListener('open-cart', handleOpenCart);
@@ -8047,7 +8065,7 @@ function AppContent() {
 
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];
-    
+
     if (filterCategory !== 'All') {
       result = result.filter(p => (p.categories || []).includes(filterCategory));
     }
@@ -8058,20 +8076,20 @@ function AppContent() {
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(p => 
-        p.name.toLowerCase().includes(query) || 
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(query) ||
         p.description.toLowerCase().includes(query) ||
         (p.categories || []).some(c => c.toLowerCase().includes(query)) ||
         p.brand?.toLowerCase().includes(query)
       );
     }
-    
+
     if (sortBy === 'price-low') {
       result.sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price-high') {
       result.sort((a, b) => b.price - a.price);
     }
-    
+
     return result;
   }, [products, sortBy, filterCategory, searchQuery]);
 
@@ -8099,14 +8117,14 @@ function AppContent() {
     setIsCartLoading(true);
     setCart(prev => {
       const variantKey = selectedVariants ? JSON.stringify(selectedVariants) : '';
-      const existing = prev.find(item => 
+      const existing = prev.find(item =>
         item.id === product.id && JSON.stringify(item.selectedVariants || {}) === JSON.stringify(selectedVariants || {})
       );
 
       if (existing) {
-        return prev.map(item => 
+        return prev.map(item =>
           (item.id === product.id && JSON.stringify(item.selectedVariants || {}) === JSON.stringify(selectedVariants || {}))
-            ? { ...item, quantity: item.quantity + quantity } 
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
@@ -8157,11 +8175,12 @@ function AppContent() {
     <div className="min-h-screen bg-white">
       <SystemAlertBanner user={user} />
       <WelcomePopup />
-      
-      
-      <Header 
-        cartCount={cartCount} 
-        onOpenCart={() => setIsCartOpen(true)} 
+
+
+      <Header
+        cartCount={cartCount}
+        cartTotal={cartTotal}
+        onOpenCart={() => setIsCartOpen(true)}
         onOpenWishlist={() => setIsWishlistOpen(true)}
         onOpenOrders={() => setIsOrdersOpen(true)}
         onOpenProducts={() => setIsProductsOpen(true)}
@@ -8175,7 +8194,7 @@ function AppContent() {
         onOpenHowToOrder={() => setIsHowToOrderOpen(true)}
         categories={categories}
       />
-      
+
       <Routes>
         <Route path="/" element={
           isDataLoading ? (
@@ -8190,7 +8209,7 @@ function AppContent() {
               </div>
             </div>
           ) : (
-            <HomePage 
+            <HomePage
               filteredAndSortedProducts={filteredAndSortedProducts}
               filterCategory={filterCategory}
               setFilterCategory={setFilterCategory}
@@ -8218,7 +8237,7 @@ function AppContent() {
           )
         } />
         <Route path="/product/:id" element={
-          <ProductPage 
+          <ProductPage
             products={products}
             addToCart={addToCart}
             handleBuyNow={handleBuyNow}
@@ -8279,17 +8298,17 @@ function AppContent() {
 
       </Routes>
 
-      <EmailProductModal 
-        isOpen={isSendingEmail} 
+      <EmailProductModal
+        isOpen={isSendingEmail}
         onClose={() => {
           setIsSendingEmail(false);
           setSelectedProduct(null);
-        }} 
-        product={selectedProduct} 
+        }}
+        product={selectedProduct}
       />
 
       <Footer categories={categories} />
-      <Sidebar 
+      <Sidebar
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         onOpenOrders={() => setIsOrdersOpen(true)}
@@ -8298,7 +8317,7 @@ function AppContent() {
         onLogout={handleLogout}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenProducts={() => setIsProductsOpen(true)}
-        cartCount={cart.length}
+        cartCount={cartCount}
         user={user}
         partners={partners}
         searchQuery={searchQuery}
@@ -8310,17 +8329,17 @@ function AppContent() {
 
       <AnimatePresence>
         {toast && (
-          <Toast 
-            message={toast.message} 
-            type={toast.type} 
-            onClose={() => setToast(null)} 
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
           />
         )}
       </AnimatePresence>
 
-      <CartDrawer 
-        isOpen={isCartOpen} 
-        onClose={() => setIsCartOpen(false)} 
+      <CartDrawer
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
         cartItems={cart}
         onUpdateQuantity={updateQuantity}
         onRemove={removeFromCart}
@@ -8328,8 +8347,8 @@ function AppContent() {
         isLoading={isCartLoading}
       />
 
-      <HybridCheckoutModal 
-        isOpen={isCheckoutOpen} 
+      <HybridCheckoutModal
+        isOpen={isCheckoutOpen}
         onClose={() => {
           setIsCheckoutOpen(false);
           setPaymentStatus(null);
@@ -8343,15 +8362,15 @@ function AppContent() {
         onOpenAuth={() => setIsAuthOpen(true)}
       />
 
-      <OrdersDrawer 
-        isOpen={isOrdersOpen} 
+      <OrdersDrawer
+        isOpen={isOrdersOpen}
         onClose={() => setIsOrdersOpen(false)}
         orders={orders}
         user={user}
         onUpdateOrder={handleUpdateOrder}
       />
 
-      <WishlistDrawer 
+      <WishlistDrawer
         isOpen={isWishlistOpen}
         onClose={() => setIsWishlistOpen(false)}
         wishlist={wishlist}
@@ -8360,7 +8379,7 @@ function AppContent() {
         onAddToCart={(p) => addToCart(p)}
       />
 
-      <ProductManagementDrawer 
+      <ProductManagementDrawer
         isOpen={isProductsOpen}
         onClose={() => setIsProductsOpen(false)}
         products={products}
@@ -8388,7 +8407,7 @@ function AppContent() {
         onDelete={handleDeleteBrand}
       />
 
-      <AuthModal 
+      <AuthModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         onSuccess={handleLoginSuccess}
@@ -8397,7 +8416,7 @@ function AppContent() {
       <AnimatePresence>
         {isHowToOrderOpen && (
           <>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
