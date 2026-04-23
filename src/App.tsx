@@ -1184,6 +1184,13 @@ const Sidebar = ({
 
 const Hero = () => {
   const navigate = useNavigate();
+  const heroSlides = [
+    { tagline: "New Season", title: "Street Ready", sub: "Premium streetwear essentials \u2014 built for the culture" },
+    { tagline: "Just Dropped", title: "Fresh Kicks", sub: "Latest sneakers from the brands you love" },
+    { tagline: "Limited Edition", title: "Stand Out", sub: "Exclusive drops you won\u0027t find anywhere else" },
+  ];
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slide = heroSlides[currentSlide];
   return (
   <section className="relative h-[70vh] md:h-[88vh] flex items-end overflow-hidden bg-black">
     <div className="absolute inset-0 z-0">
