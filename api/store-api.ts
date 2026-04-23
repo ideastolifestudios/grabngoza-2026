@@ -1,25 +1,28 @@
 /**
  * api/store-api.ts — Consolidated Store API
  *
- * Order service is lazy-imported to prevent Redis bundling crash.
- * All other services remain as static imports (they worked before).
+ * ALL service imports are LAZY — function always loads.
+ * Individual service failures are caught and returned as 500s.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { setCors } from './_lib/cors';
-import { success, error } from './_lib/response';
-import * as customerService from './_services/customer.service';
-import * as productService from './_services/product.service';
-import * as shippingService from './_services/shipping.service';
-import { listZohoItems, getMappings } from './_services/zohoInventoryService';
 
 function log(r: string, a: string, m: string, d?: any) {
   console.log(`[${new Date().toISOString()}] [${r}/${a}] ${m}`, d ? JSON.stringify(d) : '');
 }
 
-// Lazy-import order service (avoids Redis bundling issues at module load)
-async function getOrderService() {
-  return await import('./_services/order.service');
+function setCors(res: VercelResponse) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
+function success(res: VercelResponse, data: any, status = 200) {
+  return res.status(status).json({ ok: true, ...data });
+}
+
+function error(res: VercelResponse, status: number, message: string, details?: string) {
+  return res.status(status).json({ ok: false, error: message, details: details || undefined });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -39,13 +42,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     switch (resource) {
 
-      // ══════════════════════════════════════════════════════════
-      // ORDERS (payment-gated)
-      // ══════════════════════════════════════════════════════════
+      // ══════════ ORDERS ══════════
       case 'orders': {
-        const orderService = await getOrderService();
+        const orderService = await import('./_services/order.service');
         switch (action) {
-
           case 'list': {
             const status = req.query.status as string | undefined;
             const limit = Math.min(Number(req.query.limit) || 50, 200);
@@ -59,65 +59,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
           case 'stats':
             return success(res, { stats: await orderService.getStats() });
-
           case 'create': {
             if (req.method !== 'POST') return error(res, 405, 'POST required');
             const errs = orderService.validateCreateOrder(req.body || {});
             if (errs.length > 0)
               return res.status(422).json({ success: false, error: 'Validation failed', validationErrors: errs });
-
             const order = await orderService.createOrder(req.body);
-            log('orders', 'create', `${order.id} created (pending payment)`, { total: order.total });
+            log('orders', 'create', `${order.id} created`, { total: order.total });
             return success(res, { order, message: 'Order created. Proceed to payment.' }, 201);
           }
-
           case 'confirm': {
             if (req.method !== 'POST') return error(res, 405, 'POST required');
             const { orderId, paymentRef } = req.body || {};
             if (!orderId) return error(res, 400, 'Missing orderId');
-
             const result = await orderService.confirmOrder(orderId, paymentRef);
             if (!result) return error(res, 404, `Order '${orderId}' not found`);
-
-            log('orders', 'confirm', `${orderId} confirmed`, {
-              crm: result.crm.success, zoho: result.zoho.success,
-            });
             return success(res, { order: result.order, zoho: result.zoho, crm: result.crm });
           }
-
           case 'simulate-payment': {
             if (req.method !== 'POST') return error(res, 405, 'POST required');
             const { orderId: simId, paymentStatus: simStatus } = req.body || {};
-            if (!simId)    return error(res, 400, 'Missing orderId');
+            if (!simId) return error(res, 400, 'Missing orderId');
             if (!['success', 'failed'].includes(simStatus))
               return error(res, 400, 'paymentStatus must be "success" or "failed"');
-
             if (simStatus === 'failed') {
-              const cancelled = await orderService.cancelOrder(simId, 'Simulated payment failure');
+              const cancelled = await orderService.cancelOrder(simId, 'Simulated failure');
               if (!cancelled) return error(res, 404, `Order '${simId}' not found`);
-              log('orders', 'simulate-payment', `${simId} → FAILED (simulated)`);
-              return success(res, {
-                order: cancelled,
-                payment: { status: 'failed', simulated: true },
-                message: 'Order cancelled — payment failed (simulated)',
-              });
+              return success(res, { order: cancelled, payment: { status: 'failed', simulated: true } });
             }
-
             const result = await orderService.confirmOrder(simId, 'SIM-' + Date.now());
             if (!result) return error(res, 404, `Order '${simId}' not found`);
-            log('orders', 'simulate-payment', `${simId} → SUCCESS (simulated)`);
-            return success(res, {
-              order: result.order,
-              zoho: result.zoho,
-              crm: result.crm,
-              payment: { status: 'success', simulated: true },
-            });
+            return success(res, { order: result.order, zoho: result.zoho, crm: result.crm, payment: { status: 'success', simulated: true } });
           }
-
           case 'update': {
             if (req.method !== 'POST' || !id) return error(res, 400, 'POST + id required');
-            const body = req.body || {};
-            delete body.id; delete body.createdAt;
+            const body = req.body || {}; delete body.id; delete body.createdAt;
             const updated = await orderService.updateOrder(id, body);
             if (!updated) return error(res, 404, `Order '${id}' not found`);
             return success(res, { order: updated });
@@ -134,6 +110,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // ══════════ CUSTOMERS ══════════
       case 'customers': {
+        const customerService = await import('./_services/customer.service');
         switch (action) {
           case 'list': return success(res, { customers: await customerService.listCustomers(Number(req.query.limit) || 50) });
           case 'get': {
@@ -168,6 +145,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // ══════════ PRODUCTS ══════════
       case 'products': {
+        const productService = await import('./_services/product.service');
         switch (action) {
           case 'list': return success(res, { products: await productService.listProducts(Number(req.query.limit) || 100, req.query.category as string) });
           case 'get': {
@@ -201,6 +179,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // ══════════ SHIPPING ══════════
       case 'shipping': {
+        const shippingService = await import('./_services/shipping.service');
         switch (action) {
           case 'calculate': {
             if (req.method !== 'POST') return error(res, 405, 'POST required');
@@ -209,13 +188,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return success(res, { shipping: shippingService.calculateShipping(req.body) });
           }
           case 'rates': return success(res, { rates: shippingService.getAllRates(Number(req.query.total) || 0), free_shipping_threshold: 1000 });
-          case 'health': return success(res, { status: 'ok' });
+          case 'health': return success(res, { status: 'ok', ts: new Date().toISOString() });
           default: return error(res, 400, `Unknown shipping action: '${action}'`);
         }
       }
 
       // ══════════ ZOHO ══════════
       case 'zoho': {
+        const { listZohoItems, getMappings } = await import('./_services/zohoInventoryService');
         if (action === 'items') return success(res, { ...(await listZohoItems(Number(req.query.page) || 1)), currentMappings: getMappings() });
         return error(res, 400, `Unknown zoho action: '${action}'`);
       }
@@ -223,7 +203,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       default: return error(res, 400, `Unknown resource: '${resource}'`);
     }
   } catch (err: any) {
-    console.error(`[store-api/${resource}/${action}] ERROR:`, err);
+    console.error(`[store-api/${resource}/${action}] ERROR:`, err.message, err.stack?.slice(0, 500));
     return error(res, 500, 'Internal server error', err.message);
   } finally {
     log(resource, action, `Done ${Date.now() - start}ms`);

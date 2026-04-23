@@ -1,15 +1,11 @@
 /**
  * src/services/zohoService.ts
- * Zoho integration with full resilience — failures never crash the order flow.
- * Replace the stub implementations with your existing Zoho API calls.
+ * Zoho integration — wired to real API services.
+ * Failures never crash the order flow.
  */
 
 import { log } from './logger';
 
-/**
- * Safe wrapper for any Zoho operation.
- * Returns null on failure instead of throwing.
- */
 async function zohoSafe<T>(label: string, fn: () => Promise<T>): Promise<T | null> {
   try {
     const result = await fn();
@@ -20,53 +16,70 @@ async function zohoSafe<T>(label: string, fn: () => Promise<T>): Promise<T | nul
       error: err?.message,
       status: err?.response?.status,
     });
-    return null; // Never propagate — caller decides if null matters
+    return null;
   }
 }
 
-/**
- * Syncs a confirmed order to Zoho Inventory + CRM in parallel.
- * Both operations are isolated — one failure does not affect the other.
- */
 export async function syncOrderToZoho(
   orderId: string,
   order: Record<string, unknown>
 ): Promise<void> {
   log('info', 'zoho.sync.start', { orderId });
 
+  // These are server-side API services — they use zohoAuth.ts for OAuth
+  // If running in a context without Zoho env vars, they fail gracefully
   const [inventoryResult, crmResult] = await Promise.allSettled([
-    zohoSafe('inventory.create_salesorder', () => createZohoSalesOrder(orderId, order)),
-    zohoSafe('crm.upsert_contact',          () => upsertZohoCRMContact(order)),
+    zohoSafe('inventory.create_salesorder', async () => {
+      const { zohoApiFetch, ZOHO_REGION } = await import('../../api/_lib/zohoAuth');
+      const BASE = `https://inventory.zoho.${ZOHO_REGION}/api/v1`;
+      const ORG_ID = process.env.ZOHO_INVENTORY_ORG_ID || '';
+      if (!ORG_ID) throw new Error('ZOHO_INVENTORY_ORG_ID not set');
+
+      const items = (order.items as any[]) || [];
+      const payload = {
+        date: new Date().toISOString().split('T')[0],
+        salesorder_number: orderId,
+        reference_number: orderId,
+        customer_name: `${order.firstName || ''} ${order.lastName || ''}`.trim() || 'Customer',
+        line_items: items.map((item: any) => ({
+          name: item.name || 'Item',
+          rate: item.price || 0,
+          quantity: item.quantity || 1,
+        })),
+        notes: `Grab & Go order ${orderId}. ${order.email || ''}`,
+        shipping_charge: (order.shippingCost as number) || 0,
+      };
+
+      const result = await zohoApiFetch(BASE, '/salesorders', {
+        method: 'POST', body: payload, params: { organization_id: ORG_ID },
+      });
+
+      return { zohoOrderId: result.data?.salesorder?.salesorder_id || 'unknown' };
+    }),
+
+    zohoSafe('crm.upsert_contact', async () => {
+      const { zohoApiFetch, ZOHO_REGION } = await import('../../api/_lib/zohoAuth');
+      const BASE = `https://www.zohoapis.${ZOHO_REGION}/crm/v2`;
+
+      const contactData = {
+        Email: order.email || '',
+        First_Name: order.firstName || '',
+        Last_Name: order.lastName || 'Unknown',
+        Phone: order.phone || '',
+        Description: `Grab & Go customer. Order: ${orderId}`,
+        Lead_Source: 'Website',
+      };
+
+      const result = await zohoApiFetch(BASE, '/Contacts', {
+        method: 'POST', body: { data: [contactData] },
+      });
+
+      return { contactId: result.data?.data?.[0]?.details?.id || 'unknown' };
+    }),
   ]);
 
   const inventoryOk = inventoryResult.status === 'fulfilled' && inventoryResult.value !== null;
-  const crmOk       = crmResult.status === 'fulfilled'       && crmResult.value !== null;
+  const crmOk = crmResult.status === 'fulfilled' && crmResult.value !== null;
 
   log('info', 'zoho.sync.complete', { orderId, inventoryOk, crmOk });
-}
-
-// ---------------------------------------------------------------------------
-// Replace these stubs with your actual Zoho API implementations
-// ---------------------------------------------------------------------------
-
-async function createZohoSalesOrder(
-  orderId: string,
-  order: Record<string, unknown>
-): Promise<{ zohoOrderId: string }> {
-  // TODO: replace with your existing Zoho Inventory API call
-  // Example:
-  //   const token = await getZohoAccessToken();
-  //   const res = await fetch(`https://inventory.zoho.com/api/v1/salesorders`, {
-  //     method: 'POST',
-  //     headers: { Authorization: `Zoho-oauthtoken ${token}`, ... },
-  //     body: JSON.stringify({ /* mapped order */ })
-  //   });
-  throw new Error('createZohoSalesOrder: not yet implemented — replace this stub');
-}
-
-async function upsertZohoCRMContact(
-  order: Record<string, unknown>
-): Promise<{ contactId: string }> {
-  // TODO: replace with your existing Zoho CRM API call
-  throw new Error('upsertZohoCRMContact: not yet implemented — replace this stub');
 }
