@@ -71,7 +71,7 @@ service cloud.firestore {
         isValidEmail(data.email) &&
         data.items is list && data.items.size() > 0 &&
         data.total is number && data.total >= 0 &&
-        data.status in ['pending', 'preparing', 'ready', 'completed', 'cancelled', 'returned'] &&
+        data.status in ['payment_pending', 'pending', 'preparing', 'ready', 'completed', 'cancelled', 'returned'] &&
         isValidTimestamp(data.date);
     }
 
@@ -121,8 +121,21 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
+      // Authenticated users can read their own orders; admins can read all
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || resource.data.email == request.auth.token.email || isAdmin());
-      allow create: if isAuthenticated() && isValidOrder(request.resource.data) && (request.resource.data.userId == request.auth.uid || isAdmin());
+
+      // Order creation: allow both authenticated AND guest checkout
+      // Guest: must pass validation, must NOT claim a userId
+      // Authenticated: must pass validation, userId must match their auth
+      allow create: if isValidOrder(request.resource.data) && (
+        // Guest checkout (no auth required, but no userId allowed)
+        (request.auth == null && !('userId' in request.resource.data))
+        ||
+        // Authenticated checkout
+        (isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin()))
+      );
+
+      // Only admins can update orders (status changes, shipment info, etc.)
       allow update: if isAdmin();
     }
   }

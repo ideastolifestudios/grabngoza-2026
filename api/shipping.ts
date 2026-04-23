@@ -28,6 +28,25 @@ const ORIGIN = {
   code:           '2196',
 };
 
+
+// ─── Fallback rates when ShipLogic returns empty ────────────────────────────
+const FALLBACK_RATES = [
+  {
+    id: 'fallback-standard',
+    amount: 99,
+    serviceLevel: { name: 'Standard Shipping', description: '3–5 business days', code: 'STD' },
+    courier: 'Grab & Go Logistics',
+    transitDays: 4,
+  },
+  {
+    id: 'fallback-express',
+    amount: 149,
+    serviceLevel: { name: 'Express Shipping', description: '1–2 business days', code: 'EXP' },
+    courier: 'Grab & Go Logistics',
+    transitDays: 2,
+  },
+];
+
 // ─── Helpers ───────────────────────────────────────────────────────────────
 function slHeaders() {
   return {
@@ -116,8 +135,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!slRes.ok) {
           const text = await slRes.text();
           console.error('[shipping/rates] ShipLogic error:', slRes.status, text);
-          // Return empty rates gracefully — frontend handles this
-          return res.status(200).json({ rates: [] });
+          // Return fallback rates when ShipLogic fails
+          return res.status(200).json({ rates: FALLBACK_RATES });
         }
 
         const data = await slRes.json();
@@ -136,7 +155,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           transitDays: r.transit_days || 3,
         }));
 
-        return res.status(200).json({ rates });
+        // If ShipLogic returned no rates, use fallback
+        return res.status(200).json({ rates: rates.length > 0 ? rates : FALLBACK_RATES });
       }
 
       // ── Bob Go pickup points ───────────────────────────────────────────
