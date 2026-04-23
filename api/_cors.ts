@@ -2,8 +2,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const ALLOWED_ORIGINS = [
+  'https://shopgrabngo.co.za',
+  'https://www.shopgrabngo.co.za',
   'https://grabngoza-2026.vercel.app',
-  'https://www.grabandgo.co.za',  // add your custom domain if you have one
+  'https://www.grabandgo.co.za',
 ];
 
 // Also allow localhost in development

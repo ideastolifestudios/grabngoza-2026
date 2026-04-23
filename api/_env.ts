@@ -55,4 +55,4 @@ export const STUDIO_WHATSAPP = optionalEnv('STUDIO_WHATSAPP', '+27000000000');
 // ─── Base URL ──────────────────────────────────────────────────────────────
 export const BASE_URL = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
-  : optionalEnv('BASE_URL', 'https://grabngoza-2026.vercel.app');
+  : optionalEnv('BASE_URL', 'https://shopgrabngo.co.za');
