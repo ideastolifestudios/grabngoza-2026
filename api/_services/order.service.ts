@@ -1,29 +1,27 @@
 /**
  * api/_services/order.service.ts — Redis-backed persistent order storage
  *
- * UPGRADED from in-memory Map to Upstash Redis.
- * Orders survive cold starts and scale across function instances.
- *
- * Zoho imports are LAZY (inside functions) so they never crash callers
- * that only need read operations (like api/orders.ts via store-api).
+ * ZERO top-level side effects. Redis + Zoho imported lazily inside functions.
+ * Module load NEVER crashes, even if @upstash/redis or env vars are missing.
  */
 
 import type { Order } from '../_lib/types';
-import { Redis } from '@upstash/redis';
 
 const ORDER_PREFIX    = 'order:';
 const ORDER_LIST      = 'orders:list';
 const PAYMENT_PREFIX  = 'order:payment:';
 const COUNTER_KEY     = 'order:counter';
 
-// ─── Lazy Redis ─────────────────────────────────────────────────
+// ─── Lazy Redis (dynamic import — no top-level crash) ───────────
 
-let _redis: Redis | null = null;
-function getRedis(): Redis {
+let _redis: any = null;
+
+async function getRedis(): Promise<any> {
   if (!_redis) {
     const url = process.env.UPSTASH_REDIS_REST_URL;
     const token = process.env.UPSTASH_REDIS_REST_TOKEN;
     if (!url || !token) throw new Error('UPSTASH_REDIS_REST_URL / TOKEN not set');
+    const { Redis } = await import('@upstash/redis');
     _redis = new Redis({ url, token });
   }
   return _redis;
@@ -32,7 +30,7 @@ function getRedis(): Redis {
 // ─── Helpers ────────────────────────────────────────────────────
 
 async function saveOrder(order: Order): Promise<void> {
-  const redis = getRedis();
+  const redis = await getRedis();
   const ts = new Date(order.createdAt).getTime();
   await Promise.all([
     redis.set(`${ORDER_PREFIX}${order.id}`, JSON.stringify(order)),
@@ -44,7 +42,7 @@ async function saveOrder(order: Order): Promise<void> {
 }
 
 async function nextId(): Promise<string> {
-  const redis = getRedis();
+  const redis = await getRedis();
   const counter = await redis.incr(COUNTER_KEY);
   return `ORD-${counter}`;
 }
@@ -81,13 +79,13 @@ export interface ConfirmResult {
   crm: any;
 }
 
-// ─── Duplicate check by paymentId ───────────────────────────────
+// ─── Duplicate check ────────────────────────────────────────────
 
 export async function getOrderByPaymentId(paymentId: string): Promise<Order | null> {
-  const redis = getRedis();
-  const orderId = await redis.get<string>(`${PAYMENT_PREFIX}${paymentId}`);
+  const redis = await getRedis();
+  const orderId = await redis.get(`${PAYMENT_PREFIX}${paymentId}`);
   if (!orderId) return null;
-  return getOrder(orderId);
+  return getOrder(orderId as string);
 }
 
 // ─── 1. CREATE ──────────────────────────────────────────────────
@@ -120,7 +118,7 @@ export async function createOrder(data: any): Promise<Order> {
   return order;
 }
 
-// ─── 2. CONFIRM (payment success → Zoho sync) ──────────────────
+// ─── 2. CONFIRM ─────────────────────────────────────────────────
 
 export async function confirmOrder(orderId: string, paymentRef?: string): Promise<ConfirmResult | null> {
   const order = await getOrder(orderId);
@@ -146,7 +144,6 @@ export async function confirmOrder(orderId: string, paymentRef?: string): Promis
 
   console.log(`[order.service] Order ${orderId} confirmed → syncing to Zoho`);
 
-  // ── Lazy-import Zoho services (don't crash if Zoho isn't configured) ──
   let crmResult: any = { success: false, error: 'not attempted' };
   let zohoResult: any = { success: false, error: 'not attempted' };
 
@@ -170,9 +167,7 @@ export async function confirmOrder(orderId: string, paymentRef?: string): Promis
     zohoResult = { success: false, error: err.message };
   }
 
-  if (crmResult.zohoContactId) {
-    order.zohoCrmContactId = crmResult.zohoContactId;
-  }
+  if (crmResult.zohoContactId) order.zohoCrmContactId = crmResult.zohoContactId;
 
   await saveOrder(order);
   return { order, zoho: zohoResult, crm: crmResult };
@@ -202,7 +197,7 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<Ord
 // ─── READ / LIST / STATS ────────────────────────────────────────
 
 export async function listOrders(limit = 50, status?: string): Promise<Order[]> {
-  const redis = getRedis();
+  const redis = await getRedis();
   const ids: string[] = await redis.zrange(ORDER_LIST, 0, -1, { rev: true });
   if (!ids || ids.length === 0) return [];
 
@@ -225,7 +220,7 @@ export async function listOrders(limit = 50, status?: string): Promise<Order[]> 
 }
 
 export async function getOrder(id: string): Promise<Order | null> {
-  const redis = getRedis();
+  const redis = await getRedis();
   const data = await redis.get(`${ORDER_PREFIX}${id}`);
   if (!data) return null;
   try { return typeof data === 'string' ? JSON.parse(data as string) : data as Order; }
@@ -241,7 +236,7 @@ export async function updateOrder(id: string, data: Partial<Order>): Promise<Ord
 }
 
 export async function deleteOrder(id: string): Promise<boolean> {
-  const redis = getRedis();
+  const redis = await getRedis();
   const exists = await redis.exists(`${ORDER_PREFIX}${id}`);
   if (!exists) return false;
   await Promise.all([
