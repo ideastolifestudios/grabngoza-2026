@@ -8270,9 +8270,6 @@ function AppContent() {
         <Route path="*" element={<NotFoundPage />} />
         <Route path="/orders/:orderId/return" element={<ReturnRequestPage />} />
 
-// Order detail — show the button conditionally
-  <Link to={`/orders/${order.id}/return`}>Request a return</Link>
-)}
       </Routes>
 
       <EmailProductModal 
