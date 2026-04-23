@@ -5,14 +5,23 @@ import { getApps, initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import type { Customer } from '../_lib/types';
 
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId:   process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey:  (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-    }),
-  });
+try {
+  if (!getApps().length) {
+    const saKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    if (saKey) {
+      initializeApp({ credential: cert(JSON.parse(saKey)), projectId: process.env.FIREBASE_PROJECT_ID });
+    } else {
+      initializeApp({
+        credential: cert({
+          projectId:   process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey:  (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+        }),
+      });
+    }
+  }
+} catch (e: any) {
+  console.error('[firebase-init]', e.message);
 }
 const db = getFirestore();
 const col = db.collection('customers');
