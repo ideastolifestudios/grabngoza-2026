@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { db } from '../firebase';
 import { useAuth } from "../hooks/useAuth";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
