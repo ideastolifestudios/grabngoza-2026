@@ -24,6 +24,14 @@ try {
   console.error('[firebase-init]', e.message);
 }
 const db = getFirestore();
+const col = db.collection('customers');        }),
+      });
+    }
+  }
+} catch (e: any) {
+  console.error('[firebase-init]', e.message);
+}
+const db = getFirestore();
 const col = db.collection('customers');
 
 export async function listCustomers(limit = 50): Promise<Customer[]> {
