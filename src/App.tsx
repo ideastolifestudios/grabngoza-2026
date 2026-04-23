@@ -591,6 +591,49 @@ const HowToOrderDrawer = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
 };
 
 
+
+const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
+  const location = useLocation();
+  const topCats = categories.filter(c => !c.parentId);
+  
+  if (topCats.length === 0) return null;
+
+  return (
+    <div className="bg-white border-b border-gray-100 sticky top-[52px] md:top-[60px] z-40">
+      <div className="max-w-[1800px] mx-auto">
+        <nav className="flex items-center gap-1 px-4 md:px-10 py-2 overflow-x-auto scrollbar-hide">
+          <Link
+            to="/"
+            className={`flex-shrink-0 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-full ${
+              location.pathname === '/' 
+                ? 'bg-black text-white' 
+                : 'text-gray-400 hover:text-black hover:bg-black/5'
+            }`}
+          >
+            All
+          </Link>
+          {topCats.slice(0, 10).map(cat => {
+            const isActive = location.pathname === `/category/${encodeURIComponent(cat.name.toLowerCase())}`;
+            return (
+              <Link
+                key={cat.id}
+                to={`/category/${encodeURIComponent(cat.name.toLowerCase())}`}
+                className={`flex-shrink-0 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-full whitespace-nowrap ${
+                  isActive 
+                    ? 'bg-black text-white' 
+                    : 'text-gray-400 hover:text-black hover:bg-black/5'
+                }`}
+              >
+                {cat.name}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
+  );
+};
+
 const FreeDeliveryBar = ({ cartTotal }: { cartTotal: number }) => {
   const FREE_DELIVERY_THRESHOLD = 650;
   const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - cartTotal);
@@ -735,9 +778,9 @@ const Header = ({
           </Link>
         </div>
 
-        {/* Centre: Desktop Category Nav */}
+        {/* Centre: Desktop Category Nav — Moved to CategoryBar below */}
         {topCats.length > 0 && (
-          <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center" onMouseLeave={handleNavLeave}>
+          <nav className="hidden items-center gap-1 flex-1 justify-center" onMouseLeave={handleNavLeave}>
             <Link
               to="/"
               className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-colors rounded-full ${location.pathname === '/' ? 'text-black bg-black/5' : 'text-gray-400 hover:text-black hover:bg-black/5'}`}
@@ -6648,9 +6691,10 @@ const PromoGrid = () => {
       category: "Clothing & More",
       image: "https://picsum.photos/seed/promo1/1000/1000",
       label: "Big Deal Energy",
-      ends: "Ends 18 Apr (Sat)",
+      ends: "Limited Time",
       color: "bg-[#e34234]",
-      shape: "rounded-tl-[100px] rounded-bl-[40px]" // Top-left heavy curve
+      shape: "rounded-tl-[100px] rounded-bl-[40px]",
+      link: "/category/men"
     },
     {
       id: 2,
@@ -6659,9 +6703,10 @@ const PromoGrid = () => {
       category: "Sneakers & More",
       image: "https://picsum.photos/seed/promo2/1000/1000",
       label: "Sneaker Scoop",
-      ends: "Ends 18 Apr (Sat)",
+      ends: "Limited Time",
       color: "bg-black",
-      shape: "rounded-tr-[100px] rounded-br-[40px]" // Top-right heavy curve
+      shape: "rounded-tr-[100px] rounded-br-[40px]",
+      link: "/category/sneakers"
     },
     {
       id: 3,
@@ -6669,19 +6714,21 @@ const PromoGrid = () => {
       title: "Up To 60% Off",
       image: "https://picsum.photos/seed/promo3/1000/1000",
       label: "Vans & Superga",
-      ends: "Ends 17 Apr (Fri)",
+      ends: "Limited Time",
       color: "bg-black",
-      shape: "rounded-bl-[100px]" // Bottom-left heavy curve
+      shape: "rounded-bl-[100px]",
+      link: "/category/women"
     },
     {
       id: 4,
-      brands: "Studio Label & Co",
-      title: "Up To 60% Off",
+      brands: "New Season",
+      title: "Fresh Drops",
       image: "https://picsum.photos/seed/promo4/1000/1000",
-      label: "Superbalist & Co",
-      ends: "Ends 17 Apr (Fri)",
+      label: "Just Landed",
+      ends: "Shop Now",
       color: "bg-[#e34234]",
-      shape: "rounded-br-[100px] rounded-tl-[40px]" // Bottom-right + top-left accent
+      shape: "rounded-br-[100px] rounded-tl-[40px]",
+      link: "/"
     }
   ];
 
@@ -6703,6 +6750,7 @@ const PromoGrid = () => {
             viewport={{ once: true }}
             whileHover={{ y: -5 }}
             className="group cursor-pointer"
+            onClick={() => promo.link && window.location.assign(promo.link)}
           >
             <div className={`relative aspect-square md:aspect-[16/9] flex items-stretch overflow-hidden shadow-2xl ${promo.shape} transition-all duration-500 group-hover:shadow-black/20`}>
               {/* Image Side */}
@@ -8077,6 +8125,7 @@ function AppContent() {
       <SystemAlertBanner user={user} />
       <WelcomePopup />
       <FreeDeliveryBar cartTotal={cart.reduce((s: number, i: CartItem) => s + i.price * i.quantity, 0)} />
+      <CategoryBar categories={categories} />
       
       <Header 
         cartCount={cartCount} 

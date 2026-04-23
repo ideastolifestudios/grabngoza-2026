@@ -155,3 +155,8 @@ a[class*="bg-black"]:hover {
     transition: transform 0.1s ease;
   }
 }
+
+/*  Scrollbar Hide (CategoryBar)  */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
