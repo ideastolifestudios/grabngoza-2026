@@ -335,7 +335,7 @@ const WelcomePopup = () => {
     if (!hasSeenPopup) {
       const timer = setTimeout(() => {
         setIsOpen(true);
-      }, 3000); // Show after 3 seconds
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, []);
@@ -369,61 +369,98 @@ const WelcomePopup = () => {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
           />
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-4xl bg-white overflow-hidden flex flex-col md:flex-row shadow-2xl"
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-full max-w-lg bg-white overflow-hidden shadow-2xl rounded-sm"
           >
+            {/* Top accent line */}
+            <div className="h-1 w-full bg-black" />
+
             <button 
               onClick={handleClose}
               className="absolute top-4 right-4 z-10 p-2 hover:bg-black/5 rounded-full transition-colors text-black"
             >
-              <X size={24} />
+              <X size={20} />
             </button>
 
-            <div className="w-full md:w-1/2 h-64 md:h-auto relative">
-              <img 
-                src="https://picsum.photos/seed/welcome/800/1000?grayscale" 
-                alt="Welcome" 
-                className="w-full h-full object-cover grayscale"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-black/10" />
-            </div>
-
-            <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-center text-center">
-              <h2 className="text-xl md:text-2xl font-semibold uppercase tracking-tight mb-4 text-black">
-                Be the First to Know.
+            <div className="p-8 md:p-10">
+              {/* Warm greeting */}
+              <h2 className="text-3xl md:text-4xl font-black tracking-tight text-black mb-2">
+                What's good! 
               </h2>
-              <p className="text-xs md:text-sm text-gray-500 mb-6 leading-relaxed">
-                Every time you buy, you become a humanitarian. Stay in the loop for exclusive drops, impact updates, and <span className="font-semibold text-black">10% off your first purchase</span>.
+              <p className="text-sm text-gray-500 leading-relaxed mb-8">
+                Welcome to Grab & Go — premium streetwear, curated drops, and a community 
+                that moves different. We're glad you're here.
               </p>
 
+              {/* Perks grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Sparkles size={14} className="text-black" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-black uppercase tracking-wider">Exclusive Drops</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">First access to limited releases.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Truck size={14} className="text-black" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-black uppercase tracking-wider">Free Delivery</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">On orders over R650.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Tag size={14} className="text-black" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-black uppercase tracking-wider">10% Off First Order</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">A welcome gift from us to you.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <ShieldCheck size={14} className="text-black" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-black uppercase tracking-wider">Secure Checkout</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Powered by Yoco. Safe & easy.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Email form */}
               <form onSubmit={handleClaim} className="space-y-3">
                 <input 
                   type="email" 
-                  placeholder="Email address" 
+                  placeholder="Drop your email..." 
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-gray-100 rounded-sm px-4 py-3 text-xs focus:ring-1 focus:ring-black focus:outline-none transition-all"
+                  className="w-full border border-gray-200 px-4 py-3.5 text-sm focus:ring-2 focus:ring-black focus:border-black focus:outline-none transition-all rounded-sm"
                 />
                 <button 
                   type="submit"
-                  className="w-full py-3 bg-black text-white text-[10px] font-semibold uppercase tracking-widest rounded-sm hover:opacity-90 transition-opacity"
+                  className="w-full py-3.5 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-gray-900 transition-colors"
                 >
-                  Claim discount
+                  Start Shopping
                 </button>
               </form>
 
               <button 
                 onClick={handleClose}
-                className="mt-4 text-[10px] font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
+                className="mt-4 w-full text-center text-[10px] font-semibold uppercase tracking-widest text-gray-400 hover:text-black transition-colors py-2"
               >
-                No, thanks
+                Just browsing for now
               </button>
 
-              <p className="mt-6 text-[8px] text-gray-400 leading-tight uppercase tracking-wider">
+              <p className="mt-4 text-[8px] text-gray-300 leading-tight text-center">
                 You are signing up to receive communications via email and can unsubscribe at any time.
               </p>
             </div>
@@ -550,6 +587,40 @@ const HowToOrderDrawer = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
         </div>
       </div>
     </motion.div>
+  );
+};
+
+
+const FreeDeliveryBar = ({ cartTotal }: { cartTotal: number }) => {
+  const FREE_DELIVERY_THRESHOLD = 650;
+  const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - cartTotal);
+  const progress = Math.min(100, (cartTotal / FREE_DELIVERY_THRESHOLD) * 100);
+
+  return (
+    <div className="bg-[#fafafa] border-b border-gray-100 py-2 px-4 text-center">
+      <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
+        <Truck size={14} className="text-black flex-shrink-0" />
+        {remaining > 0 ? (
+          <p className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-gray-600">
+            Spend <span className="text-black font-black">R{remaining.toFixed(0)}</span> more for{' '}
+            <span className="text-black font-black">Free Delivery</span>
+          </p>
+        ) : (
+          <p className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-emerald-600">
+            <CheckCircle2 size={12} className="inline mr-1" />
+            You qualify for <span className="font-black">Free Delivery!</span>
+          </p>
+        )}
+      </div>
+      <div className="max-w-xs mx-auto mt-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+        <motion.div
+          className="h-full bg-black rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        />
+      </div>
+    </div>
   );
 };
 
@@ -1924,7 +1995,8 @@ const PartnershipHub = ({ partners }: { partners: Partner[] }) => (
   </section>
 );
 
-const Footer = ({ categories = [] }: { categories?: Category[] }) => {  const [subscribed, setSubscribed] = useState(false);
+const Footer = ({ categories = [] }: { categories?: Category[] }) => {
+  const [subscribed, setSubscribed] = useState(false);
   const [email, setEmail] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1932,14 +2004,11 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {  const [s
     if (email) {
       try {
         await supportService.subscribeNewsletter(email);
-        
-        // Send Newsletter Confirmation Email
         try {
           await emailService.sendNewsletterConfirmation(email);
         } catch (emailErr) {
           console.error("Failed to send newsletter email:", emailErr);
         }
-
         setSubscribed(true);
         setEmail('');
         setTimeout(() => setSubscribed(false), 5000);
@@ -1950,141 +2019,121 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {  const [s
   };
 
   return (
-    <footer className="bg-white py-8 md:py-12 px-6 md:px-8 border-t border-gray-50">
-      <div className="max-w-7xl mx-auto mb-8 md:mb-10">
-        <div className="max-w-md">
-          <h3 className="text-lg md:text-xl font-semibold uppercase tracking-tight mb-2 text-black">Join the Grab & Go Fam</h3>
-          <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider mb-6">Get 10% off your first drop. No spam, just fresh gear.</p>
-          
-          <AnimatePresence mode="wait">
-            {subscribed ? (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="flex items-center gap-2 text-emerald-500 py-2"
-              >
-                <CheckCircle2 size={16} />
-                <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Welcome to the family! Check your inbox soon.</span>
-              </motion.div>
-            ) : (
-              <form className="flex gap-2" onSubmit={handleSubmit}>
-                <input 
-                  type="email" 
-                  placeholder="Email address" 
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-grow border-b border-gray-100 py-2 text-[10px] md:text-xs focus:border-black outline-none transition-all uppercase tracking-wider font-semibold"
-                />
-                <button 
-                  type="submit"
-                  className="px-4 py-2 bg-black text-white text-[9px] font-semibold uppercase tracking-wider hover:opacity-90 transition-opacity"
+    <footer className="bg-[#fafafa]">
+      {/* Newsletter Section — Warm & Strategic */}
+      <div className="bg-black text-white py-12 md:py-16 px-6 md:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+          <div className="max-w-lg">
+            <h3 className="text-xl md:text-2xl font-black tracking-tight mb-2">Join the Grab & Go Fam</h3>
+            <p className="text-xs text-white/50 leading-relaxed">
+              Be the first to know about exclusive drops, restocks, and member-only offers. 
+              No spam — just the freshest gear, delivered to your inbox.
+            </p>
+          </div>
+          <div className="w-full md:w-auto md:min-w-[360px]">
+            <AnimatePresence mode="wait">
+              {subscribed ? (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex items-center gap-2 text-emerald-400 py-3"
                 >
-                  Join
-                </button>
-              </form>
-            )}
-          </AnimatePresence>
+                  <CheckCircle2 size={16} />
+                  <span className="text-xs font-bold uppercase tracking-widest">Welcome to the fam! Check your inbox.</span>
+                </motion.div>
+              ) : (
+                <form className="flex gap-2" onSubmit={handleSubmit}>
+                  <input 
+                    type="email" 
+                    placeholder="Your email..." 
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-grow bg-white/10 border border-white/20 rounded-sm px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/50 transition-colors"
+                  />
+                  <button 
+                    type="submit"
+                    className="px-6 py-3 bg-white text-black text-xs font-bold uppercase tracking-wider rounded-sm hover:bg-gray-100 transition-colors flex-shrink-0"
+                  >
+                    Join
+                  </button>
+                </form>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
-    <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-8 md:gap-12">
-      <div className="space-y-4 md:space-y-6">
-        <Logo className="h-10 md:h-14" dark />
-        <div className="flex gap-4">
-          <motion.a 
-            whileHover={{ scale: 1.1 }}
-            href="https://www.instagram.com/grabngoza" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-black opacity-30 hover:opacity-100 transition-opacity"
-          >
-            <Instagram size={16} />
-          </motion.a>
-          <motion.a 
-            whileHover={{ scale: 1.1 }}
-            href="https://www.facebook.com/grabngoza" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-black opacity-30 hover:opacity-100 transition-opacity"
-          >
-            <Facebook size={16} />
-          </motion.a>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-12 w-full md:w-auto">
-        <div className="space-y-3 md:space-y-4">
-          <h4 className="text-[9px] font-semibold uppercase tracking-wider opacity-20 text-black">Shop</h4>
-          <ul className="space-y-1 md:space-y-2 text-[9px] font-semibold uppercase tracking-wider text-black">
-            <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
-              <Link to="/">All Products</Link>
-            </li>
-            {(categories.length > 0
-              ? categories.filter(c => !c.parentId).slice(0, 6)
-              : [{ id: 'new', name: 'New Arrivals' }, { id: 'men', name: 'Men' }, { id: 'women', name: 'Women' }]
-            ).map(cat => (
-              <li key={cat.id} className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
-                <Link to={`/category/${encodeURIComponent(cat.name.toLowerCase())}`}>{cat.name}</Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-        
-        <div className="space-y-3 md:space-y-4">
-          <h4 className="text-[9px] font-semibold uppercase tracking-wider opacity-20 text-black">Support</h4>
-          <ul className="space-y-1 md:space-y-2 text-[9px] font-semibold uppercase tracking-wider text-black">
-            <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
-                            <button onClick={() => window.dispatchEvent(new Event('open-how-to-order'))} className="hover:text-black transition-colors cursor-pointer">How to Order</button>
-              <Link to="/track-order">Track Order</Link>
-            </li>
-            <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
-              <Link to="/shipping">Shipping</Link>
-            </li>
-            <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
-              <Link to="/helpdesk">Help Desk</Link>
-            </li>
-            <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
-              <Link to="/faq">FAQ</Link>
-            </li>
-            <li className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">
-              <Link to="/refunds">Returns</Link>
-            </li>
-          </ul>
+      {/* Footer Content — No Shopping Nav */}
+      <div className="max-w-7xl mx-auto py-10 md:py-14 px-6 md:px-8">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-10 md:gap-16">
+          
+          {/* Brand + Socials */}
+          <div className="space-y-4 md:space-y-5">
+            <Logo className="h-10 md:h-12" dark />
+            <p className="text-xs text-gray-400 max-w-xs leading-relaxed">
+              Premium streetwear, curated drops, and a community that moves different. Based in South Africa, shipping nationwide.
+            </p>
+            <div className="flex gap-3">
+              <motion.a 
+                whileHover={{ scale: 1.1 }}
+                href="https://www.instagram.com/grabngoza" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center text-black hover:bg-black hover:text-white transition-all"
+              >
+                <Instagram size={14} />
+              </motion.a>
+              <motion.a 
+                whileHover={{ scale: 1.1 }}
+                href="https://www.facebook.com/grabngoza" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center text-black hover:bg-black hover:text-white transition-all"
+              >
+                <Facebook size={14} />
+              </motion.a>
+            </div>
+          </div>
+
+          {/* Support + Legal columns */}
+          <div className="grid grid-cols-2 gap-8 md:gap-16">
+            <div className="space-y-3">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-black">Support</h4>
+              <ul className="space-y-2 text-xs text-gray-400">
+                <li><button onClick={() => window.dispatchEvent(new Event('open-how-to-order'))} className="hover:text-black transition-colors cursor-pointer">How to Order</button></li>
+                <li><Link to="/track-order" className="hover:text-black transition-colors">Track Order</Link></li>
+                <li><Link to="/shipping" className="hover:text-black transition-colors">Shipping Info</Link></li>
+                <li><Link to="/helpdesk" className="hover:text-black transition-colors">Help Desk</Link></li>
+                <li><Link to="/faq" className="hover:text-black transition-colors">FAQ</Link></li>
+                <li><Link to="/refunds" className="hover:text-black transition-colors">Returns & Refunds</Link></li>
+              </ul>
+            </div>
+            <div className="space-y-3">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-black">Company</h4>
+              <ul className="space-y-2 text-xs text-gray-400">
+                <li><Link to="/story" className="hover:text-black transition-colors">Our Story</Link></li>
+                <li><Link to="/legal" className="hover:text-black transition-colors">Privacy Policy</Link></li>
+                <li><Link to="/legal" className="hover:text-black transition-colors">Terms of Service</Link></li>
+              </ul>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-3 md:space-y-4 hidden md:block text-black">
-          <h4 className="text-[9px] font-semibold uppercase tracking-wider opacity-20">Legal</h4>
-          <ul className="space-y-1 md:space-y-2 text-[9px] font-semibold uppercase tracking-wider">
-            <li>
-              <Link to="/story" className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">Our Story</Link>
-            </li>
-            <li>
-              <Link to="/legal" className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">Privacy</Link>
-            </li>
-            <li>
-              <Link to="/legal" className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">Terms</Link>
-            </li>
-            <li>
-              <Link to="/refunds" className="opacity-30 hover:opacity-100 cursor-pointer transition-opacity">Refunds</Link>
-            </li>
-          </ul>
+        {/* Bottom bar */}
+        <div className="mt-10 md:mt-14 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-gray-100 pt-6">
+          <p className="text-[10px] text-gray-300 uppercase tracking-widest">&copy; 2026 Grab & Go. All rights reserved.</p>
+          <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6">
+            <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-4 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-5 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-5 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-5 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-4 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+          </div>
         </div>
       </div>
-    </div>
-    
-      <div className="max-w-7xl mx-auto mt-12 md:mt-20 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8 border-t border-gray-50 pt-6 md:pt-8">
-        <p className="text-[7px] font-semibold uppercase tracking-widest opacity-20 text-black">© 2026 Grab & Go</p>
-        <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6 transition-all duration-500">
-          <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-3 object-contain opacity-40 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-          <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-4 object-contain opacity-40 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-          <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-4 object-contain opacity-40 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-          <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-4 object-contain opacity-40 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-          <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-3 object-contain opacity-40 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-        </div>
-      </div>
-  </footer>
+    </footer>
   );
 };
 
@@ -8027,6 +8076,7 @@ function AppContent() {
     <div className="min-h-screen bg-white">
       <SystemAlertBanner user={user} />
       <WelcomePopup />
+      <FreeDeliveryBar cartTotal={cart.reduce((s: number, i: CartItem) => s + i.price * i.quantity, 0)} />
       
       <Header 
         cartCount={cartCount} 
