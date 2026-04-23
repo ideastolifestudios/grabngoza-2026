@@ -599,15 +599,15 @@ const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
   if (topCats.length === 0) return null;
 
   return (
-    <div className="bg-white border-b border-gray-100 sticky top-[52px] md:top-[60px] z-40">
+    <div className="bg-white border-b border-gray-100">
       <div className="max-w-[1800px] mx-auto">
         <nav className="flex items-center gap-1 px-4 md:px-10 py-2 overflow-x-auto scrollbar-hide">
           <Link
             to="/"
             className={`flex-shrink-0 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-full ${
               location.pathname === '/' 
-                ? 'bg-black text-white' 
-                : 'text-gray-400 hover:text-black hover:bg-black/5'
+                ? 'bg-[#06402B] text-white' 
+                : 'text-gray-400 hover:text-[#06402B] hover:bg-[#06402B]/5'
             }`}
           >
             All
@@ -642,7 +642,7 @@ const FreeDeliveryBar = ({ cartTotal }: { cartTotal: number }) => {
   return (
     <div className="bg-[#fafafa] border-b border-gray-100 py-2 px-4 text-center">
       <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
-        <Truck size={14} className="text-black flex-shrink-0" />
+        <Truck size={14} className="text-[#06402B] flex-shrink-0" />
         {remaining > 0 ? (
           <p className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-gray-600">
             Spend <span className="text-black font-black">R{remaining.toFixed(0)}</span> more for{' '}
@@ -657,7 +657,7 @@ const FreeDeliveryBar = ({ cartTotal }: { cartTotal: number }) => {
       </div>
       <div className="max-w-xs mx-auto mt-1 h-1 bg-gray-200 rounded-full overflow-hidden">
         <motion.div
-          className="h-full bg-black rounded-full"
+          className="h-full bg-[#06402B] rounded-full"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -894,7 +894,7 @@ const Header = ({
 
           <button 
             onClick={onOpenCart} 
-            className="relative p-2 hover:bg-black/5 rounded-full transition-colors text-black active:scale-90" 
+            className="relative p-2 hover:bg-black/5 rounded-full transition-colors text-black active:scale-90 overflow-visible" 
             title="Cart"
           >
             <ShoppingCart size={22} />
@@ -902,7 +902,7 @@ const Header = ({
               <motion.span 
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-[#e34234] text-white text-[8px] font-bold rounded-full flex items-center justify-center px-1 shadow-[0_2px_10px_rgba(227,66,52,0.4)]"
+                className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-[#FFA500] text-white text-[8px] font-bold rounded-full flex items-center justify-center px-1 shadow-[0_2px_10px_rgba(227,66,52,0.4)]"
               >
                 {cartCount}
               </motion.span>
@@ -928,6 +928,8 @@ const Header = ({
           )}
         </div>
       </div>
+      <FreeDeliveryBar cartTotal={cartCount} />
+      <CategoryBar categories={categories} />
     </motion.header>
   );
 };
@@ -1075,7 +1077,7 @@ const Sidebar = ({
                 {!user ? (
                   <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 space-y-6">
                     <p className="text-xs text-gray-500 font-medium leading-relaxed">
-                      Become a Studio Member for the best products and inspiration.
+                      Become a G&G Member for the best products and inspiration.
                     </p>
                     <div className="flex items-center gap-3">
                       <button 
@@ -1104,7 +1106,7 @@ const Sidebar = ({
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{user.firstName} {user.lastName}</span>
-                        <span className="text-[8px] opacity-40 uppercase tracking-widest mt-1">Studio Member</span>
+                        <span className="text-[8px] opacity-40 uppercase tracking-widest mt-1">G&G Member</span>
                       </div>
                     </div>
                     <button 
@@ -1151,7 +1153,7 @@ const Sidebar = ({
                       <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
                         <Settings size={20} />
                       </div>
-                      <span>Manage Studio</span>
+                      <span>My Account</span>
                     </button>
                     <Link to="/admin" onClick={onClose} className="flex items-center gap-4 text-sm font-bold text-gray-500 hover:text-black transition-all" style={{ textDecoration: 'none' }}>
                       <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center">
@@ -1249,7 +1251,7 @@ const PAYMENT_LOGOS = {
   visa: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882816/3840px-Visa_Inc._logo__282005_E2_80_932014_29.svg_l80vse.png",
   mastercard: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882837/mastercard_r4oo9o.svg",
   applepay: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882908/Apple_Pay_logo_mrpbqh.svg",
-  googlepay: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882943/HArtbyi53u0jnqhnnxkQnMx9dHOERNcprZyKnInd2nrfM7Wd9ivMNTiz7IJP6-mSpwk_iiugzg.png",
+  googlepay: "https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg",
   yoco: "https://res.cloudinary.com/dggitwduo/image/upload/v1775882870/yoco_ekl84d.svg"
 };
 
@@ -1511,7 +1513,7 @@ const ProductDetailContent = ({
               </div>
 
               <h1 className="text-xl md:text-2xl font-bold uppercase tracking-tighter mb-1 leading-tight">{product.name}</h1>
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-30 mb-6">{product.brand || 'Studio Born'}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-30 mb-6">{product.brand || 'Grab & Go'}</p>
               
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-xl font-bold">R {product.price.toFixed(2)}</span>
@@ -1677,7 +1679,7 @@ const ProductDetailContent = ({
                     />
                   ) : (
                     <span className="font-black text-sm uppercase tracking-[0.3em] text-black">
-                      {product.soldBy || product.brand || 'The Studio'}
+                      {product.soldBy || product.brand || 'Grab & Go'}
                     </span>
                   )}
                 </div>
@@ -1996,7 +1998,7 @@ const PartnershipHub = ({ partners }: { partners: Partner[] }) => (
             The Culture<br />Collective
           </h2>
           <p className="text-sm md:text-xl font-medium opacity-70 mb-8 md:mb-12 leading-relaxed text-black max-w-lg">
-            We don't just sell products; we build bridges. Collaborating with micro-influencers and cultural events to bring you exclusive studio-born drops.
+            We don't just sell products; we build bridges. Collaborating with micro-influencers and cultural events to bring you exclusive limited edition drops.
           </p>
           <div className="space-y-3 md:space-y-4">
             {(partners.length > 0 ? partners : []).map(p => (
@@ -2067,11 +2069,22 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
       <div className="bg-black text-white py-12 md:py-16 px-6 md:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div className="max-w-lg">
+            <Logo className="h-8 mb-4 brightness-0 invert" />
             <h3 className="text-xl md:text-2xl font-black tracking-tight mb-2">Join the Grab & Go Fam</h3>
             <p className="text-xs text-white/50 leading-relaxed">
               Be the first to know about exclusive drops, restocks, and member-only offers. 
               No spam — just the freshest gear, delivered to your inbox.
             </p>
+            <div className="flex items-center gap-4 mt-4">
+              <div className="flex items-center gap-2">
+                <Sparkles size={12} className="text-[#FFA500]" />
+                <span className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Exclusive Drops</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Truck size={12} className="text-[#FFA500]" />
+                <span className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Free Delivery 650+</span>
+              </div>
+            </div>
           </div>
           <div className="w-full md:w-auto md:min-w-[360px]">
             <AnimatePresence mode="wait">
@@ -2097,7 +2110,7 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
                   />
                   <button 
                     type="submit"
-                    className="px-6 py-3 bg-white text-black text-xs font-bold uppercase tracking-wider rounded-sm hover:bg-gray-100 transition-colors flex-shrink-0"
+                    className="px-6 py-3 bg-[#FFA500] text-black text-xs font-bold uppercase tracking-wider rounded-sm hover:bg-[#e69500] transition-colors flex-shrink-0"
                   >
                     Join
                   </button>
@@ -3189,7 +3202,7 @@ const NotFoundPage = () => {
       >
         <h1 className="text-6xl md:text-8xl font-semibold leading-none tracking-tight opacity-5">404</h1>
         <div className="space-y-2">
-          <h2 className="text-xl md:text-2xl font-semibold uppercase tracking-tight">Lost in the Studio?</h2>
+          <h2 className="text-xl md:text-2xl font-semibold uppercase tracking-tight">Need Help?</h2>
           <p className="text-[10px] font-mono uppercase tracking-wider opacity-30">The page you're looking for doesn't exist or has been moved.</p>
         </div>
         <button 
@@ -3325,7 +3338,7 @@ const AuthModal = ({
             <div className="p-8 md:p-10 text-center space-y-6">
               <div className="space-y-2">
                 <Logo className="h-8 mx-auto" dark />
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-30">Studio Access</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-30">Account Access</p>
               </div>
 
               {showForgotPassword ? (
@@ -3370,13 +3383,14 @@ const AuthModal = ({
               ) : (
                 <>
                   <div className="space-y-2">
+                    <Logo className="h-8 mb-2" dark />
                     <h2 className="text-xl font-display font-bold uppercase tracking-tighter">
                       {mode === 'login' ? 'Welcome Back' : 'Create Account'}
                     </h2>
                     <p className="text-xs text-gray-500 leading-relaxed">
                       {mode === 'login' 
-                        ? 'Sign in to track your orders and manage your studio profile.' 
-                        : 'Join the studio to save your details and track your orders.'}
+                        ? 'Sign in to track your orders and manage your account.' 
+                        : 'Join Grab & Go to save your details and track your orders.'}
                     </p>
                   </div>
 
@@ -6647,7 +6661,7 @@ const Breadcrumbs = ({
 
   return (
     <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-black/30 mb-6 overflow-x-auto no-scrollbar whitespace-nowrap">
-      <Link to="/" className="hover:text-black transition-colors">Studio</Link>
+      <Link to="/" className="hover:text-black transition-colors">Home</Link>
       {path.map((item, idx) => (
         <React.Fragment key={idx}>
           <ChevronRight size={8} className="flex-shrink-0" />
@@ -8124,8 +8138,7 @@ function AppContent() {
     <div className="min-h-screen bg-white">
       <SystemAlertBanner user={user} />
       <WelcomePopup />
-      <FreeDeliveryBar cartTotal={cart.reduce((s: number, i: CartItem) => s + i.price * i.quantity, 0)} />
-      <CategoryBar categories={categories} />
+      
       
       <Header 
         cartCount={cartCount} 
@@ -8148,9 +8161,13 @@ function AppContent() {
         <Route path="/" element={
           isDataLoading ? (
             <div className="min-h-screen flex items-center justify-center bg-white">
-              <div className="flex flex-col items-center gap-4">
-                <Loader2 className="animate-spin text-black" size={48} />
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30">Loading Studio...</p>
+              <div className="flex flex-col items-center gap-6">
+                <Logo className="h-12 md:h-16" dark />
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-[#06402B] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2 h-2 bg-[#06402B] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2 h-2 bg-[#FFA500] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
               </div>
             </div>
           ) : (
