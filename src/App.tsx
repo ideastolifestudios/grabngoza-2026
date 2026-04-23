@@ -8271,7 +8271,6 @@ function AppContent() {
         <Route path="/orders/:orderId/return" element={<ReturnRequestPage />} />
 
 // Order detail — show the button conditionally
-{isOrderReturnable(order) && (
   <Link to={`/orders/${order.id}/return`}>Request a return</Link>
 )}
       </Routes>
