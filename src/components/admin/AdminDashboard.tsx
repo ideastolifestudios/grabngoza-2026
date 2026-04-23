@@ -157,15 +157,15 @@ export default function AdminDashboard() {
 
     for (const order of pending) {
       try {
-        const res = await fetch(`${API_BASE}/api/shipping?action=create`, {
+        const res = await fetch(`${API_BASE}/api/create-shipment`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order, serviceLevel: 'standard' }),
+          body: JSON.stringify({ orderId: order.id, order }),
         });
         const data = await res.json();
         console.log('Dispatch response for', order.id, data);
 
-        if (data.success) {
+        if (data.ok || data.success) {
           const shipId = data.shipmentId || data.raw?.id || null;
           const trackRef = data.trackingRef || data.raw?.custom_tracking_reference || `GNG-${order.id}`;
           const trackNum = data.trackingNumber || data.raw?.tracking_reference || '';
