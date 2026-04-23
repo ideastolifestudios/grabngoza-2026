@@ -8256,6 +8256,12 @@ function AppContent() {
         <Route path="/story" element={<OurStoryPage />} />
         <Route path="/admin/system" element={user?.role === 'admin' ? <SystemHealthDashboard /> : <NotFoundPage />} />
         <Route path="*" element={<NotFoundPage />} />
+        <Route path="/orders/:orderId/return" element={<ReturnRequestPage />} />
+
+// Order detail — show the button conditionally
+{isOrderReturnable(order) && (
+  <Link to={`/orders/${order.id}/return`}>Request a return</Link>
+)}
       </Routes>
 
       <EmailProductModal 
