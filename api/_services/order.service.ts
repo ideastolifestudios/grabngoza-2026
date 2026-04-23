@@ -4,27 +4,30 @@
  * UPGRADED from in-memory Map to Upstash Redis.
  * Orders survive cold starts and scale across function instances.
  *
- * Storage layout:
- *   order:{id}           → JSON order object
- *   orders:list          → sorted set (score = timestamp, member = order id)
- *   order:payment:{pid}  → order id (dedup by paymentId)
- *   order:counter        → auto-increment counter
- *
- * Flow:
- *   1. createOrder()   → stores with status='pending' (NO Zoho sync)
- *   2. confirmOrder()  → marks paid → triggers CRM + Inventory sync
- *   3. cancelOrder()   → marks cancelled
+ * Zoho imports are LAZY (inside functions) so they never crash callers
+ * that only need read operations (like api/orders.ts via store-api).
  */
 
 import type { Order } from '../_lib/types';
-import { getRedis } from '../_lib/redis';
-import { createZohoOrder, type ZohoSalesOrderResult } from './zohoInventoryService';
-import { createOrUpdateCustomer, type ZohoCRMResult } from './zohoCRMService';
+import { Redis } from '@upstash/redis';
 
 const ORDER_PREFIX    = 'order:';
 const ORDER_LIST      = 'orders:list';
 const PAYMENT_PREFIX  = 'order:payment:';
 const COUNTER_KEY     = 'order:counter';
+
+// ─── Lazy Redis ─────────────────────────────────────────────────
+
+let _redis: Redis | null = null;
+function getRedis(): Redis {
+  if (!_redis) {
+    const url = process.env.UPSTASH_REDIS_REST_URL;
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+    if (!url || !token) throw new Error('UPSTASH_REDIS_REST_URL / TOKEN not set');
+    _redis = new Redis({ url, token });
+  }
+  return _redis;
+}
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -35,7 +38,6 @@ async function saveOrder(order: Order): Promise<void> {
     redis.set(`${ORDER_PREFIX}${order.id}`, JSON.stringify(order)),
     redis.zadd(ORDER_LIST, { score: ts, member: order.id }),
   ]);
-  // Index by paymentId if present
   if (order.paymentId) {
     await redis.set(`${PAYMENT_PREFIX}${order.paymentId}`, order.id);
   }
@@ -75,8 +77,8 @@ export function validateCreateOrder(body: any): ValidationError[] {
 
 export interface ConfirmResult {
   order: Order;
-  zoho: ZohoSalesOrderResult;
-  crm: ZohoCRMResult;
+  zoho: any;
+  crm: any;
 }
 
 // ─── Duplicate check by paymentId ───────────────────────────────
@@ -88,7 +90,7 @@ export async function getOrderByPaymentId(paymentId: string): Promise<Order | nu
   return getOrder(orderId);
 }
 
-// ─── 1. CREATE (pending_payment — no Zoho yet) ─────────────────
+// ─── 1. CREATE ──────────────────────────────────────────────────
 
 export async function createOrder(data: any): Promise<Order> {
   const id = await nextId();
@@ -114,7 +116,7 @@ export async function createOrder(data: any): Promise<Order> {
   };
 
   await saveOrder(order);
-  console.log(`[order.service] Order ${id} created (pending payment). Total: R${order.total}`);
+  console.log(`[order.service] Order ${id} created. Total: R${order.total}`);
   return order;
 }
 
@@ -133,7 +135,6 @@ export async function confirmOrder(orderId: string, paymentRef?: string): Promis
     };
   }
 
-  // Mark as paid
   order.paymentStatus = 'paid';
   order.status = 'processing';
   order.paidAt = new Date().toISOString();
@@ -143,33 +144,34 @@ export async function confirmOrder(orderId: string, paymentRef?: string): Promis
     order.notes = `Payment: ${paymentRef}`;
   }
 
-  console.log(`[order.service] Order ${orderId} payment confirmed → syncing to Zoho`);
+  console.log(`[order.service] Order ${orderId} confirmed → syncing to Zoho`);
 
-  // ── CRM sync (non-blocking) ───────────────────────────────────
-  let crmResult: ZohoCRMResult;
+  // ── Lazy-import Zoho services (don't crash if Zoho isn't configured) ──
+  let crmResult: any = { success: false, error: 'not attempted' };
+  let zohoResult: any = { success: false, error: 'not attempted' };
+
   try {
+    const { createOrUpdateCustomer } = await import('./zohoCRMService');
     crmResult = await createOrUpdateCustomer(order);
   } catch (err: any) {
-    console.error(`[order.service] CRM sync error for ${orderId}:`, err.message);
+    console.error(`[order.service] CRM sync error: ${err.message}`);
     crmResult = { success: false, error: err.message };
   }
 
-  // ── Inventory sync ────────────────────────────────────────────
-  let zohoResult: ZohoSalesOrderResult;
   try {
+    const { createZohoOrder } = await import('./zohoInventoryService');
     zohoResult = await createZohoOrder(order, crmResult.zohoContactId || undefined);
     if (zohoResult.success && zohoResult.zohoSalesOrderId) {
       order.zohoOrderId = zohoResult.zohoSalesOrderId;
       order.notes = [order.notes, `Zoho SO: ${zohoResult.zohoSalesOrderId}`].filter(Boolean).join(' | ');
     }
   } catch (err: any) {
-    console.error(`[order.service] Inventory sync error for ${orderId}:`, err.message);
+    console.error(`[order.service] Inventory sync error: ${err.message}`);
     zohoResult = { success: false, error: err.message };
   }
 
   if (crmResult.zohoContactId) {
     order.zohoCrmContactId = crmResult.zohoContactId;
-    order.notes = [order.notes, `CRM: ${crmResult.zohoContactId}`].filter(Boolean).join(' | ');
   }
 
   await saveOrder(order);
@@ -193,7 +195,7 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<Ord
   order.notes = [order.notes, `Cancelled: ${reason || 'payment failed'}`].filter(Boolean).join(' | ');
 
   await saveOrder(order);
-  console.log(`[order.service] Order ${orderId} cancelled: ${reason || 'payment failed'}`);
+  console.log(`[order.service] Order ${orderId} cancelled`);
   return order;
 }
 
@@ -201,29 +203,22 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<Ord
 
 export async function listOrders(limit = 50, status?: string): Promise<Order[]> {
   const redis = getRedis();
-  // Get newest first (highest score = most recent)
-  const ids = await redis.zrange(ORDER_LIST, '+inf', '-inf', {
-    byScore: true,
-    rev: true,
-    offset: 0,
-    count: Math.min(limit * 2, 200), // fetch extra to filter by status
-  });
-
+  const ids: string[] = await redis.zrange(ORDER_LIST, 0, -1, { rev: true });
   if (!ids || ids.length === 0) return [];
 
   const pipeline = redis.pipeline();
   for (const id of ids) {
     pipeline.get(`${ORDER_PREFIX}${id}`);
   }
-  const results = await pipeline.exec<(string | null)[]>();
+  const results = await pipeline.exec();
 
   let orders: Order[] = results
-    .filter((r): r is string => r !== null)
-    .map(r => {
+    .filter((r: any) => r !== null)
+    .map((r: any) => {
       try { return typeof r === 'string' ? JSON.parse(r) : r; }
       catch { return null; }
     })
-    .filter((o): o is Order => o !== null);
+    .filter((o: any): o is Order => o !== null);
 
   if (status) orders = orders.filter(o => o.status === status);
   return orders.slice(0, limit);
@@ -231,9 +226,9 @@ export async function listOrders(limit = 50, status?: string): Promise<Order[]> 
 
 export async function getOrder(id: string): Promise<Order | null> {
   const redis = getRedis();
-  const data = await redis.get<string>(`${ORDER_PREFIX}${id}`);
+  const data = await redis.get(`${ORDER_PREFIX}${id}`);
   if (!data) return null;
-  try { return typeof data === 'string' ? JSON.parse(data) : data; }
+  try { return typeof data === 'string' ? JSON.parse(data as string) : data as Order; }
   catch { return null; }
 }
 
