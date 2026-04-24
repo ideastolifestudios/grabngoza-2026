@@ -378,7 +378,7 @@ const WelcomePopup = () => {
             className="relative w-full max-w-lg bg-white overflow-hidden shadow-2xl rounded-sm"
           >
             {/* Top accent line */}
-            <div className="h-1 w-full bg-black" />
+            <div className="h-1 w-full bg-[#FFA500]" />
 
             <button
               onClick={handleClose}
@@ -449,7 +449,7 @@ const WelcomePopup = () => {
                 />
                 <button
                   type="submit"
-                  className="w-full py-3.5 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-gray-900 transition-colors"
+                  className="w-full py-3.5 bg-[#06402B] text-white text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-[#06402B]/90 transition-colors"
                 >
                   Start Shopping
                 </button>
@@ -901,8 +901,24 @@ const Header = ({
             className="relative p-2 hover:bg-black/5 rounded-full transition-colors text-black active:scale-90 overflow-visible"
             title="Cart"
           >
-            <ShoppingCart size={22} />
-            {cartCount > 0 && (
+            <AnimatePresence mode="wait">
+              {cartCount > 0 ? (
+                <motion.div
+                  key="cart-count"
+                  initial={{ scale: 0, rotate: -10 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0 }}
+                  className="w-8 h-8 bg-[#06402B] text-white rounded-full flex items-center justify-center text-xs font-black"
+                >
+                  {cartCount}
+                </motion.div>
+              ) : (
+                <motion.div key="cart-icon" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                  <ShoppingCart size={22} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {false && cartCount > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -2080,6 +2096,110 @@ const PartnershipHub = ({ partners }: { partners: Partner[] }) => (
   </section>
 );
 
+
+const FAQChatbot = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<{role: 'bot' | 'user', text: string}[]>([
+    { role: 'bot', text: "Hey! 👋 I'm here to help. What can I assist you with?" }
+  ]);
+  const [input, setInput] = useState('');
+
+  const faqs: Record<string, string> = {
+    'size': "We use standard SA sizing. Check the size guide on each product page. If you're between sizes, we recommend going one size up for a relaxed fit.",
+    'sizing': "We use standard SA sizing. Check the size guide on each product page. If you're between sizes, we recommend going one size up for a relaxed fit.",
+    'delivery': "Standard delivery takes 5-10 business days within SA. Free delivery on orders over R650! Express options available at checkout.",
+    'shipping': "We ship nationwide across South Africa. Standard delivery is 5-10 business days. Free on orders over R650.",
+    'return': "You can return unworn items within 14 days for a full refund. Items must be in original condition with tags attached.",
+    'refund': "Refunds are processed within 5-7 business days after we receive your return. You'll get an email confirmation.",
+    'payment': "We accept Visa, Mastercard, Apple Pay, Google Pay — all powered by Yoco for secure checkout.",
+    'track': "Go to Track Order in the menu, enter your order ID and email. You'll see real-time status updates.",
+    'order': "Once you place an order, you'll receive a confirmation email. Track it anytime from the menu.",
+    'contact': "Reach us via our Help Desk page, or DM us on Instagram @grabngoza. We typically respond within 24 hours.",
+    'help': "I can help with: sizes, delivery, returns, payments, tracking, and more. Just ask!",
+    'exchange': "We offer exchanges within 14 days. Visit our Returns page or contact us via Help Desk.",
+    'pickup': "We offer pickup from our location in Midrand — no shipping fee! Select it at checkout.",
+    'brand': "Grab & Go is a premium streetwear brand designed by IDEAS TO LIFE Studios, based in South Africa.",
+  };
+
+  const findAnswer = (q: string): string => {
+    const lower = q.toLowerCase();
+    for (const [key, answer] of Object.entries(faqs)) {
+      if (lower.includes(key)) return answer;
+    }
+    return "I'm not sure about that one. Let me connect you with our team — head to the Help Desk for personalized support! 💬";
+  };
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    const userMsg = input.trim();
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setTimeout(() => {
+      setMessages(prev => [...prev, { role: 'bot', text: findAnswer(userMsg) }]);
+    }, 500);
+  };
+
+  return (
+    <>
+      <motion.button
+        onClick={() => setIsOpen(!isOpen)}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="fixed bottom-6 right-6 z-[100] w-14 h-14 bg-[#06402B] text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-[#06402B]/90 transition-colors"
+      >
+        {isOpen ? <X size={22} /> : <MessageSquare size={22} />}
+      </motion.button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-24 right-6 z-[100] w-[340px] max-h-[480px] bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+          >
+            <div className="bg-[#06402B] text-white p-4 flex items-center gap-3">
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <MessageSquare size={14} />
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider">Grab & Go Support</p>
+                <p className="text-[9px] text-white/60">Usually replies instantly</p>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[300px]">
+              {messages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed ${
+                    msg.role === 'user' ? 'bg-[#06402B] text-white rounded-br-sm' : 'bg-gray-100 text-gray-700 rounded-bl-sm'
+                  }`}>{msg.text}</div>
+                </div>
+              ))}
+            </div>
+            <div className="px-4 pb-2 flex flex-wrap gap-1.5">
+              {['Sizes', 'Delivery', 'Returns', 'Payment'].map(q => (
+                <button key={q} onClick={() => setInput(q)}
+                  className="text-[9px] px-3 py-1 bg-[#06402B]/10 text-[#06402B] rounded-full font-bold uppercase tracking-wider hover:bg-[#06402B]/20 transition-colors"
+                >{q}</button>
+              ))}
+            </div>
+            <div className="p-3 border-t border-gray-100 flex gap-2">
+              <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                placeholder="Ask me anything..."
+                className="flex-1 text-xs px-3 py-2.5 border border-gray-200 rounded-full focus:outline-none focus:border-[#06402B] transition-colors"
+              />
+              <button onClick={handleSend}
+                className="w-9 h-9 bg-[#06402B] text-white rounded-full flex items-center justify-center hover:bg-[#06402B]/90 transition-colors flex-shrink-0"
+              ><Send size={14} /></button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
 const Footer = ({ categories = [] }: { categories?: Category[] }) => {
   const [subscribed, setSubscribed] = useState(false);
   const [email, setEmail] = useState('');
@@ -2106,7 +2226,7 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
   return (
     <footer className="bg-[#fafafa] border-t-[3px] border-[#06402B]">
       {/* Newsletter Section — Warm & Strategic */}
-      <div className="bg-black text-white py-12 md:py-16 px-6 md:px-8">
+      <div className="bg-[#06402B] text-white py-12 md:py-16 px-6 md:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div className="max-w-lg">
             <Logo className="h-8 mb-4 brightness-0 invert" />
@@ -2177,7 +2297,7 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
                 href="https://www.instagram.com/grabngoza"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center text-black hover:bg-black hover:text-white transition-all"
+                className="w-8 h-8 rounded-full bg-[#06402B]/10 flex items-center justify-center text-[#06402B] hover:bg-[#06402B] hover:text-white transition-all"
               >
                 <Instagram size={14} />
               </motion.a>
@@ -2186,7 +2306,7 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
                 href="https://www.facebook.com/grabngoza"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center text-black hover:bg-black hover:text-white transition-all"
+                className="w-8 h-8 rounded-full bg-[#06402B]/10 flex items-center justify-center text-[#06402B] hover:bg-[#06402B] hover:text-white transition-all"
               >
                 <Facebook size={14} />
               </motion.a>
@@ -7654,7 +7774,8 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <AppContent />
-      </BrowserRouter>
+      <FAQChatbot />
+    </BrowserRouter>
     </ErrorBoundary>
   );
 }
