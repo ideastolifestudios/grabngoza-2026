@@ -375,7 +375,7 @@ const WelcomePopup = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-lg bg-white overflow-hidden shadow-2xl rounded-sm"
+            className="relative w-full max-w-lg bg-white overflow-hidden shadow-2xl rounded-sm max-h-[90vh] overflow-y-auto"
           >
             {/* Top accent line */}
             <div className="h-1 w-full bg-[#FFA500]" />
@@ -730,7 +730,7 @@ const Header = ({
 
       // Hide on scroll down, show on scroll up
       // Only hide if we've scrolled past a certain threshold
-      if (currentScrollY > lastScrollY && currentScrollY > 150) {
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
         setIsVisible(false);
       } else {
         setIsVisible(true);
@@ -1215,7 +1215,7 @@ const Hero = () => {
       <img
         src="https://picsum.photos/seed/streetwear-hero/1920/1080"
         alt="HeroBackground"
-        className="w-full h-full object-cover opacity-70 scale-105"
+        className="w-full h-full object-cover opacity-70 scale-105" loading="eager"
         style={{ objectPosition: 'center 30%' }}
         referrerPolicy="no-referrer"
       />
@@ -3493,7 +3493,7 @@ const AuthModal = ({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-md bg-white border border-gray-100 shadow-2xl overflow-hidden flex flex-col"
+            className="relative w-full max-w-md bg-white border border-gray-100 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] overflow-y-auto"
           >
             <div className="p-8 md:p-10 text-center space-y-6">
               <div className="space-y-2">
@@ -6855,6 +6855,53 @@ const CategoryPanel = ({
   return null;
 };
 
+
+const HowToOrderGuide = () => {
+  const steps = [
+    { num: 1, icon: <Search size={20} />, title: "Browse & Choose", desc: "Explore our curated collections. Use categories or search to find your gear.", color: "bg-[#06402B]" },
+    { num: 2, icon: <Ruler size={20} />, title: "Pick Your Size", desc: "Check the size guide on each product. Between sizes? Go one up for a relaxed fit.", color: "bg-[#06402B]" },
+    { num: 3, icon: <ShoppingCart size={20} />, title: "Add to Cart", desc: "Hit 'Add to Cart' or 'Buy Now' for instant checkout. Cart icon shows your count.", color: "bg-[#FFA500]" },
+    { num: 4, icon: <CreditCard size={20} />, title: "Secure Checkout", desc: "Fill in your details. Pay safely with Visa, Mastercard, Apple Pay or Google Pay via Yoco.", color: "bg-[#06402B]" },
+    { num: 5, icon: <Package size={20} />, title: "We Ship It", desc: "Standard delivery 5-10 days. Free on orders over R650! Track your order anytime.", color: "bg-[#06402B]" },
+    { num: 6, icon: <CheckCircle2 size={20} />, title: "Rock It", desc: "Unbox your fresh gear. Not happy? Easy 14-day returns, no stress.", color: "bg-[#FFA500]" },
+  ];
+
+  return (
+    <section className="max-w-[1800px] mx-auto px-4 md:px-10 py-16 md:py-24">
+      <div className="text-center mb-12">
+        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-[#06402B] mb-3">Simple as 1-2-3</p>
+        <h2 className="text-3xl md:text-5xl font-display font-black uppercase tracking-tighter text-black">How to Order</h2>
+      </div>
+      
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+        {steps.map((step, i) => (
+          <motion.div
+            key={step.num}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="group text-center"
+          >
+            <div className={`${step.color} w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
+              {step.icon}
+            </div>
+            <div className="text-[9px] font-black text-[#06402B] uppercase tracking-widest mb-1">Step {step.num}</div>
+            <h3 className="text-sm font-black uppercase tracking-tight text-black mb-1">{step.title}</h3>
+            <p className="text-[10px] text-gray-400 leading-relaxed">{step.desc}</p>
+          </motion.div>
+        ))}
+      </div>
+      
+      <div className="text-center mt-10">
+        <p className="text-[10px] text-gray-400 uppercase tracking-wider">
+          Questions? Our <span className="text-[#06402B] font-bold cursor-pointer hover:underline" onClick={() => document.querySelector('.fixed.bottom-6.right-6')?.dispatchEvent(new Event('click'))}>chat support</span> is always ready to help.
+        </p>
+      </div>
+    </section>
+  );
+};
+
 const PromoGrid = () => {
   const promos = [
     {
@@ -6931,7 +6978,7 @@ const PromoGrid = () => {
                 <img
                   src={promo.image}
                   alt={promo.label}
-                  className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
@@ -7252,6 +7299,7 @@ const HomePage = ({
       </motion.div>
 
       <PromoGrid />
+              <HowToOrderGuide />
 
       {/* Products anchor for hero scroll */}
       <div id="products-section" />
@@ -8295,7 +8343,7 @@ function AppContent() {
   const cartTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white overflow-x-hidden">
       <SystemAlertBanner user={user} />
       <WelcomePopup />
 
