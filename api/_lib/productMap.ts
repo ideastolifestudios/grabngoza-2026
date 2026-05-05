@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../_logger';
  * api/_lib/productMap.ts — Product ID mapping (Local ↔ Zoho)
  *
  * Central mapping of your Firestore product IDs to Zoho Inventory item IDs.

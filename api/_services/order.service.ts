@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../_logger';
  * api/_services/order.service.ts — Redis-backed persistent order storage
  *
  * ZERO top-level side effects. Redis + Zoho imported lazily inside functions.

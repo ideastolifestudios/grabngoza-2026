@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './_logger';
  * api/store-api.ts — Consolidated Store API
  *
  * Static imports for ALL local files (Vercel bundler requires this).
