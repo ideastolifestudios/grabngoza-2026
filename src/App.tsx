@@ -148,16 +148,13 @@ class ErrorBoundary extends Component<any, any> {
             <div className="flex justify-center">
               <div className="p-4 bg-red-50 rounded-full">
                 <AlertCircle className="text-red-600" size={48} />
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
             <div className="space-y-2">
               <h1 className="text-2xl font-display font-bold uppercase tracking-tighter">Something went wrong</h1>
               <p className="text-gray-500 text-sm">
                 {(this as any).state.errorInfo || (this as any).state.error?.message || 'An unexpected error occurred.'}
               </p>
-              <SupportChat />
     </div>
             <div className="pt-4">
               <button
@@ -167,11 +164,8 @@ class ErrorBoundary extends Component<any, any> {
                 <RefreshCw size={16} />
                 Reload Application
               </button>
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
       );
     }
@@ -283,12 +277,10 @@ const WishlistDrawer = ({
               <div className="flex items-center gap-3">
                 <Heart size={20} className="text-red-500" fill="currentColor" />
                 <h2 className="text-xl font-display font-bold uppercase tracking-tighter">My Wishlist</h2>
-                <SupportChat />
     </div>
               <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition-colors">
                 <X size={24} />
               </button>
-              <SupportChat />
     </div>
 
             <div className="flex-grow overflow-y-auto p-6 md:p-8 custom-scrollbar">
@@ -296,7 +288,6 @@ const WishlistDrawer = ({
                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-30">
                   <Heart size={48} />
                   <p className="text-[10px] font-black uppercase tracking-widest">Your wishlist is empty</p>
-                  <SupportChat />
     </div>
               ) : (
                 <div className="space-y-6">
@@ -305,13 +296,11 @@ const WishlistDrawer = ({
                       <div className="w-24 h-32 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
                         <img src={item.image} alt={item.name} loading="lazy"
                         className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                        <SupportChat />
     </div>
                       <div className="flex-grow flex flex-col justify-between py-1">
                         <div>
                           <h3 className="text-[10px] font-black uppercase tracking-widest mb-1">{item.name}</h3>
                           <p className="text-[10px] font-bold text-gray-400">{formatPrice(item.price)}</p>
-                          <SupportChat />
     </div>
                         <div className="flex gap-2">
                           <button
@@ -326,17 +315,12 @@ const WishlistDrawer = ({
                           >
                             <Trash2 size={14} />
                           </button>
-                          <SupportChat />
     </div>
-                        <SupportChat />
     </div>
-                      <SupportChat />
     </div>
                   ))}
-                  <SupportChat />
     </div>
               )}
-              <SupportChat />
     </div>
           </motion.div>
         </>
@@ -419,52 +403,39 @@ const WelcomePopup = () => {
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Sparkles size={14} className="text-black" />
-                    <SupportChat />
     </div>
                   <div>
                     <p className="text-xs font-bold text-black uppercase tracking-wider">Exclusive Drops</p>
                     <p className="text-[10px] text-gray-400 mt-0.5">First access to limited releases.</p>
-                    <SupportChat />
     </div>
-                  <SupportChat />
     </div>
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Truck size={14} className="text-black" />
-                    <SupportChat />
     </div>
                   <div>
                     <p className="text-xs font-bold text-black uppercase tracking-wider">Free Delivery</p>
                     <p className="text-[10px] text-gray-400 mt-0.5">On orders over R1,000.</p>
-                    <SupportChat />
     </div>
-                  <SupportChat />
     </div>
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Tag size={14} className="text-black" />
-                    <SupportChat />
     </div>
                   <div>
                     <p className="text-xs font-bold text-black uppercase tracking-wider">10% Off First Order</p>
                     <p className="text-[10px] text-gray-400 mt-0.5">A welcome gift from us to you.</p>
-                    <SupportChat />
     </div>
-                  <SupportChat />
     </div>
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <ShieldCheck size={14} className="text-black" />
-                    <SupportChat />
     </div>
                   <div>
                     <p className="text-xs font-bold text-black uppercase tracking-wider">Secure Checkout</p>
                     <p className="text-[10px] text-gray-400 mt-0.5">Powered by Yoco. Safe & easy.</p>
-                    <SupportChat />
     </div>
-                  <SupportChat />
     </div>
-                <SupportChat />
     </div>
 
               {/* Email form */}
@@ -495,10 +466,8 @@ const WelcomePopup = () => {
               <p className="mt-4 text-[8px] text-gray-300 leading-tight text-center">
                 You are signing up to receive communications via email and can unsubscribe at any time.
               </p>
-              <SupportChat />
     </div>
           </motion.div>
-          <SupportChat />
     </div>
       )}
     </AnimatePresence>
@@ -543,7 +512,6 @@ const HowToOrderDrawer = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
         <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition-colors">
           <X size={24} />
         </button>
-        <SupportChat />
     </div>
 
       <div className="flex-grow overflow-y-auto p-6 md:p-10 custom-scrollbar">
@@ -569,19 +537,15 @@ const HowToOrderDrawer = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
                 <span className="text-[10px] font-black uppercase tracking-widest block mb-2">Cards</span>
                 <p className="text-[10px] text-gray-400">Visa, Mastercard, American Express via secure gateway.</p>
-                <SupportChat />
     </div>
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
                 <span className="text-[10px] font-black uppercase tracking-widest block mb-2">Digital</span>
                 <p className="text-[10px] text-gray-400">Apple Pay and Google Pay supported.</p>
-                <SupportChat />
     </div>
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
                 <span className="text-[10px] font-black uppercase tracking-widest block mb-1">EFT</span>
                 <p className="text-[10px] text-gray-400">Direct Bank Transfer (EFT) available on request.</p>
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
           </section>
 
@@ -594,19 +558,15 @@ const HowToOrderDrawer = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-[10px] font-bold uppercase tracking-widest">Standard Shipping</span>
                 <span className="text-[10px] font-black">R100 Flat Fee</span>
-                <SupportChat />
     </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-[10px] font-bold uppercase tracking-widest">Free Shipping</span>
                 <span className="text-[10px] font-black">Orders over R1500</span>
-                <SupportChat />
     </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-[10px] font-bold uppercase tracking-widest">Delivery Time</span>
                 <span className="text-[10px] font-black">2-4 Business Days</span>
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
           </section>
 
@@ -625,13 +585,9 @@ const HowToOrderDrawer = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
             <div className="flex justify-center gap-6">
               <a href="mailto:support@grabandgo.co.za" className="text-[10px] font-black uppercase tracking-widest hover:underline">Email Support</a>
               <a href="tel:+27123456789" className="text-[10px] font-black uppercase tracking-widest hover:underline">Call Us</a>
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
-        <SupportChat />
     </div>
     </motion.div>
   );
@@ -676,9 +632,7 @@ const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
             );
           })}
         </nav>
-        <SupportChat />
     </div>
-      <SupportChat />
     </div>
   );
 };
@@ -703,7 +657,6 @@ const FreeDeliveryBar = ({ cartTotal }: { cartTotal: number }) => {
             You qualify for <span className="font-black">Free Delivery!</span>
           </p>
         )}
-        <SupportChat />
     </div>
       <div className="max-w-xs mx-auto mt-1 h-1 bg-gray-200 rounded-full overflow-hidden">
         <motion.div
@@ -712,9 +665,7 @@ const FreeDeliveryBar = ({ cartTotal }: { cartTotal: number }) => {
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
         />
-        <SupportChat />
     </div>
-      <SupportChat />
     </div>
   );
 };
@@ -830,7 +781,6 @@ const Header = ({
           <Link to="/" className="block group">
             <Logo className="h-8 md:h-12 transition-transform duration-500 group-hover:scale-105" dark />
           </Link>
-          <SupportChat />
     </div>
 
         {/* Centre: Desktop Category Nav — Moved to CategoryBar below */}
@@ -884,12 +834,10 @@ const Header = ({
                               {sub.name}
                             </Link>
                           ))}
-                          <SupportChat />
     </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
-                  <SupportChat />
     </div>
               );
             })}
@@ -911,7 +859,6 @@ const Header = ({
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 className="text-xs font-medium outline-none bg-transparent w-28 md:w-36 placeholder:text-gray-300"
               />
-              <SupportChat />
     </div>
             {/* Suggestions dropdown */}
             {showSuggestions && suggestions.length > 0 && (
@@ -926,7 +873,6 @@ const Header = ({
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-black truncate">{p.name}</p>
                       <p className="text-[9px] text-gray-400 uppercase tracking-widest">{formatPrice(p.price)}</p>
-                      <SupportChat />
     </div>
                     <ChevronRight size={12} className="text-gray-300 flex-shrink-0 ml-auto" />
                   </button>
@@ -938,12 +884,9 @@ const Header = ({
                   >
                     Browse all products →
                   </button>
-                  <SupportChat />
     </div>
-                <SupportChat />
     </div>
             )}
-            <SupportChat />
     </div>
 
           <button
@@ -1001,13 +944,10 @@ const Header = ({
             <button onClick={onOpenMenu} className="p-2 hover:bg-black/5 rounded-full transition-colors text-black flex items-center gap-2">
               <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-[9px] font-bold uppercase ring-2 ring-offset-2 ring-black/5">
                 {user.firstName[0]}{user.lastName[0]}
-                <SupportChat />
     </div>
             </button>
           )}
-          <SupportChat />
     </div>
-        <SupportChat />
     </div>
       <FreeDeliveryBar cartTotal={cartTotal} />
       <CategoryBar categories={categories} />
@@ -1090,7 +1030,6 @@ const Sidebar = ({
               <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                 <X size={24} className="text-black" />
               </button>
-              <SupportChat />
     </div>
 
             <nav className="flex-grow overflow-y-auto px-8 custom-scrollbar space-y-10 pb-12 pt-6">
@@ -1104,7 +1043,6 @@ const Sidebar = ({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-transparent border-b border-gray-100 focus:border-black py-4 pl-8 text-sm font-bold placeholder:text-gray-300 outline-none transition-all"
                 />
-                <SupportChat />
     </div>
 
               {/* Main Navigation */}
@@ -1151,10 +1089,8 @@ const Sidebar = ({
                       </motion.div>
                     )}
                   </AnimatePresence>
-                  <SupportChat />
     </div>
 
-                {/* Direct Links — Our Story removed */}                <SupportChat />
     </div>
 
               {/* Membership / Account */}
@@ -1177,9 +1113,7 @@ const Sidebar = ({
                       >
                         Sign In
                       </button>
-                      <SupportChat />
     </div>
-                    <SupportChat />
     </div>
                 ) : (
                   <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">
@@ -1190,14 +1124,11 @@ const Sidebar = ({
                         ) : (
                           `${user.firstName[0]}${user.lastName[0]}`
                         )}
-                        <SupportChat />
     </div>
                       <div className="flex flex-col">
                         <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{user.firstName} {user.lastName}</span>
                         <span className="text-[8px] opacity-40 uppercase tracking-widest mt-1">G&G Member</span>
-                        <SupportChat />
     </div>
-                      <SupportChat />
     </div>
                     <button
                       onClick={() => { onClose(); onLogout(); }}
@@ -1206,10 +1137,8 @@ const Sidebar = ({
                     >
                       <LogOut size={16} />
                     </button>
-                    <SupportChat />
     </div>
                 )}
-                <SupportChat />
     </div>
 
               {/* Quick Actions */}
@@ -1217,28 +1146,24 @@ const Sidebar = ({
                 <button onClick={() => { onClose(); onOpenCart(); }} className="flex items-center gap-4 text-sm font-bold text-gray-500 hover:text-black transition-all">
                   <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center">
                     <ShoppingCart size={20} />
-                    <SupportChat />
     </div>
                   <span>Cart ({cartCount})</span>
                 </button>
                 <button onClick={() => { onClose(); onOpenWishlist(); }} className="flex items-center gap-4 text-sm font-bold text-gray-500 hover:text-black transition-all">
                   <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center">
                     <Heart size={20} />
-                    <SupportChat />
     </div>
                   <span>Wishlist</span>
                 </button>
                 <button onClick={() => { onClose(); onOpenOrders(); }} className="flex items-center gap-4 text-sm font-bold text-gray-500 hover:text-black transition-all">
                   <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center">
                     <Package size={20} />
-                    <SupportChat />
     </div>
                   <span>Orders</span>
                 </button>
                 <button onClick={() => { onClose(); navigate('/faq'); }} className="flex items-center gap-4 text-sm font-bold text-gray-500 hover:text-black transition-all">
                   <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center">
                     <HelpCircle size={20} />
-                    <SupportChat />
     </div>
                   <span>Support</span>
                 </button>
@@ -1248,20 +1173,17 @@ const Sidebar = ({
                     <button onClick={() => { onClose(); onOpenProducts(); }} className="flex items-center gap-4 text-sm font-bold text-red-500 hover:text-red-700 transition-all">
                       <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
                         <Settings size={20} />
-                        <SupportChat />
     </div>
                       <span>My Account</span>
                     </button>
                     <Link to="/admin" onClick={onClose} className="flex items-center gap-4 text-sm font-bold text-gray-500 hover:text-black transition-all" style={{ textDecoration: 'none' }}>
                       <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center">
                         <Truck size={20} style={{ color: '#3b82f6' }} />
-                        <SupportChat />
     </div>
                       <span>Dispatch Dashboard</span>
                     </Link>
                   </>
                 )}
-                <SupportChat />
     </div>
             </nav>
 
@@ -1269,10 +1191,8 @@ const Sidebar = ({
               <div className="flex gap-6 text-gray-300">
                 <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-black transition-colors"><Instagram size={18} /></a>
                 <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-black transition-colors"><Facebook size={18} /></a>
-                <SupportChat />
     </div>
               <p className="text-[8px] font-mono uppercase tracking-widest opacity-20">© 2026 GRAB & GO</p>
-              <SupportChat />
     </div>
           </motion.div>
         </>
@@ -1301,7 +1221,6 @@ const Hero = () => {
         referrerPolicy="no-referrer"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-      <SupportChat />
     </div>
 
     {/* Hero Content */}
@@ -1336,10 +1255,8 @@ const Hero = () => {
           >
             View All
           </motion.button>
-          <SupportChat />
     </div>
       </motion.div>
-      <SupportChat />
     </div>
 
     {/* Slide indicators */}
@@ -1351,7 +1268,6 @@ const Hero = () => {
           className={`w-8 h-1 rounded-full transition-all duration-500 ${idx === currentSlide ? 'bg-white w-12' : 'bg-white/30'}`}
         />
       ))}
-      <SupportChat />
     </div>
 
     {/* Scroll indicator */}
@@ -1363,9 +1279,7 @@ const Hero = () => {
           transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
           className="absolute top-0 left-0 w-full h-1/2 bg-white"
         />
-        <SupportChat />
     </div>
-      <SupportChat />
     </div>
   </section>
   );
@@ -1463,9 +1377,7 @@ const ProductDetailContent = ({
       <div className="text-center">
         <h2 className="text-xl font-bold uppercase mb-4">Product not found</h2>
         <Link to="/" className="text-[10px] font-bold uppercase tracking-widest underline">Back to shop</Link>
-        <SupportChat />
     </div>
-      <SupportChat />
     </div>
   );
 
@@ -1499,7 +1411,6 @@ const ProductDetailContent = ({
                 categories={categories}
                 product={product}
               />
-              <SupportChat />
     </div>
 
             <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden group">
@@ -1512,10 +1423,8 @@ const ProductDetailContent = ({
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                     />
-                    <SupportChat />
     </div>
                 ))}
-                <SupportChat />
     </div>
 
               {allImages.length > 1 && (
@@ -1538,10 +1447,8 @@ const ProductDetailContent = ({
               {discount > 0 && (
                 <div className="absolute bottom-6 left-6 px-3 py-1 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest">
                   Sale
-                  <SupportChat />
     </div>
               )}
-              <SupportChat />
     </div>
 
             <div className="flex gap-3 overflow-x-auto no-scrollbar">
@@ -1554,9 +1461,7 @@ const ProductDetailContent = ({
                   <img src={img || null} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </button>
               ))}
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
 
           {/* Right: Info */}
@@ -1567,7 +1472,6 @@ const ProductDetailContent = ({
                 categories={categories}
                 product={product}
               />
-              <SupportChat />
     </div>
 
             <div className="mb-4">
@@ -1596,7 +1500,6 @@ const ProductDetailContent = ({
                         <p className="text-[10px] font-black uppercase tracking-widest text-red-600">
                           Out of Stock — {product.variants?.length ? 'Select a different size/colour' : 'Check back soon'}
                         </p>
-                        <SupportChat />
     </div>
                     )}
                     {/* Low stock warning */}
@@ -1606,7 +1509,6 @@ const ProductDetailContent = ({
                         <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">
                           Only {currentStock} left — order soon!
                         </p>
-                        <SupportChat />
     </div>
                     )}
                   </>
@@ -1624,9 +1526,7 @@ const ProductDetailContent = ({
                     <span className="text-red-500 font-bold text-xs">-{discount}%</span>
                   </>
                 )}
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
 
             {/* Variants */}
@@ -1641,7 +1541,6 @@ const ProductDetailContent = ({
                     <label className="text-[10px] font-black uppercase tracking-widest opacity-40">
                       {v.name} <span className="text-black font-black ml-2">{selectedVariants[v.name]}</span>
                     </label>
-                    <SupportChat />
     </div>
 
                   <div className="flex flex-wrap gap-2">
@@ -1662,18 +1561,14 @@ const ProductDetailContent = ({
                           {isColor ? (
                             <div className="relative w-full h-full rounded-full" style={{ backgroundColor: opt.toLowerCase() }}>
                               {selectedVariants[v.name] === opt && <Check size={14} className="absolute inset-0 m-auto text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />}
-                              <SupportChat />
     </div>
                           ) : opt}
                         </button>
                       );
                     })}
-                    <SupportChat />
     </div>
-                  <SupportChat />
     </div>
               ))}
-              <SupportChat />
     </div>
 
               <div className="flex justify-between items-start mb-4">
@@ -1681,7 +1576,6 @@ const ProductDetailContent = ({
                   <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-1 hover:bg-black/5 transition-colors"><Minus size={12} /></button>
                   <span className="px-4 text-xs font-black">{quantity}</span>
                   <button onClick={() => setQuantity(quantity + 1)} className="px-3 py-1 hover:bg-black/5 transition-colors"><Plus size={12} /></button>
-                  <SupportChat />
     </div>
                 <div className="flex gap-4 text-[10px] font-black uppercase tracking-widest">
                   {(() => {
@@ -1701,9 +1595,7 @@ const ProductDetailContent = ({
                     if (s <= 5) return <span className="text-amber-600 border-b-2 border-amber-500 pb-1">{s} left</span>;
                     return <span className="text-green-600 border-b-2 border-green-600 pb-1">In stock</span>;
                   })()}
-                  <SupportChat />
     </div>
-                <SupportChat />
     </div>
 
             {/* Actions */}
@@ -1757,7 +1649,6 @@ const ProductDetailContent = ({
                         <Heart size={20} fill={wishlist.includes(product?.id || '') ? "currentColor" : "none"} strokeWidth={2.5} />
                       </motion.div>
                     </motion.button>
-                    <SupportChat />
     </div>
                   <button
                     onClick={() => { if (!isOOS) onBuyNow(product, selectedVariants); }}
@@ -1768,7 +1659,6 @@ const ProductDetailContent = ({
                   >
                     Buy it now
                   </button>
-                  <SupportChat />
     </div>
               );
             })()}
@@ -1797,7 +1687,6 @@ const ProductDetailContent = ({
             <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest opacity-40 mb-6">
               <Truck size={14} />
               <span>Ships in 5-10 Business days</span>
-              <SupportChat />
     </div>
 
             {/* Description & Details */}
@@ -1806,9 +1695,7 @@ const ProductDetailContent = ({
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Product Description</p>
                 <div className="text-xs leading-relaxed text-black uppercase tracking-widest opacity-80 whitespace-pre-wrap">
                   {product.description || "Premium heavyweight garment designed for longevity and timeless style. Studio-born quality guaranteed."}
-                  <SupportChat />
     </div>
-                <SupportChat />
     </div>
 
               <div className="space-y-4 pt-8 border-t border-gray-100">
@@ -1817,13 +1704,9 @@ const ProductDetailContent = ({
                   <div className="flex flex-col">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Estimated Delivery</p>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-black">2-4 Business Days Nationwide</p>
-                    <SupportChat />
     </div>
-                  <SupportChat />
     </div>
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
 
             {/* Payment Icons */}
@@ -1835,9 +1718,7 @@ const ProductDetailContent = ({
                 <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
                 <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
                 <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-4 object-contain" referrerPolicy="no-referrer" />
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
 
             {/* Sold By */}
@@ -1857,15 +1738,10 @@ const ProductDetailContent = ({
                       {product.soldBy || product.brand || 'Grab & Go'}
                     </span>
                   )}
-                  <SupportChat />
     </div>
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
 
         {/* Pairs Well With */}
@@ -1885,9 +1761,7 @@ const ProductDetailContent = ({
               >
                 <ChevronRight size={14} className="group-hover/btn:translate-x-0.5 transition-transform" />
               </button>
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
 
           <div
@@ -1906,12 +1780,9 @@ const ProductDetailContent = ({
                   onToggleWishlist={onToggleWishlist}
                   isLoading={isCartLoading}
                 />
-                <SupportChat />
     </div>
             ))}
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
 
         {/* Recently Viewed */}
@@ -1931,14 +1802,10 @@ const ProductDetailContent = ({
                   isLoading={isCartLoading}
                 />
               ))}
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
         )}
-        <SupportChat />
     </div>
-      <SupportChat />
     </div>
   );
 };
@@ -2012,7 +1879,6 @@ const ProductCard = ({
         {isLoading && (
           <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-40 flex items-center justify-center">
             <Loader2 className="animate-spin text-black" size={24} />
-            <SupportChat />
     </div>
         )}
 
@@ -2042,7 +1908,6 @@ const ProductCard = ({
               <Heart size={14} fill={isWishlisted ? "currentColor" : "none"} strokeWidth={2.5} />
             </motion.div>
           </motion.button>
-          <SupportChat />
     </div>
 
         {/* Auto-cycling product images */}
@@ -2065,7 +1930,6 @@ const ProductCard = ({
             {allImages.map((_, i) => (
               <div key={i} className={`w-1 h-1 rounded-full transition-all duration-300 ${i === imgIdx ? 'bg-black w-3' : 'bg-black/30'}`} />
             ))}
-            <SupportChat />
     </div>
         )}
 
@@ -2073,7 +1937,6 @@ const ProductCard = ({
         {discount > 0 && !isOutOfStock && (
           <div className="absolute top-4 left-4 px-2 py-1 bg-[#06402B] text-white text-[7px] font-bold uppercase tracking-widest z-20">
             -{discount}%
-            <SupportChat />
     </div>
         )}
 
@@ -2083,7 +1946,6 @@ const ProductCard = ({
             <div className="absolute inset-0 bg-white/60 z-20 pointer-events-none" />
             <div className="absolute top-4 left-4 px-2 py-1 bg-[#FFA500] text-black text-[7px] font-bold uppercase tracking-widest z-30">
               Out of Stock
-              <SupportChat />
     </div>
           </>
         )}
@@ -2092,7 +1954,6 @@ const ProductCard = ({
         {isLowStock && !isOutOfStock && (
           <div className="absolute top-4 left-4 px-2 py-1 bg-amber-500 text-white text-[7px] font-bold uppercase tracking-widest z-20">
             Only {stockLevel} left
-            <SupportChat />
     </div>
         )}
 
@@ -2109,7 +1970,6 @@ const ProductCard = ({
         >
           {isOutOfStock ? 'Out of Stock' : 'Quick Add'}
         </button>
-        <SupportChat />
     </div>
 
       <div className="space-y-1 px-1" onClick={() => navigate(`/product/${product.id}`)}>
@@ -2119,10 +1979,8 @@ const ProductCard = ({
             <h3 className="text-[9px] font-medium uppercase tracking-widest text-black truncate">
               <Highlight text={product.name} query={searchQuery} />
             </h3>
-            <SupportChat />
     </div>
           <p className="text-[9px] font-bold text-black whitespace-nowrap">R{product.price}</p>
-          <SupportChat />
     </div>
         <div className="flex items-center justify-between">
           <p className="text-[8px] font-bold uppercase tracking-widest text-gray-300">
@@ -2131,9 +1989,7 @@ const ProductCard = ({
           {product.soldByLogo && (
             <img src={product.soldByLogo} alt="" className="h-3 w-auto object-contain" referrerPolicy="no-referrer" />
           )}
-          <SupportChat />
     </div>
-        <SupportChat />
     </div>
     </motion.div>
   );
@@ -2146,26 +2002,20 @@ const SocialProof = ({ testimonials }: { testimonials: Testimonial[] }) => (
         <div>
           <h2 className="text-xl md:text-3xl font-semibold uppercase tracking-tight mb-1 md:mb-2 text-black">Customer Love</h2>
           <p className="text-xs md:text-sm opacity-50 text-black">Real vibes from the community.</p>
-          <SupportChat />
     </div>
         <div className="flex items-center gap-3">
           <div className="flex -space-x-2 md:-space-x-3">
             {[1,2,3,4].map(i => (
               <div key={i} className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-white bg-gray-50 overflow-hidden">
                 <img src={`https://picsum.photos/seed/user${i}/100/100`} alt="user" referrerPolicy="no-referrer" />
-                <SupportChat />
     </div>
             ))}
-            <SupportChat />
     </div>
           <div className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-black">
             <span className="block">500+ Grabs</span>
             <span className="opacity-40">This Month</span>
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
-        <SupportChat />
     </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
@@ -2173,27 +2023,20 @@ const SocialProof = ({ testimonials }: { testimonials: Testimonial[] }) => (
           <div key={t.id} className="p-6 md:p-8 bg-gray-50 border border-gray-50 relative overflow-hidden group rounded-xl">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Instagram size={32} className="text-black" />
-              <SupportChat />
     </div>
             <div className="flex items-center gap-2 mb-3 md:mb-4">
               <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-black text-white flex items-center justify-center font-semibold text-[10px]">
                 {t.user[0]}
-                <SupportChat />
     </div>
               <div>
                 <h4 className="font-semibold text-[10px] md:text-xs text-black">{t.user}</h4>
                 <p className="text-[8px] md:text-[9px] opacity-40 font-mono text-black">{t.handle}</p>
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
             <p className="text-sm md:text-base font-normal leading-relaxed italic text-black/80">"{t.content}"</p>
-            <SupportChat />
     </div>
         ))}
-        <SupportChat />
     </div>
-      <SupportChat />
     </div>
   </section>
 );
@@ -2207,7 +2050,6 @@ const PartnershipHub = ({ partners }: { partners: Partner[] }) => (
             <Logo className="h-6 md:h-8" dark />
             <div className="h-px w-12 bg-black/10" />
             <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] text-black/30">Collective</span>
-            <SupportChat />
     </div>
           <h2 className="text-4xl md:text-7xl font-bold uppercase tracking-tighter mb-6 md:mb-8 text-black leading-[0.9]">
             The Culture<br />Collective
@@ -2229,19 +2071,14 @@ const PartnershipHub = ({ partners }: { partners: Partner[] }) => (
                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
                      referrerPolicy="no-referrer"
                    />
-                  <SupportChat />
     </div>
                 <div>
                   <h4 className="font-semibold uppercase tracking-wider text-[10px] md:text-xs text-black">{p.name}</h4>
                   <p className="text-[9px] md:text-[10px] opacity-40 text-black">{p.description}</p>
-                  <SupportChat />
     </div>
-                <SupportChat />
     </div>
             ))}
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
         <div className="relative aspect-square">
           <img
@@ -2253,13 +2090,9 @@ const PartnershipHub = ({ partners }: { partners: Partner[] }) => (
           <div className="absolute -bottom-3 -right-3 md:-bottom-6 md:-right-6 w-24 h-24 md:w-32 md:h-32 bg-black text-white p-4 md:p-6 flex flex-col justify-center items-center text-center rounded-xl shadow-xl">
             <span className="text-xl md:text-3xl font-semibold">2026</span>
             <span className="text-[8px] md:text-[9px] font-semibold uppercase tracking-wider">Season Drop</span>
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
-        <SupportChat />
     </div>
-      <SupportChat />
     </div>
   </section>
 );
@@ -2329,14 +2162,11 @@ const FAQChatbot = () => {
             <div className="bg-[#06402B] text-white p-4 flex items-center gap-3">
               <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                 <MessageSquare size={14} />
-                <SupportChat />
     </div>
               <div>
                 <p className="text-xs font-black uppercase tracking-wider">Grab & Go Support</p>
                 <p className="text-[9px] text-white/60">Usually replies instantly</p>
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[300px]">
               {messages.map((msg, i) => (
@@ -2344,10 +2174,8 @@ const FAQChatbot = () => {
                   <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-xs leading-relaxed ${
                     msg.role === 'user' ? 'bg-[#06402B] text-white rounded-br-sm' : 'bg-gray-100 text-gray-700 rounded-bl-sm'
                   }`}>{msg.text}</div>
-                  <SupportChat />
     </div>
               ))}
-              <SupportChat />
     </div>
             <div className="px-4 pb-2 flex flex-wrap gap-1.5">
               {['Sizes', 'Delivery', 'Returns', 'Payment'].map(q => (
@@ -2355,7 +2183,6 @@ const FAQChatbot = () => {
                   className="text-[9px] px-3 py-1 bg-[#06402B]/10 text-[#06402B] rounded-full font-bold uppercase tracking-wider hover:bg-[#06402B]/20 transition-colors"
                 >{q}</button>
               ))}
-              <SupportChat />
     </div>
             <div className="p-3 border-t border-gray-100 flex gap-2">
               <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
@@ -2366,7 +2193,6 @@ const FAQChatbot = () => {
               <button onClick={handleSend}
                 className="w-9 h-9 bg-[#06402B] text-white rounded-full flex items-center justify-center hover:bg-[#06402B]/90 transition-colors flex-shrink-0"
               ><Send size={14} /></button>
-              <SupportChat />
     </div>
           </motion.div>
         )}
@@ -2414,16 +2240,12 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
               <div className="flex items-center gap-2">
                 <Sparkles size={12} className="text-[#FFA500]" />
                 <span className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Exclusive Drops</span>
-                <SupportChat />
     </div>
               <div className="flex items-center gap-2">
                 <Truck size={12} className="text-[#FFA500]" />
                 <span className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Free Delivery R1,000+</span>
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
           <div className="w-full md:w-auto md:min-w-[360px]">
             <AnimatePresence mode="wait">
@@ -2456,11 +2278,8 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
                 </form>
               )}
             </AnimatePresence>
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
-        <SupportChat />
     </div>
 
       {/* Footer Content — No Shopping Nav */}
@@ -2492,9 +2311,7 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
               >
                 <Facebook size={14} />
               </motion.a>
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
 
           {/* Support + Legal columns */}
@@ -2509,7 +2326,6 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
                 <li><Link to="/faq" className="hover:text-black transition-colors">FAQ</Link></li>
                 <li><Link to="/refunds" className="hover:text-black transition-colors">Returns & Refunds</Link></li>
               </ul>
-              <SupportChat />
     </div>
             <div className="space-y-3">
               <h4 className="text-[10px] font-black uppercase tracking-widest text-black">Company</h4>
@@ -2518,11 +2334,8 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
                 <li><Link to="/legal" className="hover:text-black transition-colors">Privacy Policy</Link></li>
                 <li><Link to="/legal" className="hover:text-black transition-colors">Terms of Service</Link></li>
               </ul>
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
 
         {/* Bottom bar */}
@@ -2534,11 +2347,8 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
             <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-5 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
             <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-5 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
             <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-4 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
-        <SupportChat />
     </div>
     </footer>
   );
@@ -2579,12 +2389,10 @@ const SystemHealthDashboard = () => {
           <div>
             <h1 className="font-serif italic text-4xl mb-2">System Health</h1>
             <p className="font-mono text-[10px] uppercase tracking-widest opacity-50">Diagnostic Console v2.4.0</p>
-            <SupportChat />
     </div>
           <div className="text-right">
             <p className="font-mono text-[10px] uppercase tracking-widest opacity-50">Last Scan</p>
             <p className="font-mono text-xs">{new Date().toLocaleString()}</p>
-            <SupportChat />
     </div>
         </header>
 
@@ -2595,7 +2403,6 @@ const SystemHealthDashboard = () => {
             <div className="font-serif italic text-[11px] uppercase tracking-wider opacity-50">System</div>
             <div className="font-serif italic text-[11px] uppercase tracking-wider opacity-50">Status / Diagnostics</div>
             <div className="font-serif italic text-[11px] uppercase tracking-wider opacity-50 text-right">Action</div>
-            <SupportChat />
     </div>
 
           {/* Table Rows */}
@@ -2609,12 +2416,10 @@ const SystemHealthDashboard = () => {
               <div className="flex items-center gap-3">
                 <system.icon size={16} className={system.status === 'error' ? 'text-red-500 group-hover:text-red-400' : 'text-emerald-600 group-hover:text-emerald-400'} />
                 <span className="font-bold uppercase tracking-tight text-sm">{system.name}</span>
-                <SupportChat />
     </div>
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${system.status === 'error' ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
                 <span className="font-mono text-xs">{system.message}</span>
-                <SupportChat />
     </div>
               <div className="text-right">
                 {system.action ? (
@@ -2629,11 +2434,9 @@ const SystemHealthDashboard = () => {
                 ) : (
                   <span className="font-mono text-[10px] uppercase tracking-widest opacity-30">No Action Required</span>
                 )}
-                <SupportChat />
     </div>
             </motion.div>
           ))}
-          <SupportChat />
     </div>
 
         <div className="mt-12 grid md:grid-cols-2 gap-8">
@@ -2644,13 +2447,9 @@ const SystemHealthDashboard = () => {
             <button className="font-mono text-[10px] uppercase tracking-widest border border-[#141414] px-6 py-3 hover:bg-[#141414] hover:text-[#E4E3E0] transition-all flex items-center gap-2">
               <RefreshCw size={14} /> Trigger Manual Scan
             </button>
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
-        <SupportChat />
     </div>
-      <SupportChat />
     </div>
   );
 };
@@ -2708,7 +2507,6 @@ const HelpDeskPage = () => {
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-tighter mb-4">Help Desk</h1>
           <p className="text-sm text-gray-500 uppercase tracking-widest">How can we help you today?</p>
-          <SupportChat />
     </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -2725,7 +2523,6 @@ const HelpDeskPage = () => {
                 >
                   <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle2 size={24} />
-                    <SupportChat />
     </div>
                   <h3 className="text-lg font-bold mb-2">Message Sent!</h3>
                   <p className="text-xs text-gray-500 mb-6">We've received your inquiry and will get back to you within 24-48 hours.</p>
@@ -2748,7 +2545,6 @@ const HelpDeskPage = () => {
                         onChange={(e) => setFormData({...formData, name: e.target.value})}
                         className="w-full bg-white border border-gray-200 rounded-md px-4 py-3 text-xs focus:ring-1 focus:ring-black outline-none transition-all"
                       />
-                      <SupportChat />
     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Email</label>
@@ -2759,9 +2555,7 @@ const HelpDeskPage = () => {
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
                         className="w-full bg-white border border-gray-200 rounded-md px-4 py-3 text-xs focus:ring-1 focus:ring-black outline-none transition-all"
                       />
-                      <SupportChat />
     </div>
-                    <SupportChat />
     </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Subject</label>
@@ -2772,7 +2566,6 @@ const HelpDeskPage = () => {
                       onChange={(e) => setFormData({...formData, subject: e.target.value})}
                       className="w-full bg-white border border-gray-200 rounded-md px-4 py-3 text-xs focus:ring-1 focus:ring-black outline-none transition-all"
                     />
-                    <SupportChat />
     </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Message</label>
@@ -2783,7 +2576,6 @@ const HelpDeskPage = () => {
                       onChange={(e) => setFormData({...formData, message: e.target.value})}
                       className="w-full bg-white border border-gray-200 rounded-md px-4 py-3 text-xs focus:ring-1 focus:ring-black outline-none transition-all resize-none"
                     />
-                    <SupportChat />
     </div>
 
                   {status === 'error' && (
@@ -2809,22 +2601,17 @@ const HelpDeskPage = () => {
                   </button>
                 </form>
               )}
-              <SupportChat />
     </div>
 
             <div className="grid grid-cols-1 gap-4">
               <div className="p-6 border border-gray-100 rounded-2xl flex flex-col items-center text-center hover:bg-gray-50 transition-colors group">
                 <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Mail size={20} />
-                  <SupportChat />
     </div>
                 <h3 className="text-[10px] font-bold uppercase tracking-widest mb-1">Email</h3>
                 <p className="text-[8px] text-gray-400 uppercase tracking-wider">support@grabandgo.co.za</p>
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
 
           {/* Quick FAQs */}
@@ -2852,25 +2639,18 @@ const HelpDeskPage = () => {
                 <div key={i} className="space-y-2">
                   <h3 className="text-xs font-bold uppercase tracking-widest text-black">{faq.q}</h3>
                   <p className="text-xs text-gray-500 leading-relaxed">{faq.a}</p>
-                  <SupportChat />
     </div>
               ))}
-              <SupportChat />
     </div>
 
             <div className="pt-8 border-t border-gray-100">
               <Link to="/faq" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] hover:gap-4 transition-all">
                 View All FAQs <ArrowRight size={14} />
               </Link>
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
-        <SupportChat />
     </div>
-      <SupportChat />
     </div>
   );
 };
@@ -2988,14 +2768,11 @@ const FAQPage = () => {
                   <div key={i} className="space-y-2">
                     <h3 className="text-sm font-semibold text-black uppercase tracking-tight">{item.q}</h3>
                     <p className="text-sm leading-relaxed text-gray-500 whitespace-pre-line">{item.a}</p>
-                    <SupportChat />
     </div>
                 ))}
-                <SupportChat />
     </div>
             </section>
           ))}
-          <SupportChat />
     </div>
 
         <footer className="pt-8 border-t border-gray-50 text-center">
@@ -3005,7 +2782,6 @@ const FAQPage = () => {
           </p>
         </footer>
       </motion.div>
-      <SupportChat />
     </div>
   );
 };
@@ -3082,7 +2858,6 @@ const ShippingPolicyPage = () => {
           </p>
         </footer>
       </motion.div>
-      <SupportChat />
     </div>
   );
 };
@@ -3172,7 +2947,6 @@ const RefundPolicyPage = () => {
           </p>
         </footer>
       </motion.div>
-      <SupportChat />
     </div>
   );
 };
@@ -3264,7 +3038,6 @@ const LegalPage = () => {
           <p className="text-[10px] font-semibold uppercase tracking-wider opacity-30">These policies were last updated on 13/05/2025 and may be revised periodically.</p>
         </footer>
       </motion.div>
-      <SupportChat />
     </div>
   );
 };
@@ -3314,7 +3087,6 @@ const OurStoryPage = () => {
           <p>
             No endless back-and-forth. Just fresh, finished fashion that’s ready to move when you are.
           </p>
-          <SupportChat />
     </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8">
@@ -3325,7 +3097,6 @@ const OurStoryPage = () => {
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
-            <SupportChat />
     </div>
           <div className="aspect-[4/5] bg-gray-50 overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 rounded-lg">
             <img
@@ -3334,12 +3105,9 @@ const OurStoryPage = () => {
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
       </motion.div>
-      <SupportChat />
     </div>
   );
 };
@@ -3377,9 +3145,7 @@ const TrackingTimeline = ({ trackingNumber, trackingUrl }: { trackingNumber: str
             <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Tracking Number</p>
             <p className="text-xs font-mono font-bold">{trackingNumber}</p>
             {status && <p className="text-[10px] text-emerald-500 mt-1 uppercase">{status}</p>}
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
         {trackingUrl && (
           <a
@@ -3391,13 +3157,11 @@ const TrackingTimeline = ({ trackingNumber, trackingUrl }: { trackingNumber: str
             Track Package
           </a>
         )}
-        <SupportChat />
     </div>
 
       {loadingEvents ? (
         <div className="flex items-center gap-2 py-4 px-4 text-sm text-gray-400">
           <Loader2 className="animate-spin" size={16} /> Loading tracking events...
-          <SupportChat />
     </div>
       ) : events.length > 0 ? (
         <div className="pl-4 border-l-2 border-gray-100 space-y-4 ml-2">
@@ -3421,17 +3185,12 @@ const TrackingTimeline = ({ trackingNumber, trackingUrl }: { trackingNumber: str
                       })}
                     </p>
                   )}
-                  <SupportChat />
     </div>
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
           ))}
-          <SupportChat />
     </div>
       ) : null}
-      <SupportChat />
     </div>
   );
 };
@@ -3489,7 +3248,6 @@ const OrderTrackingPage = () => {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-4 text-black">Track Your Order</h1>
           <p className="text-[10px] text-gray-400 uppercase tracking-widest">Enter your details below to see your order status</p>
-          <SupportChat />
     </div>
 
         <form onSubmit={handleTrack} className="space-y-6 mb-12">
@@ -3504,7 +3262,6 @@ const OrderTrackingPage = () => {
                 required
                 className="w-full border border-gray-100 rounded-sm px-4 py-3 text-sm focus:border-black outline-none transition-all uppercase tracking-widest font-bold text-black"
               />
-              <SupportChat />
     </div>
             <div>
               <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-2 text-black">Email Address</label>
@@ -3516,9 +3273,7 @@ const OrderTrackingPage = () => {
                 required
                 className="w-full border border-gray-100 rounded-sm px-4 py-3 text-sm focus:border-black outline-none transition-all uppercase tracking-widest font-bold text-black"
               />
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
 
           <button
@@ -3554,7 +3309,6 @@ const OrderTrackingPage = () => {
               <div>
                 <h2 className="text-xl font-bold uppercase tracking-tighter">Order #{order.id.slice(0, 8).toUpperCase()}</h2>
                 <p className="text-[10px] opacity-30 uppercase tracking-widest mt-1">Placed on {new Date(order.date).toLocaleDateString()}</p>
-                <SupportChat />
     </div>
               <div className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest ${
                 order.status === 'pending' ? 'bg-yellow-50 text-yellow-600' :
@@ -3564,9 +3318,7 @@ const OrderTrackingPage = () => {
                 'bg-red-50 text-red-600'
               }`}>
                 {order.status}
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
 
             {order.trackingNumber && (
@@ -3580,24 +3332,18 @@ const OrderTrackingPage = () => {
                   <div key={idx} className="flex justify-between items-center text-xs">
                     <span className="font-bold uppercase tracking-tight">{item.quantity}x {item.name}</span>
                     <span className="font-mono opacity-60">{formatPrice(item.price * item.quantity)}</span>
-                    <SupportChat />
     </div>
                 ))}
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
 
             <div className="pt-6 border-t border-gray-100 flex justify-between items-center">
               <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Total Paid</span>
               <span className="text-lg font-bold">{formatPrice(order.total)}</span>
-              <SupportChat />
     </div>
           </motion.div>
         )}
-        <SupportChat />
     </div>
-      <SupportChat />
     </div>
   );
 };
@@ -3619,7 +3365,6 @@ const NotFoundPage = () => {
         <div className="space-y-2">
           <h2 className="text-xl md:text-2xl font-semibold uppercase tracking-tight">Need Help?</h2>
           <p className="text-[10px] font-mono uppercase tracking-wider opacity-30">The page you're looking for doesn't exist or has been moved.</p>
-          <SupportChat />
     </div>
         <button
           onClick={() => navigate('/')}
@@ -3628,7 +3373,6 @@ const NotFoundPage = () => {
           <ArrowRight className="rotate-180" size={16} /> Back to Shop
         </button>
       </motion.div>
-      <SupportChat />
     </div>
   );
 };
@@ -3756,7 +3500,6 @@ const AuthModal = ({
               <div className="space-y-2">
                 <Logo className="h-8 mx-auto" dark />
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-30">Account Access</p>
-                <SupportChat />
     </div>
 
               {showForgotPassword ? (
@@ -3764,14 +3507,12 @@ const AuthModal = ({
                   <div className="space-y-2">
                     <h2 className="text-xl font-display font-bold uppercase tracking-tighter">Reset Password</h2>
                     <p className="text-xs text-gray-500 leading-relaxed">Enter your email and we'll send you a link to reset your password.</p>
-                    <SupportChat />
     </div>
 
                   {resetSent ? (
                     <div className="p-4 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 text-left">
                       <CheckCircle2 size={14} className="flex-shrink-0" />
                       <span>Reset link sent! Check your inbox.</span>
-                      <SupportChat />
     </div>
                   ) : (
                     <form onSubmit={handleForgotPassword} className="space-y-4">
@@ -3799,7 +3540,6 @@ const AuthModal = ({
                       </button>
                     </form>
                   )}
-                  <SupportChat />
     </div>
               ) : (
                 <>
@@ -3812,14 +3552,12 @@ const AuthModal = ({
                         ? 'Sign in to track your orders and manage your account.'
                         : 'Join Grab & Go to save your details and track your orders.'}
                     </p>
-                    <SupportChat />
     </div>
 
                   {error && (
                     <div className="p-3 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 text-left">
                       <AlertCircle size={14} className="flex-shrink-0" />
                       <span>{error}</span>
-                      <SupportChat />
     </div>
                   )}
 
@@ -3859,7 +3597,6 @@ const AuthModal = ({
                         >
                           Forgot Password?
                         </button>
-                        <SupportChat />
     </div>
                     )}
                     <button
@@ -3874,13 +3611,10 @@ const AuthModal = ({
                   <div className="relative py-2">
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-gray-100"></div>
-                      <SupportChat />
     </div>
                     <div className="relative flex justify-center text-[8px] uppercase tracking-[0.2em] font-bold">
                       <span className="bg-white px-2 text-gray-300">Or continue with</span>
-                      <SupportChat />
     </div>
-                    <SupportChat />
     </div>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -3906,7 +3640,6 @@ const AuthModal = ({
                     >
                       <Facebook size={16} className="text-[#1877F2]" />
                     </button>
-                    <SupportChat />
     </div>
 
                   <div className="pt-2">
@@ -3916,7 +3649,6 @@ const AuthModal = ({
                     >
                       {mode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
                     </button>
-                    <SupportChat />
     </div>
                 </>
               )}
@@ -3924,7 +3656,6 @@ const AuthModal = ({
               <p className="text-[8px] text-gray-400 uppercase tracking-widest">
                 By continuing, you agree to our <Link to="/legal" className="text-black underline">Terms</Link>
               </p>
-              <SupportChat />
     </div>
 
             <button
@@ -3934,7 +3665,6 @@ const AuthModal = ({
               <X size={20} />
             </button>
           </motion.div>
-          <SupportChat />
     </div>
       )}
     </AnimatePresence>
@@ -4034,7 +3764,6 @@ const LabelDownloadButton = ({ order }: { order: Order }) => {
       {status === 'error' && errorMsg && (
         <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest text-center leading-tight">{errorMsg}</p>
       )}
-      <SupportChat />
     </div>
   );
 };
@@ -4117,12 +3846,10 @@ const OrdersDrawer = ({
                 <span className="text-[10px] font-mono opacity-30 uppercase tracking-widest text-black">
                   {orders.length} Total
                 </span>
-                <SupportChat />
     </div>
               <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors">
                 <X size={24} className="text-black" />
               </button>
-              <SupportChat />
     </div>
 
             <div className="flex-grow overflow-y-auto space-y-4 pr-2 custom-scrollbar">
@@ -4130,13 +3857,11 @@ const OrdersDrawer = ({
                 <div className="text-center py-20 opacity-30 text-black">
                   <UserIcon size={48} className="mx-auto mb-4" />
                   <p className="uppercase tracking-widest text-sm font-bold">Login to track your orders</p>
-                  <SupportChat />
     </div>
               ) : orders.length === 0 ? (
                 <div className="text-center py-20 opacity-30 text-black">
                   <Package size={48} className="mx-auto mb-4" />
                   <p className="uppercase tracking-widest text-sm font-bold">No orders found</p>
-                  <SupportChat />
     </div>
               ) : (
                 orders.map((order) => (
@@ -4146,19 +3871,16 @@ const OrdersDrawer = ({
                         <h4 className="text-xs font-mono font-bold uppercase tracking-widest opacity-50">Order #{order.id.slice(0, 8).toUpperCase()}</h4>
                         <p className="text-[10px] opacity-30 uppercase tracking-widest mt-1">{new Date(order.date).toLocaleDateString()}</p>
                         <p className="text-[10px] opacity-30 mt-1">{new Date(order.date).toLocaleString()}</p>
-                        <SupportChat />
     </div>
                       <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest ${getStatusColor(order.status)}`}>
                         {getStatusLabel(order.status)}
                       </span>
-                      <SupportChat />
     </div>
 
                     {order.trackingNumber && (
                       <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-sm w-fit">
                         <Truck size={12} />
                         <span>Shipment: {order.status === 'completed' ? 'Delivered' : 'In Transit'}</span>
-                        <SupportChat />
     </div>
                     )}
 
@@ -4167,16 +3889,13 @@ const OrdersDrawer = ({
                         <div key={idx} className="flex justify-between text-xs">
                           <span className="opacity-70">{item.quantity}x {item.name}</span>
                           <span className="font-mono">{formatPrice(item.price * item.quantity)}</span>
-                          <SupportChat />
     </div>
                       ))}
-                      <SupportChat />
     </div>
 
                     <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
                       <span className="text-[10px] font-bold uppercase tracking-widest opacity-50">Total Paid</span>
                       <span className="font-mono font-bold">{formatPrice(order.total)}</span>
-                      <SupportChat />
     </div>
 
 
@@ -4187,7 +3906,6 @@ const OrdersDrawer = ({
                           <div>
                             <p className="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-1">Tracking Number</p>
                             <p className="text-xs font-mono">{order.trackingNumber || (order as any).trackingReference || 'N/A'}</p>
-                            <SupportChat />
     </div>
                           <a
                             href={order.trackingUrl || `/track-order?id=${order.id}&email=${encodeURIComponent(order.email)}`}
@@ -4197,13 +3915,11 @@ const OrdersDrawer = ({
                           >
                             Track <ExternalLink size={12} />
                           </a>
-                          <SupportChat />
     </div>
                         {user.role === 'admin' && (order.labelUrl || order.shipmentId) && (
                           <LabelDownloadButton order={order} />
                         )}
 
-                        <SupportChat />
     </div>
                     )}
 
@@ -4219,7 +3935,6 @@ const OrdersDrawer = ({
                               {s}
                             </button>
                           ))}
-                          <SupportChat />
     </div>
 
                         <div className="grid grid-cols-2 gap-2">
@@ -4246,16 +3961,12 @@ const OrdersDrawer = ({
                           >
                             Update Tracking Info
                           </button>
-                          <SupportChat />
     </div>
-                        <SupportChat />
     </div>
                     )}
-                    <SupportChat />
     </div>
                 ))
               )}
-              <SupportChat />
     </div>
           </motion.div>
         </>
@@ -4344,7 +4055,6 @@ const CategoryManagementDrawer = ({
               <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors text-black">
                 <X size={24} />
               </button>
-              <SupportChat />
     </div>
 
             <div className="mb-6">
@@ -4354,7 +4064,6 @@ const CategoryManagementDrawer = ({
               >
                 <Plus size={16} /> Add New Category
               </button>
-              <SupportChat />
     </div>
 
             <div className="flex-grow overflow-y-auto space-y-3 pr-2 custom-scrollbar">
@@ -4363,7 +4072,6 @@ const CategoryManagementDrawer = ({
                   <div className="p-3 border border-gray-50 bg-gray-50/30 flex gap-3 items-center text-black group">
                     <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
                       {mainCat.image ? <img src={mainCat.image} alt={mainCat.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : null}
-                      <SupportChat />
     </div>
                     <div className="flex-grow">
                       <h4 className="text-xs font-bold uppercase tracking-tight">{mainCat.name}</h4>
@@ -4372,7 +4080,6 @@ const CategoryManagementDrawer = ({
                           {mainCat.description}
                         </p>
                       )}
-                      <SupportChat />
     </div>
                     <div className="flex gap-1">
                       <button
@@ -4387,9 +4094,7 @@ const CategoryManagementDrawer = ({
                       >
                         <Trash2 size={14} />
                       </button>
-                      <SupportChat />
     </div>
-                    <SupportChat />
     </div>
 
                   {/* Sub-categories */}
@@ -4398,11 +4103,9 @@ const CategoryManagementDrawer = ({
                       <div key={subCat.id} className="p-2 border border-gray-50 bg-white flex gap-3 items-center text-black group">
                         <div className="w-8 h-8 bg-gray-50 rounded overflow-hidden flex-shrink-0">
                           {subCat.image ? <img src={subCat.image} alt={subCat.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : null}
-                          <SupportChat />
     </div>
                         <div className="flex-grow">
                           <h4 className="text-[10px] font-bold uppercase tracking-tight">{subCat.name}</h4>
-                          <SupportChat />
     </div>
                         <div className="flex gap-1">
                           <button
@@ -4417,14 +4120,10 @@ const CategoryManagementDrawer = ({
                           >
                             <Trash2 size={12} />
                           </button>
-                          <SupportChat />
     </div>
-                        <SupportChat />
     </div>
                     ))}
-                    <SupportChat />
     </div>
-                  <SupportChat />
     </div>
               ))}
 
@@ -4433,17 +4132,13 @@ const CategoryManagementDrawer = ({
                 <div key={orphan.id} className="p-3 border border-red-50 bg-red-50/10 flex gap-3 items-center text-black group">
                   <div className="flex-grow">
                     <h4 className="text-xs font-bold uppercase tracking-tight">{orphan.name} (Orphaned)</h4>
-                    <SupportChat />
     </div>
                   <div className="flex gap-1">
                     <button onClick={() => setEditingCategory(orphan)} className="p-1.5 hover:bg-black/5 rounded-full transition-colors"><Edit3 size={14} /></button>
                     <button onClick={() => setDeletingId(orphan.id)} className="p-1.5 hover:bg-red-50 rounded-full transition-colors text-red-500"><Trash2 size={14} /></button>
-                    <SupportChat />
     </div>
-                  <SupportChat />
     </div>
               ))}
-              <SupportChat />
     </div>
 
             {/* Edit Modal */}
@@ -4476,7 +4171,6 @@ const CategoryManagementDrawer = ({
                           onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
                           className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none"
                         />
-                        <SupportChat />
     </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Description</label>
@@ -4485,7 +4179,6 @@ const CategoryManagementDrawer = ({
                           onChange={(e) => setEditingCategory({ ...editingCategory, description: e.target.value })}
                           className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none h-20 resize-none"
                         />
-                        <SupportChat />
     </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Image</label>
@@ -4495,7 +4188,6 @@ const CategoryManagementDrawer = ({
                             className="w-12 h-12 border border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-black transition-colors"
                           >
                             {isUploading ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
-                            <SupportChat />
     </div>
                           <input
                             type="text"
@@ -4510,9 +4202,7 @@ const CategoryManagementDrawer = ({
                             onChange={handleFileUpload}
                             className="hidden"
                           />
-                          <SupportChat />
     </div>
-                        <SupportChat />
     </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Parent Category</label>
@@ -4526,7 +4216,6 @@ const CategoryManagementDrawer = ({
                             <option key={c.id} value={c.id}>{c.name}</option>
                           ))}
                         </select>
-                        <SupportChat />
     </div>
                       <div className="flex gap-3 pt-4">
                         <button
@@ -4543,11 +4232,9 @@ const CategoryManagementDrawer = ({
                         >
                           {isSaving ? <Loader2 className="animate-spin" size={14} /> : 'Save'}
                         </button>
-                        <SupportChat />
     </div>
                     </form>
                   </motion.div>
-                  <SupportChat />
     </div>
               )}
             </AnimatePresence>
@@ -4582,10 +4269,8 @@ const CategoryManagementDrawer = ({
                       >
                         Delete
                       </button>
-                      <SupportChat />
     </div>
                   </motion.div>
-                  <SupportChat />
     </div>
               )}
             </AnimatePresence>
@@ -4678,7 +4363,6 @@ const BrandManagementDrawer = ({
               <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors text-black">
                 <X size={24} />
               </button>
-              <SupportChat />
     </div>
 
             <div className="mb-6">
@@ -4688,7 +4372,6 @@ const BrandManagementDrawer = ({
               >
                 <Plus size={16} /> Add New Brand
               </button>
-              <SupportChat />
     </div>
 
             <div className="flex-grow overflow-y-auto space-y-3 pr-2 custom-scrollbar">
@@ -4696,11 +4379,9 @@ const BrandManagementDrawer = ({
                 <div key={brand.id} className="p-3 border border-gray-50 bg-gray-50/30 flex gap-3 items-center text-black group">
                   <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
                     {brand.logo ? <img src={brand.logo} alt={brand.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : null}
-                    <SupportChat />
     </div>
                   <div className="flex-grow">
                     <h4 className="text-xs font-bold uppercase tracking-tight">{brand.name}</h4>
-                    <SupportChat />
     </div>
                   <div className="flex gap-1">
                     <button
@@ -4715,12 +4396,9 @@ const BrandManagementDrawer = ({
                     >
                       <Trash2 size={14} />
                     </button>
-                    <SupportChat />
     </div>
-                  <SupportChat />
     </div>
               ))}
-              <SupportChat />
     </div>
 
             {/* Edit Modal */}
@@ -4753,7 +4431,6 @@ const BrandManagementDrawer = ({
                           onChange={(e) => setEditingBrand({ ...editingBrand, name: e.target.value })}
                           className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none"
                         />
-                        <SupportChat />
     </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Description</label>
@@ -4762,7 +4439,6 @@ const BrandManagementDrawer = ({
                           onChange={(e) => setEditingBrand({ ...editingBrand, description: e.target.value })}
                           className="w-full bg-gray-50 border border-gray-100 px-4 py-2 text-sm focus:border-black outline-none h-20 resize-none"
                         />
-                        <SupportChat />
     </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Logo</label>
@@ -4772,7 +4448,6 @@ const BrandManagementDrawer = ({
                             className="w-12 h-12 border border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-black transition-colors"
                           >
                             {isUploading ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
-                            <SupportChat />
     </div>
                           <input
                             type="text"
@@ -4787,9 +4462,7 @@ const BrandManagementDrawer = ({
                             onChange={handleFileUpload}
                             className="hidden"
                           />
-                          <SupportChat />
     </div>
-                        <SupportChat />
     </div>
                       <div className="flex gap-3 pt-4">
                         <button
@@ -4806,11 +4479,9 @@ const BrandManagementDrawer = ({
                         >
                           {isSaving ? <Loader2 className="animate-spin" size={14} /> : 'Save'}
                         </button>
-                        <SupportChat />
     </div>
                     </form>
                   </motion.div>
-                  <SupportChat />
     </div>
               )}
             </AnimatePresence>
@@ -4845,10 +4516,8 @@ const BrandManagementDrawer = ({
                       >
                         Delete
                       </button>
-                      <SupportChat />
     </div>
                   </motion.div>
-                  <SupportChat />
     </div>
               )}
             </AnimatePresence>
@@ -5066,12 +4735,10 @@ const ProductManagementDrawer = ({
                 <span className="text-[10px] font-mono opacity-30 uppercase tracking-widest text-black">
                   {products.length} Items
                 </span>
-                <SupportChat />
     </div>
               <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors text-black">
                 <X size={24} />
               </button>
-              <SupportChat />
     </div>
 
             <div className="mb-8 space-y-4">
@@ -5086,7 +4753,6 @@ const ProductManagementDrawer = ({
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full bg-gray-50 border border-gray-100 pl-12 pr-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-black outline-none transition-all text-black"
                     />
-                    <SupportChat />
     </div>
                   <select
                     value={filterCategory}
@@ -5098,7 +4764,6 @@ const ProductManagementDrawer = ({
                       <option key={c.id} value={c.name}>{c.name}</option>
                     ))}
                   </select>
-                  <SupportChat />
     </div>
                 <div className="flex gap-2">
                   <select
@@ -5122,9 +4787,7 @@ const ProductManagementDrawer = ({
                       <option key={sub} value={sub}>{sub}</option>
                     ))}
                   </select>
-                  <SupportChat />
     </div>
-                <SupportChat />
     </div>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -5139,9 +4802,7 @@ const ProductManagementDrawer = ({
                 >
                   <Grid size={16} /> Categories
                 </button>
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
 
             <div className="flex-grow overflow-y-auto space-y-4 pr-4 custom-scrollbar">
@@ -5156,7 +4817,6 @@ const ProductManagementDrawer = ({
                   <div className="flex-grow">
                     <h4 className="text-sm font-bold uppercase tracking-tight">{product.name}</h4>
                     <p className="text-[10px] opacity-50 uppercase tracking-widest">{formatPrice(product.price)} • {(product.categories || []).join(', ')}</p>
-                    <SupportChat />
     </div>
                   <div className="flex gap-2">
                     <button
@@ -5171,12 +4831,9 @@ const ProductManagementDrawer = ({
                     >
                       <Trash2 size={16} />
                     </button>
-                    <SupportChat />
     </div>
-                  <SupportChat />
     </div>
               ))}
-              <SupportChat />
     </div>
 
             {/* Delete Confirmation Overlay */}
@@ -5198,7 +4855,6 @@ const ProductManagementDrawer = ({
                   >
                     <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Trash2 size={24} />
-                      <SupportChat />
     </div>
                     <h3 className="text-lg font-display font-bold uppercase tracking-tighter mb-2">Delete Product?</h3>
                     <p className="text-[10px] text-gray-500 mb-6 uppercase tracking-widest">This action cannot be undone.</p>
@@ -5220,10 +4876,8 @@ const ProductManagementDrawer = ({
                       >
                         Delete
                       </button>
-                      <SupportChat />
     </div>
                   </motion.div>
-                  <SupportChat />
     </div>
               )}
             </AnimatePresence>
@@ -5252,7 +4906,6 @@ const ProductManagementDrawer = ({
                       <button onClick={() => setEditingProduct(null)} className="p-2 hover:bg-gray-50 rounded-full transition-colors">
                         <X size={20} />
                       </button>
-                      <SupportChat />
     </div>
 
                     {/* Shopify-like Tabs */}
@@ -5272,7 +4925,6 @@ const ProductManagementDrawer = ({
                           {tab.label}
                         </button>
                       ))}
-                      <SupportChat />
     </div>
 
                     <form onSubmit={handleSave} className="flex-grow overflow-y-auto p-6 space-y-6 custom-scrollbar">
@@ -5289,7 +4941,6 @@ const ProductManagementDrawer = ({
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                                 placeholder="e.g. Classic Street Tee"
                               />
-                              <SupportChat />
     </div>
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Categories</label>
@@ -5314,7 +4965,6 @@ const ProductManagementDrawer = ({
                                     {(editingProduct.categories || []).length === 0 && (
                                       <span className="text-[10px] opacity-30 uppercase tracking-widest">No categories selected</span>
                                     )}
-                                    <SupportChat />
     </div>
                                   <button
                                     type="button"
@@ -5323,7 +4973,6 @@ const ProductManagementDrawer = ({
                                   >
                                     Manage
                                   </button>
-                                  <SupportChat />
     </div>
 
                                 <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
@@ -5348,13 +4997,9 @@ const ProductManagementDrawer = ({
                                       </button>
                                     );
                                   })}
-                                  <SupportChat />
     </div>
-                                <SupportChat />
     </div>
-                              <SupportChat />
     </div>
-                            <SupportChat />
     </div>
 
                           {/* New Fields: Gender and Sub-category */}
@@ -5371,7 +5016,6 @@ const ProductManagementDrawer = ({
                                 <option value="Kids">Kids</option>
                                 <option value="Unisex">Unisex</option>
                               </select>
-                              <SupportChat />
     </div>
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sub-category</label>
@@ -5382,9 +5026,7 @@ const ProductManagementDrawer = ({
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all text-black"
                                 placeholder="e.g. Sneakers, Accessories, Tees"
                               />
-                              <SupportChat />
     </div>
-                            <SupportChat />
     </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -5397,7 +5039,6 @@ const ProductManagementDrawer = ({
                                 onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                               />
-                              <SupportChat />
     </div>
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Compare at Price (R)</label>
@@ -5408,9 +5049,7 @@ const ProductManagementDrawer = ({
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                                 placeholder="Optional"
                               />
-                              <SupportChat />
     </div>
-                            <SupportChat />
     </div>
 
                           <div className="space-y-1">
@@ -5422,7 +5061,6 @@ const ProductManagementDrawer = ({
                               className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none h-32 resize-none text-black transition-all"
                               placeholder="Describe your product..."
                             />
-                            <SupportChat />
     </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -5435,7 +5073,6 @@ const ProductManagementDrawer = ({
                                 onChange={(e) => setEditingProduct({ ...editingProduct, weight: Number(e.target.value) })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                               />
-                              <SupportChat />
     </div>
                             <div className="flex items-center gap-4 pt-6">
                               <label className="flex items-center gap-2 cursor-pointer group">
@@ -5447,11 +5084,8 @@ const ProductManagementDrawer = ({
                                 />
                                 <span className="text-[10px] font-bold uppercase tracking-widest opacity-50 group-hover:opacity-100 transition-opacity">Featured Drop</span>
                               </label>
-                              <SupportChat />
     </div>
-                            <SupportChat />
     </div>
-                          <SupportChat />
     </div>
                       )}
 
@@ -5479,31 +5113,25 @@ const ProductManagementDrawer = ({
                                   <img src={editingProduct.image || undefined} alt="Preview" className="w-full h-full object-cover grayscale group-hover/drop:grayscale-0 transition-all" referrerPolicy="no-referrer" />
                                   <div className="absolute top-2 left-2 px-2 py-1 bg-black text-white text-[6px] font-black uppercase tracking-widest z-10">
                                     Main Image
-                                    <SupportChat />
     </div>
                                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/main:opacity-100 transition-opacity flex items-center justify-center">
                                     <p className="text-[8px] font-black uppercase text-white">Change Image</p>
-                                    <SupportChat />
     </div>
-                                  <SupportChat />
     </div>
                               ) : (
                                 <>
                                   <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover/drop:text-black transition-colors">
                                     <Upload size={24} />
-                                    <SupportChat />
     </div>
                                   <div className="text-center">
                                     <p className="text-[10px] font-black uppercase tracking-widest">Drag & Drop Image</p>
                                     <p className="text-[8px] opacity-40 uppercase tracking-widest mt-1">or click to browse</p>
-                                    <SupportChat />
     </div>
                                 </>
                               )}
                               {isUploading && (
                                 <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
                                   <Loader2 className="animate-spin text-black" size={32} />
-                                  <SupportChat />
     </div>
                               )}
                               <input
@@ -5513,7 +5141,6 @@ const ProductManagementDrawer = ({
                                 onChange={handleFileUpload}
                                 className="hidden"
                               />
-                              <SupportChat />
     </div>
                             <div className="mt-4">
                               <label className="text-[8px] font-bold uppercase tracking-widest opacity-30">Or use URL</label>
@@ -5524,9 +5151,7 @@ const ProductManagementDrawer = ({
                                 onChange={(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-mono focus:border-black outline-none mt-1 transition-all"
                               />
-                              <SupportChat />
     </div>
-                            <SupportChat />
     </div>
 
                             <div className="space-y-1">
@@ -5535,7 +5160,6 @@ const ProductManagementDrawer = ({
                                 <span className="text-[8px] font-mono opacity-30 uppercase tracking-widest">
                                   {editingProduct.images?.length || 0} / 10 Images
                                 </span>
-                                <SupportChat />
     </div>
                               <div
                                 onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-black'); }}
@@ -5563,13 +5187,10 @@ const ProductManagementDrawer = ({
                                         >
                                           <Trash2 size={12} />
                                         </button>
-                                        <SupportChat />
     </div>
                                       <div className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/60 text-white text-[6px] font-mono rounded">
                                         #{idx + 1}
-                                        <SupportChat />
     </div>
-                                      <SupportChat />
     </div>
                                   ))}
                                   <button
@@ -5583,13 +5204,11 @@ const ProductManagementDrawer = ({
                                       <>
                                         <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-black">
                                           <Plus size={16} />
-                                          <SupportChat />
     </div>
                                         <span className="text-[8px] font-black uppercase tracking-widest">Add Media</span>
                                       </>
                                     )}
                                   </button>
-                                  <SupportChat />
     </div>
 
                                 <div className="flex items-center justify-between">
@@ -5603,9 +5222,7 @@ const ProductManagementDrawer = ({
                                       Clear All
                                     </button>
                                   )}
-                                  <SupportChat />
     </div>
-                                <SupportChat />
     </div>
 
                             <input
@@ -5625,11 +5242,8 @@ const ProductManagementDrawer = ({
                                 onChange={(e) => setEditingProduct({ ...editingProduct, images: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-[10px] font-mono focus:border-black outline-none h-24 resize-none text-black transition-all mt-1"
                               />
-                              <SupportChat />
     </div>
-                            <SupportChat />
     </div>
-                          <SupportChat />
     </div>
                       )}
 
@@ -5639,7 +5253,6 @@ const ProductManagementDrawer = ({
                             <div>
                               <h4 className="text-[10px] font-black uppercase tracking-widest">Product Variants</h4>
                               <p className="text-[8px] opacity-40 uppercase tracking-widest mt-1">Add sizes, colors, or materials</p>
-                              <SupportChat />
     </div>
                             <button
                               type="button"
@@ -5648,7 +5261,6 @@ const ProductManagementDrawer = ({
                             >
                               <Plus size={14} /> Add Variant
                             </button>
-                            <SupportChat />
     </div>
 
                           <div className="space-y-4">
@@ -5671,7 +5283,6 @@ const ProductManagementDrawer = ({
                                     onChange={(e) => updateVariant(variant.id, { name: e.target.value })}
                                     className="w-full bg-white border border-gray-100 px-4 py-2 text-xs font-bold focus:border-black outline-none text-black transition-all"
                                   />
-                                  <SupportChat />
     </div>
 
                                 <div className="space-y-2">
@@ -5701,22 +5312,16 @@ const ProductManagementDrawer = ({
                                         }
                                       }}
                                     />
-                                    <SupportChat />
     </div>
-                                  <SupportChat />
     </div>
-                                <SupportChat />
     </div>
                             ))}
                             {(!editingProduct.variants || editingProduct.variants.length === 0) && (
                               <div className="py-12 text-center border-2 border-dashed border-gray-100 rounded-xl">
                                 <p className="text-[10px] font-black uppercase tracking-widest opacity-20">No variants added</p>
-                                <SupportChat />
     </div>
                             )}
-                            <SupportChat />
     </div>
-                          <SupportChat />
     </div>
                       )}
 
@@ -5726,9 +5331,7 @@ const ProductManagementDrawer = ({
                             <div>
                               <h4 className="text-[10px] font-black uppercase tracking-widest">Inventory Management</h4>
                               <p className="text-[8px] opacity-40 uppercase tracking-widest mt-1">Set stock levels per variant</p>
-                              <SupportChat />
     </div>
-                            <SupportChat />
     </div>
 
                           {editingProduct.variants && editingProduct.variants.length > 0 ? (
@@ -5752,16 +5355,12 @@ const ProductManagementDrawer = ({
                                             }}
                                             className="w-20 bg-white border border-gray-200 px-3 py-2 text-sm text-center focus:border-black outline-none"
                                           />
-                                          <SupportChat />
     </div>
                                       );
                                     })}
-                                    <SupportChat />
     </div>
-                                  <SupportChat />
     </div>
                               ))}
-                              <SupportChat />
     </div>
                           ) : (
                             <div className="p-4 bg-gray-50 border border-gray-100 space-y-3">
@@ -5777,10 +5376,8 @@ const ProductManagementDrawer = ({
                                 placeholder="0"
                               />
                               <p className="text-[8px] text-gray-400">Add variants in the Variants tab to track stock per size/color</p>
-                              <SupportChat />
     </div>
                           )}
-                          <SupportChat />
     </div>
                       )}
 
@@ -5826,9 +5423,7 @@ const ProductManagementDrawer = ({
                                 >
                                   Manage
                                 </button>
-                                <SupportChat />
     </div>
-                              <SupportChat />
     </div>
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Brand Name (Display)</label>
@@ -5839,9 +5434,7 @@ const ProductManagementDrawer = ({
                                 onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                               />
-                              <SupportChat />
     </div>
-                            <SupportChat />
     </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -5868,9 +5461,7 @@ const ProductManagementDrawer = ({
                                   onChange={(e) => setEditingProduct({ ...editingProduct, brandBanner: e.target.value })}
                                   className="flex-grow bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                                 />
-                                <SupportChat />
     </div>
-                              <SupportChat />
     </div>
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sold By</label>
@@ -5881,9 +5472,7 @@ const ProductManagementDrawer = ({
                                 onChange={(e) => setEditingProduct({ ...editingProduct, soldBy: e.target.value })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                               />
-                              <SupportChat />
     </div>
-                            <SupportChat />
     </div>
 
                           <div className="space-y-1">
@@ -5894,7 +5483,6 @@ const ProductManagementDrawer = ({
                               onChange={(e) => setEditingProduct({ ...editingProduct, brandDescription: e.target.value })}
                               className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none h-24 resize-none text-black transition-all"
                             />
-                            <SupportChat />
     </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -5921,9 +5509,7 @@ const ProductManagementDrawer = ({
                                   onChange={(e) => setEditingProduct({ ...editingProduct, soldByLogo: e.target.value })}
                                   className="flex-grow bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                                 />
-                                <SupportChat />
     </div>
-                              <SupportChat />
     </div>
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold uppercase tracking-widest opacity-50">Tags (Comma separated)</label>
@@ -5934,11 +5520,8 @@ const ProductManagementDrawer = ({
                                 onChange={(e) => setEditingProduct({ ...editingProduct, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
                                 className="w-full bg-gray-50 border border-gray-100 px-4 py-3 text-sm focus:border-black outline-none transition-all"
                               />
-                              <SupportChat />
     </div>
-                            <SupportChat />
     </div>
-                          <SupportChat />
     </div>
                       )}
                     </form>
@@ -5958,10 +5541,8 @@ const ProductManagementDrawer = ({
                       >
                         {isSaving ? <Loader2 className="animate-spin" size={16} /> : 'Save Product'}
                       </button>
-                      <SupportChat />
     </div>
                   </motion.div>
-                  <SupportChat />
     </div>
               )}
             </AnimatePresence>
@@ -6012,26 +5593,22 @@ const CartDrawer = ({
                 <span className="text-[10px] font-mono opacity-30 uppercase tracking-widest text-black">
                   {cartItems.reduce((acc, item) => acc + item.quantity, 0)} Items
                 </span>
-                <SupportChat />
     </div>
               <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors">
                 <X size={24} className="text-black" />
               </button>
-              <SupportChat />
     </div>
 
             <div className="flex-grow overflow-y-auto space-y-6 pr-2 custom-scrollbar relative">
               {isLoading && (
                 <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
                   <Loader2 className="animate-spin text-black" size={32} />
-                  <SupportChat />
     </div>
               )}
             {cartItems.length === 0 ? (
               <div className="text-center py-20 opacity-30 text-black">
                 <ShoppingBag size={48} className="mx-auto mb-4" />
                 <p className="uppercase tracking-widest text-sm font-bold">Your cart is empty</p>
-                <SupportChat />
     </div>
             ) : (
               cartItems.map((item) => (
@@ -6045,7 +5622,6 @@ const CartDrawer = ({
                 >
                   <div className="w-24 h-32 bg-gray-50 border border-gray-100 flex-shrink-0 overflow-hidden">
                     <img src={item.image || undefined} alt={item.name} className="w-full h-full object-cover grayscale" referrerPolicy="no-referrer" />
-                    <SupportChat />
     </div>
                   <div className="flex-grow flex flex-col justify-between py-1">
                     <div className="flex justify-between items-start">
@@ -6059,10 +5635,8 @@ const CartDrawer = ({
                                 {k}: {v}
                               </span>
                             ))}
-                            <SupportChat />
     </div>
                         )}
-                        <SupportChat />
     </div>
                       <button
                         onClick={() => onRemove(item.id, item.selectedVariants)}
@@ -6070,7 +5644,6 @@ const CartDrawer = ({
                       >
                         <Trash2 size={14} />
                       </button>
-                      <SupportChat />
     </div>
 
                     <div className="flex justify-between items-end">
@@ -6088,17 +5661,13 @@ const CartDrawer = ({
                         >
                           <Plus size={14} />
                         </button>
-                        <SupportChat />
     </div>
                       <span className="font-mono font-bold">{formatPrice(item.price * item.quantity)}</span>
-                      <SupportChat />
     </div>
-                    <SupportChat />
     </div>
                 </motion.div>
               ))
             )}
-            <SupportChat />
     </div>
 
           {cartItems.length > 0 && (
@@ -6107,19 +5676,15 @@ const CartDrawer = ({
                 <div className="flex justify-between items-center text-xs font-mono uppercase tracking-widest opacity-50">
                   <span>Subtotal</span>
                   <span>{formatPrice(cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0))}</span>
-                  <SupportChat />
     </div>
                 <div className="flex justify-between items-center text-xs font-mono uppercase tracking-widest opacity-50">
                   <span>Logistics</span>
                   <span>Calculated at checkout</span>
-                  <SupportChat />
     </div>
                 <div className="flex justify-between items-center pt-4">
                   <span className="uppercase tracking-widest text-xs font-bold">Total</span>
                   <span className="text-3xl font-mono font-bold">{formatPrice(cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0))}</span>
-                  <SupportChat />
     </div>
-                <SupportChat />
     </div>
               <button
                 onClick={onCheckout}
@@ -6130,7 +5695,6 @@ const CartDrawer = ({
               <p className="text-center mt-4 text-[10px] font-mono uppercase tracking-widest opacity-30 text-black">
                 Secure checkout & Email Confirmation
               </p>
-              <SupportChat />
     </div>
           )}
         </motion.div>
@@ -6436,7 +6000,6 @@ const HybridCheckoutModal = ({
             >
               <div className="w-12 h-12 md:w-16 md:h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-6">
                 <CheckCircle2 size={24} className="md:w-8 md:h-8" />
-                <SupportChat />
     </div>
               <h2 className="text-xl md:text-2xl font-display font-bold uppercase tracking-tighter mb-4">Order Confirmed!</h2>
               <p className="text-xs md:text-sm text-gray-500 max-w-md mb-6 px-4">Thank you for your order. We've sent a confirmation email to {email}.</p>
@@ -6454,14 +6017,12 @@ const HybridCheckoutModal = ({
                   >
                     Create Account
                   </button>
-                  <SupportChat />
     </div>
               )}
 
               {orderMessage && (
                 <div className="mb-6 md:mb-8 p-4 bg-emerald-50 border border-emerald-100 rounded-lg max-w-md mx-4">
                   <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-emerald-700">{orderMessage}</p>
-                  <SupportChat />
     </div>
               )}
 
@@ -6495,7 +6056,6 @@ const HybridCheckoutModal = ({
             >
               <div className="w-12 h-12 md:w-16 md:h-16 bg-red-500 text-white rounded-full flex items-center justify-center mb-6 shadow-lg shadow-red-500/20">
                 <X size={24} className="md:w-8 md:h-8" />
-                <SupportChat />
     </div>
               <h2 className="text-xl md:text-2xl font-display font-bold uppercase tracking-tighter mb-4">Payment Cancelled</h2>
               <p className="text-xs md:text-sm text-gray-500 max-w-md mb-6 px-4">The payment process was cancelled. No funds were deducted. You can try again or contact support if you're having issues.</p>
@@ -6518,7 +6078,6 @@ const HybridCheckoutModal = ({
                 >
                   Try Again
                 </button>
-                <SupportChat />
     </div>
             </motion.div>
           </>
@@ -6550,7 +6109,6 @@ const HybridCheckoutModal = ({
                 <button onClick={onClose} className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-full transition-colors">
                   <X size={20} />
                 </button>
-                <SupportChat />
     </div>
 
               <div className="flex-grow overflow-y-auto">
@@ -6573,10 +6131,8 @@ const HybridCheckoutModal = ({
                             >
                               Login
                             </button>
-                            <SupportChat />
     </div>
                         )}
-                        <SupportChat />
     </div>
                       <div className="space-y-4">
                         <div className="relative">
@@ -6593,9 +6149,7 @@ const HybridCheckoutModal = ({
                               We'll send your order confirmation and tracking details here.
                             </p>
                           )}
-                          <SupportChat />
     </div>
-                        <SupportChat />
     </div>
                     </section>
 
@@ -6629,7 +6183,6 @@ const HybridCheckoutModal = ({
                         >
                           <Globe size={14} className="md:w-4 md:h-4" /> International
                         </button>
-                        <SupportChat />
     </div>
 
                     <div className="space-y-4">
@@ -6652,7 +6205,6 @@ const HybridCheckoutModal = ({
                               <option>France</option>
                             </select>
                             <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 opacity-50" size={16} />
-                            <SupportChat />
     </div>
 
                           <div className="grid grid-cols-2 gap-4">
@@ -6676,7 +6228,6 @@ const HybridCheckoutModal = ({
                               required
                               className="w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                             />
-                            <SupportChat />
     </div>
 
                           <input
@@ -6722,7 +6273,6 @@ const HybridCheckoutModal = ({
                               required
                               className="col-span-1 w-full border border-gray-200 rounded-md px-4 py-4 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                             />
-                            <SupportChat />
     </div>
 
                           <input
@@ -6746,13 +6296,11 @@ const HybridCheckoutModal = ({
                                   <p className="text-[10px] text-amber-700 font-medium uppercase tracking-wider">
                                     ⚠️ Customs & import duties are the buyer's responsibility (DDU — Delivered Duty Unpaid).
                                   </p>
-                                  <SupportChat />
     </div>
                               )}
                               {loadingRates ? (
                                 <div className="flex items-center gap-2 py-4 text-sm text-gray-400">
                                   <Loader2 className="animate-spin" size={16} /> Fetching live rates...
-                                  <SupportChat />
     </div>
                               ) : shippingRates.length > 0 ? (
                                 <div className="space-y-2">
@@ -6775,17 +6323,14 @@ const HybridCheckoutModal = ({
                                             <> • Est. {new Date(rate.serviceLevel.delivery_date_from).toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' })}</>
                                           )}
                                         </p>
-                                        <SupportChat />
     </div>
                                       <span className="text-sm font-bold whitespace-nowrap">R{rate.amount?.toFixed(2)}</span>
                                     </button>
                                   ))}
-                                  <SupportChat />
     </div>
                               ) : address && city && province && postalCode ? (
                                 <p className="text-xs text-gray-400 py-2">No rates available for this address</p>
                               ) : null}
-                              <SupportChat />
     </div>
                           )}
 
@@ -6799,7 +6344,6 @@ const HybridCheckoutModal = ({
                                 {loadingPickupPoints ? (
                                   <div className="flex items-center gap-2 py-4 text-sm text-gray-400">
                                     <Loader2 className="animate-spin" size={16} /> Finding nearby pickup points...
-                                    <SupportChat />
     </div>
                                 ) : (
                                   <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
@@ -6821,22 +6365,18 @@ const HybridCheckoutModal = ({
                                             {point.operating_hours && typeof point.operating_hours === 'string' && (
                                               <p className="text-[10px] text-gray-300 mt-0.5">{point.operating_hours}</p>
                                             )}
-                                            <SupportChat />
     </div>
                                           <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 shrink-0 mt-0.5">
                                             {point.type === 'locker' ? '🔒 Locker' : '🏪 Counter'}
                                           </span>
-                                          <SupportChat />
     </div>
                                       </button>
                                     ))}
                                     {pickupPoints.length === 0 && (
                                       <p className="text-xs text-gray-400 py-2">No pickup points found near your area.</p>
                                     )}
-                                    <SupportChat />
     </div>
                                 )}
-                                <SupportChat />
     </div>
 
                               {/* Speed selector — only after pickup point chosen */}
@@ -6848,7 +6388,6 @@ const HybridCheckoutModal = ({
                                   {loadingRates ? (
                                     <div className="flex items-center gap-2 py-2 text-sm text-gray-400">
                                       <Loader2 className="animate-spin" size={16} /> Fetching rates...
-                                      <SupportChat />
     </div>
                                   ) : shippingRates.length > 0 ? (
                                     <div className="space-y-2">
@@ -6866,12 +6405,10 @@ const HybridCheckoutModal = ({
                                           <div>
                                             <p className="text-sm font-semibold">{rate.serviceLevel?.name || rate.serviceLevel}</p>
                                             <p className="text-[10px] text-gray-400">{rate.serviceLevel?.description || rate.carrier}</p>
-                                            <SupportChat />
     </div>
                                           <span className="text-sm font-bold whitespace-nowrap">R{rate.amount?.toFixed(2)}</span>
                                         </button>
                                       ))}
-                                      <SupportChat />
     </div>
                                   ) : (
                                     /* Flat-rate fallback until ShipLogic Bob Go rates are live */
@@ -6885,12 +6422,10 @@ const HybridCheckoutModal = ({
                                       <div>
                                         <p className="text-sm font-semibold">Bob Go Standard</p>
                                         <p className="text-[10px] text-gray-400">3–5 business days to pickup point</p>
-                                        <SupportChat />
     </div>
                                       <span className="text-sm font-bold">R89.00</span>
                                     </button>
                                   )}
-                                  <SupportChat />
     </div>
                               )}
 
@@ -6900,10 +6435,8 @@ const HybridCheckoutModal = ({
                                   <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Delivering to</p>
                                   <p className="text-sm font-semibold">{String(selectedPickupPoint.name || '')}</p>
                                   <p className="text-[10px] text-gray-500">{String(selectedPickupPoint.address || '')}{selectedPickupPoint.suburb ? `, ${String(selectedPickupPoint.suburb)}` : ''}</p>
-                                  <SupportChat />
     </div>
                               )}
-                              <SupportChat />
     </div>
                           )}                        </>
                       ) : (
@@ -6912,7 +6445,6 @@ const HybridCheckoutModal = ({
                           <div className="p-4 border border-gray-200 rounded-md bg-gray-50">
                             <p className="text-sm font-bold mb-1">IDEAS TO LIFE STUDIOS</p>
                             <p className="text-[10px] text-gray-500 uppercase tracking-widest">1104 Tugela Street, Klipfontein view, Midrand</p>
-                            <SupportChat />
     </div>
                           <div className="grid grid-cols-2 gap-4">
                             <input
@@ -6931,7 +6463,6 @@ const HybridCheckoutModal = ({
                               required
                               className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                             />
-                            <SupportChat />
     </div>
                           <input
                             type="tel"
@@ -6941,10 +6472,8 @@ const HybridCheckoutModal = ({
                             required
                             className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-black focus:outline-none transition-all"
                           />
-                          <SupportChat />
     </div>
                       )}
-                      <SupportChat />
     </div>
                   </section>
 
@@ -6958,16 +6487,12 @@ const HybridCheckoutModal = ({
                         <div className="flex items-center gap-3">
                           <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-6 object-contain" referrerPolicy="no-referrer" />
                           <span className="text-sm font-medium">Yoco Secure Checkout</span>
-                          <SupportChat />
     </div>
                         <div className="flex gap-2">
                           <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-4 object-contain" referrerPolicy="no-referrer" />
                           <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-5 object-contain" referrerPolicy="no-referrer" />
-                          <SupportChat />
     </div>
-                        <SupportChat />
     </div>
-                      <SupportChat />
     </div>
 
                     <p className="text-[10px] text-gray-400 mt-4 text-center uppercase tracking-widest">All transactions are secure and encrypted.</p>
@@ -6995,9 +6520,7 @@ const HybridCheckoutModal = ({
                         </>
                       )}
                     </button>
-                    <SupportChat />
     </div>
-                  <SupportChat />
     </div>
 
                 {/* Right Column: Summary */}
@@ -7008,12 +6531,10 @@ const HybridCheckoutModal = ({
                         <div className="relative flex-shrink-0">
                           <div className="w-12 h-12 md:w-16 md:h-16 bg-white border border-gray-200 rounded-md overflow-hidden">
                             <img src={item.image || undefined} alt={item.name} className="w-full h-full object-cover grayscale" referrerPolicy="no-referrer" />
-                            <SupportChat />
     </div>
                           <span className="absolute -top-2 -right-2 w-5 h-5 bg-gray-500 text-white text-[10px] flex items-center justify-center rounded-full font-bold">
                             {item.quantity}
                           </span>
-                          <SupportChat />
     </div>
                         <div className="flex-grow min-w-0">
                           <h4 className="text-xs md:text-sm font-bold leading-tight truncate">{item.name}</h4>
@@ -7025,16 +6546,12 @@ const HybridCheckoutModal = ({
                                   {k}: {v}
                                 </span>
                               ))}
-                              <SupportChat />
     </div>
                           )}
-                          <SupportChat />
     </div>
                         <span className="text-xs md:text-sm font-medium flex-shrink-0">{formatPrice(item.price * item.quantity)}</span>
-                        <SupportChat />
     </div>
                     ))}
-                    <SupportChat />
     </div>
 
                   <div className="flex gap-2">
@@ -7048,30 +6565,25 @@ const HybridCheckoutModal = ({
                     <button className="px-4 md:px-6 bg-gray-200 text-gray-500 font-bold text-xs md:text-sm rounded-md hover:bg-gray-300 transition-colors">
                       Apply
                     </button>
-                    <SupportChat />
     </div>
 
                   <div className="space-y-3 pt-4 border-t border-gray-200">
                     <div className="flex justify-between text-xs md:text-sm">
                       <span className="text-gray-600">Subtotal</span>
                       <span className="font-medium">{formatPrice(subtotal)}</span>
-                      <SupportChat />
     </div>
                     <div className="flex justify-between text-xs md:text-sm">
                       <div className="flex flex-col gap-0.5">
                         <div className="flex items-center gap-1 text-gray-600">
                           Shipping <Info size={12} className="opacity-50" />
-                          <SupportChat />
     </div>
                         {selectedRate?.serviceLevel?.name && deliveryMethod === 'standard' && (
                           <span className="text-[10px] text-gray-400">{selectedRate.serviceLevel.name}</span>
                         )}
-                        <SupportChat />
     </div>
                       <span className="text-gray-500">
                         {loadingRates ? '...' : shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}
                       </span>
-                      <SupportChat />
     </div>
 
                     <div className="flex justify-between items-center pt-4 border-t border-gray-200">
@@ -7079,18 +6591,12 @@ const HybridCheckoutModal = ({
                       <div className="flex items-baseline gap-2">
                         <span className="text-[10px] md:text-xs text-gray-500">ZAR</span>
                         <span className="text-xl md:text-2xl font-black">{formatPrice(finalTotal)}</span>
-                        <SupportChat />
     </div>
-                      <SupportChat />
     </div>
-                    <SupportChat />
     </div>
-                  <SupportChat />
     </div>
 
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
           </motion.div>
         </>
@@ -7158,7 +6664,6 @@ const EmailProductModal = ({
               <button onClick={onClose} className="p-2 hover:bg-black/5 rounded-full transition-colors text-black">
                 <X size={20} />
               </button>
-              <SupportChat />
     </div>
 
             <div className="flex gap-4 mb-6 p-4 bg-gray-50 border border-gray-100 text-black">
@@ -7167,9 +6672,7 @@ const EmailProductModal = ({
                 <h4 className="font-bold uppercase text-xs md:text-sm tracking-tight truncate">{product.name}</h4>
                 <p className="text-[10px] text-gray-500 uppercase tracking-widest truncate">{(product.categories || []).join(', ')}</p>
                 <p className="text-xs font-bold mt-1">{formatPrice(product.price)}</p>
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
 
             <form onSubmit={handleSend} className="space-y-6">
@@ -7183,7 +6686,6 @@ const EmailProductModal = ({
                   placeholder="enter@email.com"
                   className="w-full bg-gray-50 border border-gray-100 px-4 py-4 text-sm font-mono focus:outline-none focus:border-black transition-colors text-black"
                 />
-                <SupportChat />
     </div>
 
               <button
@@ -7208,7 +6710,6 @@ const EmailProductModal = ({
                       Error: {errorDetails}
                     </p>
                   )}
-                  <SupportChat />
     </div>
               )}
             </form>
@@ -7263,7 +6764,6 @@ const BrandBanner = ({ brand, banner, description, logo }: { brand: string, bann
           </p>
         )}
       </motion.div>
-      <SupportChat />
     </div>
   </div>
 );
@@ -7372,7 +6872,6 @@ const HowToOrderGuide = () => {
       <div className="text-center mb-12">
         <p className="text-[9px] font-black uppercase tracking-[0.5em] text-[#06402B] mb-3">Simple as 1-2-3</p>
         <h2 className="text-3xl md:text-5xl font-display font-black uppercase tracking-tighter text-black">How to Order</h2>
-        <SupportChat />
     </div>
       
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
@@ -7387,21 +6886,18 @@ const HowToOrderGuide = () => {
           >
             <div className={`${step.color} w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
               {step.icon}
-              <SupportChat />
     </div>
             <div className="text-[9px] font-black text-[#06402B] uppercase tracking-widest mb-1">Step {step.num}</div>
             <h3 className="text-sm font-black uppercase tracking-tight text-black mb-1">{step.title}</h3>
             <p className="text-[10px] text-gray-400 leading-relaxed">{step.desc}</p>
           </motion.div>
         ))}
-        <SupportChat />
     </div>
       
       <div className="text-center mt-10">
         <p className="text-[10px] text-gray-400 uppercase tracking-wider">
           Questions? Our <span className="text-[#06402B] font-bold cursor-pointer hover:underline" onClick={() => document.querySelector('.fixed.bottom-6.right-6')?.dispatchEvent(new Event('click'))}>chat support</span> is always ready to help.
         </p>
-        <SupportChat />
     </div>
     </section>
   );
@@ -7463,9 +6959,7 @@ const PromoGrid = () => {
         <div>
           <h2 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-tighter text-black leading-none">Seasonal<br />Price Drops</h2>
           <p className="text-[10px] font-black uppercase tracking-[0.5em] text-black/30 mt-4">Limited Availability</p>
-          <SupportChat />
     </div>
-        <SupportChat />
     </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
@@ -7489,7 +6983,6 @@ const PromoGrid = () => {
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
-                <SupportChat />
     </div>
 
               {/* Info Side */}
@@ -7511,35 +7004,27 @@ const PromoGrid = () => {
                     <p className="font-black uppercase tracking-tighter leading-none text-sm md:text-xl">
                       {promo.title}
                     </p>
-                    <SupportChat />
     </div>
                   {promo.category && (
                     <p className="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] opacity-60 mt-6 pt-4 border-t border-white/10">
                       {promo.category}
                     </p>
                   )}
-                  <SupportChat />
     </div>
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
 
             <div className="mt-6 flex justify-between items-end border-b border-gray-100 pb-4">
               <div>
                 <h4 className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-black transition-colors group-hover:text-[#e34234]">{promo.label}</h4>
                 <p className="text-[8px] md:text-[9px] font-medium uppercase tracking-widest text-black/30 mt-1">{promo.ends}</p>
-                <SupportChat />
     </div>
               <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100 translate-x-4 group-hover:translate-x-0">
                 <ChevronRight size={14} />
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
           </motion.div>
         ))}
-        <SupportChat />
     </div>
     </section>
   );
@@ -7595,7 +7080,6 @@ const FilterDropdown = ({
                 <span className="text-[11px] text-gray-400 font-medium">
                   {displayValue || 'All'}
                 </span>
-                <SupportChat />
     </div>
               <button
                 onClick={(e) => { e.stopPropagation(); onClear(); }}
@@ -7603,7 +7087,6 @@ const FilterDropdown = ({
               >
                 Clear All
               </button>
-              <SupportChat />
     </div>
 
             <div className="space-y-1 max-h-[340px] overflow-y-auto no-scrollbar pr-2">
@@ -7617,7 +7100,6 @@ const FilterDropdown = ({
                   >
                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${isSelected ? 'border-[#e34234]' : 'border-gray-200 group-hover:border-black'}`}>
                       {isSelected && <div className="w-3 h-3 rounded-full bg-[#e34234] animate-in fade-in zoom-in duration-300" />}
-                      <SupportChat />
     </div>
                     <span className={`text-[12px] font-bold uppercase tracking-wide transition-all duration-300 ${isSelected ? 'text-black translate-x-1' : 'text-gray-400 group-hover:text-black group-hover:translate-x-1'}`}>
                       {option.label}
@@ -7625,12 +7107,10 @@ const FilterDropdown = ({
                   </button>
                 );
               })}
-              <SupportChat />
     </div>
           </motion.div>
         )}
       </AnimatePresence>
-      <SupportChat />
     </div>
   );
 };
@@ -7806,7 +7286,6 @@ const HomePage = ({
               isOpen={activeDropdown === 'price'}
               onToggle={() => setActiveDropdown(activeDropdown === 'price' ? null : 'price')}
             />
-            <SupportChat />
     </div>
 
           {searchQuery && (
@@ -7815,10 +7294,8 @@ const HomePage = ({
               <p className="text-[9px] font-medium uppercase tracking-widest opacity-30">
                 Results for: "{searchQuery}"
               </p>
-              <SupportChat />
     </div>
           )}
-          <SupportChat />
     </div>
       </motion.div>
 
@@ -7852,7 +7329,6 @@ const HomePage = ({
                         <h3 className="text-[10px] font-bold uppercase tracking-[0.4em] text-black">{cat.name}</h3>
                         <div className="flex-grow h-[1px] bg-gray-100" />
                         <span className="text-[9px] font-medium text-gray-300 uppercase tracking-widest">{catProducts.length} Items</span>
-                        <SupportChat />
     </div>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-6">
                         {catProducts.map((product, idx) => (
@@ -7867,15 +7343,11 @@ const HomePage = ({
                             isLoading={isCartLoading}
                           />
                         ))}
-                        <SupportChat />
     </div>
-                      <SupportChat />
     </div>
                   );
                 })}
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
           </section>
         );
@@ -7888,7 +7360,6 @@ const HomePage = ({
             <div className="mb-16">
               <h2 className="text-4xl font-display font-bold uppercase tracking-tighter mb-2 text-black">More Essentials</h2>
               <p className="text-[10px] opacity-40 uppercase tracking-widest text-black">Handpicked for you</p>
-              <SupportChat />
     </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10">
@@ -7904,9 +7375,7 @@ const HomePage = ({
                   isLoading={isCartLoading}
                 />
               ))}
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
         </section>
       )}
@@ -7915,7 +7384,6 @@ const HomePage = ({
         <div className="py-40 text-center">
           <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
             <Search size={32} className="opacity-10" />
-            <SupportChat />
     </div>
           <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 text-black">
             No products match your selection
@@ -7926,7 +7394,6 @@ const HomePage = ({
           >
             Clear All Filters
           </button>
-          <SupportChat />
     </div>
       )}
 
@@ -7938,12 +7405,10 @@ const HomePage = ({
               <div>
                 <p className="text-[9px] font-black uppercase tracking-[0.4em] text-black/30 mb-2">Browse by Category</p>
                 <h2 className="text-3xl md:text-5xl font-display font-black uppercase tracking-tighter text-black leading-none">Shop<br />The Look</h2>
-                <SupportChat />
     </div>
               <Link to="/" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors flex items-center gap-2 pb-1">
                 View All <ArrowRight size={12} />
               </Link>
-              <SupportChat />
     </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
               {categories.filter(c => !c.parentId && c.image).slice(0, 6).map(cat => (
@@ -7965,13 +7430,10 @@ const HomePage = ({
                     <p className="text-[8px] text-white/60 uppercase tracking-widest mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                       Shop Now <ArrowRight size={8} />
                     </p>
-                    <SupportChat />
     </div>
                 </Link>
               ))}
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
         </section>
       )}
@@ -8096,9 +7558,7 @@ const CategoryPage = ({
           <p className="text-[10px] text-white/50 uppercase tracking-[0.3em] mt-2 font-bold">
             {categoryProducts.length} items
           </p>
-          <SupportChat />
     </div>
-        <SupportChat />
     </div>
 
       {/* Sub-category tabs */}
@@ -8118,9 +7578,7 @@ const CategoryPage = ({
                 {sc.name}
               </button>
             ))}
-            <SupportChat />
     </div>
-          <SupportChat />
     </div>
       )}
 
@@ -8158,14 +7616,11 @@ const CategoryPage = ({
               isOpen={activeDropdown === 'price'}
               onToggle={() => setActiveDropdown(activeDropdown === 'price' ? null : 'price')}
             />
-            <SupportChat />
     </div>
           <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 hidden md:block">
             {categoryProducts.length} Results
           </span>
-          <SupportChat />
     </div>
-        <SupportChat />
     </div>
 
       {/* Products — grouped by brand if multiple brands, otherwise plain grid */}
@@ -8174,13 +7629,11 @@ const CategoryPage = ({
           <div className="py-32 text-center">
             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <Search size={24} className="opacity-20" />
-              <SupportChat />
     </div>
             <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30">No products in this category yet</p>
             <button onClick={() => navigate('/')} className="mt-6 text-[10px] font-black uppercase tracking-widest underline underline-offset-4 hover:opacity-60 transition-opacity">
               Browse All Products
             </button>
-            <SupportChat />
     </div>
         ) : brandNames.length > 1 ? (
           // Multi-brand layout: brand sections
@@ -8198,7 +7651,6 @@ const CategoryPage = ({
                     )}
                     <div className="flex-grow h-[1px] bg-gray-100" />
                     <span className="text-[9px] text-gray-300 uppercase tracking-widest font-bold">{brandProducts.length} items</span>
-                    <SupportChat />
     </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8">
                     {brandProducts.map((product, idx) => (
@@ -8213,9 +7665,7 @@ const CategoryPage = ({
                         isLoading={isCartLoading}
                       />
                     ))}
-                    <SupportChat />
     </div>
-                  <SupportChat />
     </div>
               );
             })}
@@ -8234,10 +7684,8 @@ const CategoryPage = ({
                     isLoading={isCartLoading}
                   />
                 ))}
-                <SupportChat />
     </div>
             )}
-            <SupportChat />
     </div>
         ) : (
           // Single-brand or unbranded: clean grid like MyRunway
@@ -8254,10 +7702,8 @@ const CategoryPage = ({
                 isLoading={isCartLoading}
               />
             ))}
-            <SupportChat />
     </div>
         )}
-        <SupportChat />
     </div>
     </main>
   );
@@ -8931,11 +8377,8 @@ function AppContent() {
                   <div className="w-2 h-2 bg-[#06402B] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                   <div className="w-2 h-2 bg-[#06402B] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                   <div className="w-2 h-2 bg-[#FFA500] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  <SupportChat />
     </div>
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
           ) : (
             <HomePage
@@ -9004,17 +8447,13 @@ function AppContent() {
             <div className="text-center p-8">
               <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 size={32} />
-                <SupportChat />
     </div>
               <h1 className="text-2xl font-display font-bold uppercase tracking-tighter mb-4">Processing Your Order...</h1>
               <p className="text-sm text-gray-500 max-w-md mx-auto">Please wait while we finalize your order details.</p>
               <div className="mt-8">
                 <Loader2 className="animate-spin mx-auto text-black" size={24} />
-                <SupportChat />
     </div>
-              <SupportChat />
     </div>
-            <SupportChat />
     </div>
         } />
         <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <NotFoundPage />} />
@@ -9160,11 +8599,8 @@ function AppContent() {
           </>
         )}
       </AnimatePresence>
-      <SupportChat />
     </div>
   );
 }
-import SupportChat from './components/SupportChat';
 
 // Inside the return, before the closing </div>:
-<SupportChat />
