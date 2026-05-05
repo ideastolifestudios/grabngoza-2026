@@ -138,5 +138,15 @@ service cloud.firestore {
       // Only admins can update orders (status changes, shipment info, etc.)
       allow update: if isAdmin();
     }
+
+    match /testimonials/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /partners/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }

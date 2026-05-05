@@ -8603,4 +8603,3 @@ function AppContent() {
   );
 }
 
-// Inside the return, before the closing </div>:
