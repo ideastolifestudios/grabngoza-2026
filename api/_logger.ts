@@ -1,34 +1,44 @@
 // api/_logger.ts — Structured JSON logging for Vercel Functions
+// Usage: import { createLogger } from './_logger';
+//        const log = createLogger('payments');
+//        log.info('checkout_created', { orderId, amountCents });
+
 type LogLevel = 'info' | 'warn' | 'error';
 
 interface LogEntry {
+  ts: string;
   level: LogLevel;
   service: string;
-  action: string;
-  message: string;
-  orderId?: string;
-  duration_ms?: number;
+  event: string;
   [key: string]: any;
 }
 
-function log(entry: LogEntry) {
-  const out = { ts: new Date().toISOString(), ...entry };
-  if (entry.level === 'error') {
-    console.error(JSON.stringify(out));
-  } else if (entry.level === 'warn') {
-    console.warn(JSON.stringify(out));
-  } else {
-    console.log(JSON.stringify(out));
-  }
+function emit(entry: LogEntry) {
+  const line = JSON.stringify(entry);
+  if (entry.level === 'error') console.error(line);
+  else if (entry.level === 'warn') console.warn(line);
+  else console.log(line);
 }
 
 export function createLogger(service: string) {
   return {
-    info:  (action: string, message: string, extra?: Record<string, any>) =>
-      log({ level: 'info',  service, action, message, ...extra }),
-    warn:  (action: string, message: string, extra?: Record<string, any>) =>
-      log({ level: 'warn',  service, action, message, ...extra }),
-    error: (action: string, message: string, extra?: Record<string, any>) =>
-      log({ level: 'error', service, action, message, ...extra }),
+    info:  (event: string, data?: Record<string, any>) =>
+      emit({ ts: new Date().toISOString(), level: 'info',  service, event, ...data }),
+    warn:  (event: string, data?: Record<string, any>) =>
+      emit({ ts: new Date().toISOString(), level: 'warn',  service, event, ...data }),
+    error: (event: string, data?: Record<string, any>) =>
+      emit({ ts: new Date().toISOString(), level: 'error', service, event, ...data }),
+    /** Time an async operation and log it */
+    async time<T>(event: string, fn: () => Promise<T>, extra?: Record<string, any>): Promise<T> {
+      const start = Date.now();
+      try {
+        const result = await fn();
+        emit({ ts: new Date().toISOString(), level: 'info', service, event, duration_ms: Date.now() - start, ...extra });
+        return result;
+      } catch (err: any) {
+        emit({ ts: new Date().toISOString(), level: 'error', service, event, duration_ms: Date.now() - start, error: err.message, ...extra });
+        throw err;
+      }
+    },
   };
 }

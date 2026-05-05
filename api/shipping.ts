@@ -66,6 +66,24 @@ const FALLBACK_RATES = [
   },
 ];
 
+// International fallback rates
+const INTL_FALLBACK_RATES = [
+  {
+    id: 'fallback-intl-standard',
+    amount: 399,
+    serviceLevel: { name: 'International Standard', description: '7–14 business days', code: 'INTL-STD' },
+    courier: 'Grab & Go International',
+    transitDays: 10,
+  },
+  {
+    id: 'fallback-intl-express',
+    amount: 699,
+    serviceLevel: { name: 'International Express', description: '3–7 business days', code: 'INTL-EXP' },
+    courier: 'Grab & Go International',
+    transitDays: 5,
+  },
+];
+
 // ─── Helpers ───────────────────────────────────────────────────────────────
 function slHeaders() {
   return { 'Authorization': `Bearer ${SHIPLOGIC_API_KEY}`, 'Content-Type': 'application/json' };

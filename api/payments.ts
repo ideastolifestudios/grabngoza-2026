@@ -265,7 +265,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           results.shipmentError = e.message;
         }
 
-        // ── 3. Send confirmation email ──────────────────────────────
+        // ── 3. Zoho CRM + Inventory sync ─────────────────────────
+        try {
+          const zohoRes = await fetch(`${BASE_URL}/api/zoho-sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId, order }),
+          });
+          const zohoData = await zohoRes.json();
+          results.zoho = zohoData;
+        } catch (e: any) {
+          log('error', 'zoho_sync_call_failed', { orderId, error: e.message });
+          results.zohoError = e.message;
+        }
+
+        // ── 4. Send confirmation email ──────────────────────────────
         const resendKey = process.env.RESEND_API_KEY;
         if (resendKey) {
           try {
