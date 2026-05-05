@@ -7111,6 +7111,7 @@ const FilterDropdown = ({
           </motion.div>
         )}
       </AnimatePresence>
+      <SupportChat />
     </div>
   );
 };
@@ -8599,6 +8600,7 @@ function AppContent() {
           </>
         )}
       </AnimatePresence>
+      <SupportChat />
     </div>
   );
 }
