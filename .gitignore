@@ -9,3 +9,9 @@ coverage/
 firebase-applet-config.json 
 .vercel
 .env*.local
+
+# Environment variables (never commit)
+.env
+.env.local
+.env.production
+.env.*.local

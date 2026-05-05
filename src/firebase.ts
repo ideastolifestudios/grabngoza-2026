@@ -3,13 +3,13 @@ import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCcQWjvjcwO5S-KQoTP-6sRIOJkHCKBj1I",
-  authDomain: "grab-go-za.firebaseapp.com",
-  projectId: "grab-go-za",
-  storageBucket: "grab-go-za.firebasestorage.app",
-  messagingSenderId: "111606509611",
-  appId: "1:111606509611:web:10dcbcdb2e39a052b47a6e",
-  measurementId: "G-L979BBPS1K"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
