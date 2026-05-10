@@ -1,92 +1,104 @@
 /**
- * api../internal/services/whatsapp.service.ts — Twilio WhatsApp notifications
+ * internal/services/whatsapp.service.ts
  *
- * Sends admin alerts on new orders via Twilio WhatsApp API.
- * Non-blocking — failures are logged but never crash the caller.
+ * Sends a WhatsApp notification via Meta Cloud API.
+ * Uses plain console.log/error — no custom logger import so the
+ * TS2554 "expected 1-2 arguments, got 3" error cannot occur here.
  *
- * Env vars:
- *   TWILIO_SID
- *   TWILIO_AUTH_TOKEN
- *   TWILIO_WHATSAPP_NUMBER    (e.g. whatsapp:+14155238886)
- *   ADMIN_WHATSAPP_NUMBER     (e.g. whatsapp:+27821234567)
+ * Required env vars:
+ *   WHATSAPP_ACCESS_TOKEN       — Meta system user token
+ *   WHATSAPP_PHONE_NUMBER_ID    — From Meta Business → WhatsApp → API Setup
+ *   WHATSAPP_ADMIN_NUMBER       — Recipient number, E.164 without +  e.g. 27821234567
  */
 
-import type { Order } from '../internal/lib/types';
-import { createLogger } from '../internal/utils/_logger';
+const PREFIX = "[WHATSAPP]";
 
-const log = createLogger('whatsapp');
+export interface WhatsAppOrderPayload {
+  orderId: string;
+  email: string;
+  amountCents: number;
+  itemCount: number;
+  paymentId: string;
+  createdAt: string;
+}
 
-interface WhatsAppResult {
-  success: boolean;
-  messageSid?: string;
-  error?: string;
+function formatAmount(cents: number): string {
+  return `R${(cents / 100).toFixed(2)}`;
+}
+
+function formatTimeSA(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString("en-ZA", {
+      timeZone: "Africa/Johannesburg",
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function buildMessage(order: WhatsAppOrderPayload): string {
+  const lines = [
+    `New Grab n Go Order`,
+    `Order: ${order.orderId}`,
+    `Customer: ${order.email}`,
+    `Amount: ${formatAmount(order.amountCents)}`,
+    `Items: ${order.itemCount}`,
+    `Payment ref: ${order.paymentId}`,
+    `Time: ${formatTimeSA(order.createdAt)}`,
+  ];
+  return lines.join("\n");
 }
 
 /**
- * Send new-order alert to admin via Twilio WhatsApp.
- * Returns result — never throws.
+ * Sends an order notification to the admin WhatsApp number.
+ * Never throws — all errors are caught and logged.
+ * Returns true if message was sent, false if it failed or was skipped.
  */
-export async function sendOrderAlert(order: Order): Promise<WhatsAppResult> {
-  const sid       = process.env.TWILIO_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const from      = process.env.TWILIO_WHATSAPP_NUMBER;
-  const to        = process.env.ADMIN_WHATSAPP_NUMBER;
+export async function sendOrderNotification(
+  order: WhatsAppOrderPayload
+): Promise<boolean> {
+  const token = process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const recipient = process.env.WHATSAPP_ADMIN_NUMBER;
 
-  if (!sid || !authToken || !from || !to) {
-    log.warn('send', 'WhatsApp not configured — skipping notification', {
-      hasSid: !!sid, hasAuth: !!authToken, hasFrom: !!from, hasTo: !!to,
-    });
-    return { success: false, error: 'WhatsApp not configured — missing env vars' };
+  if (!token || !phoneNumberId || !recipient) {
+    console.warn(
+      `${PREFIX} Missing env vars (WHATSAPP_ACCESS_TOKEN / WHATSAPP_PHONE_NUMBER_ID / WHATSAPP_ADMIN_NUMBER) — skipping`
+    );
+    return false;
   }
 
-  const itemCount = order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
-  const amountDisplay = `R${(order.total || 0).toFixed(2)}`;
-
-  const message = [
-    `🛒 *New Order: ${order.id}*`,
-    ``,
-    `📧 Email: ${order.email}`,
-    `💰 Amount: ${amountDisplay}`,
-    `📦 Items: ${itemCount}`,
-    `👤 ${order.firstName} ${order.lastName}`,
-    `📱 ${order.phone || 'No phone'}`,
-    ``,
-    `🚚 Delivery: ${order.deliveryMethod || 'standard'}`,
-  ].join('\n');
+  const body = buildMessage(order);
+  const url = `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`;
 
   try {
-    const url = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
-    const auth = Buffer.from(`${sid}:${authToken}`).toString('base64');
-
-    const body = new URLSearchParams({
-      From: from.startsWith('whatsapp:') ? from : `whatsapp:${from}`,
-      To:   to.startsWith('whatsapp:') ? to : `whatsapp:${to}`,
-      Body: message,
-    });
-
-    const response = await fetch(url, {
-      method: 'POST',
+    const res = await fetch(url, {
+      method: "POST",
       headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
-      body: body.toString(),
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: recipient,
+        type: "text",
+        text: { body },
+      }),
     });
 
-    const data = await response.json();
-
-    if (response.ok && data.sid) {
-      log.info('sent', `WhatsApp alert sent for ${order.id}`, { messageSid: data.sid });
-      return { success: true, messageSid: data.sid };
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "(unreadable)");
+      console.error(`${PREFIX} Send failed — status ${res.status}:`, errText);
+      return false;
     }
 
-    log.error('failed', `WhatsApp send failed: ${data.message || response.status}`, {
-      orderId: order.id, status: response.status,
-    });
-    return { success: false, error: data.message || `HTTP ${response.status}` };
-
-  } catch (err: any) {
-    log.error('exception', `WhatsApp exception: ${err.message}`, { orderId: order.id });
-    return { success: false, error: err.message };
+    console.log(`${PREFIX} Notification sent for order: ${order.orderId}`);
+    return true;
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`${PREFIX} Network error:`, msg);
+    return false;
   }
 }
