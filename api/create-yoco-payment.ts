@@ -199,3 +199,18 @@ export async function createYocoPaymentHandler(req: Request, res: Response): Pro
     res.status(500).json({ success: false, error: 'Failed to connect to payment gateway' });
   }
 }
+// Add this default export so Vercel can actually run the function
+export default async function handler(req: Request, res: Response) {
+  // Handle CORS Pre-flight (important for your frontend)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  // Vercel only supports POST for this specific logic
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  // Call your existing logic
+  return createYocoPaymentHandler(req, res);
+}
