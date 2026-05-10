@@ -37,7 +37,6 @@
   "functions": {
     "api/webhook.ts": { "maxDuration": 30 },
     "api/orders.ts": { "maxDuration": 10 },
-    "api/create-yoco-payment.ts": { "maxDuration": 10 },
-    "api/health.ts": { "maxDuration": 5 }
+    "api/create-yoco-payment.ts": { "maxDuration": 10 }
   }
 }
