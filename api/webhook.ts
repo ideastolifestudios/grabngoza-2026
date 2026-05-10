@@ -1,23 +1,26 @@
 /**
  * api/webhook.ts — Yoco Payment Webhook (SOP-compliant)
  *
- * Import paths assume /internal/ lives at the repo root alongside /api/.
- * On Vercel, serverless functions in /api/ can import from /internal/ via
- * relative paths: "../internal/..."
- *
  * Flow: webhook hit → HMAC → idempotency → order → Zoho → WhatsApp
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createHmac, timingSafeEqual } from "crypto";
 import { Redis } from "@upstash/redis";
+
+// 1. Updated Import to point to the new internal folder structure
 import { sendOrderNotification } from "../internal/services/whatsapp.service";
 import { createLogger } from "../internal/lib/logger";
 
+// 2. Initialize the logger with the specific prefix
 const log = createLogger("[WEBHOOK]");
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Redis Init (Required for Idempotency) ───────────────────────────────────
+// Ensure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are in Vercel
+const redis = Redis.fromEnv();
 
+// ─── Types ───────────────────────────────────────────────────────────────────
+// ... rest of your code ...
 interface YocoWebhookPayload {
   id: string;
   type: string;

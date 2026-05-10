@@ -1,8 +1,11 @@
 /**
-import { createLogger } from '../internal/utils/_logger';
+// 1. Updated Import to the new safe logger
+import { createLogger } from '../internal/lib/logger'; 
+
+/**
  * api/create-shipment.ts — Grab & Go Shipment Creation (Vercel Serverless)
  *
- * Called internally by api/payments.ts after Yoco payment is confirmed.
+ * Called internally by api/webhook.ts (SOP updated) after Yoco payment is confirmed.
  * Creates a ShipLogic shipment, stores shipmentId + labelUrl on the Firestore order.
  *
  * POST /api/create-shipment
@@ -12,6 +15,9 @@ import { createLogger } from '../internal/utils/_logger';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+
+// 2. Initialize the logger factory
+const log = createLogger('SHIPMENT');
 
 // ─── Firebase Admin init ───────────────────────────────────────────────────
 if (!getApps().length) {
