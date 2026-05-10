@@ -1,12 +1,12 @@
 /**
-import { createLogger } from '../_logger';
- * api/_services/order.service.ts — Redis-backed persistent order storage
+import { createLogger } from '../internal/utils/_logger';
+ * api../internal/services/order.service.ts — Redis-backed persistent order storage
  *
  * ZERO top-level side effects. Redis + Zoho imported lazily inside functions.
  * Module load NEVER crashes, even if @upstash/redis or env vars are missing.
  */
 
-import type { Order } from '../_lib/types';
+import type { Order } from '../internal/lib/types';
 
 const ORDER_PREFIX    = 'order:';
 const ORDER_LIST      = 'orders:list';

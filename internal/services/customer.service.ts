@@ -1,9 +1,9 @@
 /**
- * api/_services/customer.service.ts — Customer CRUD (Firestore)
+ * api../internal/services/customer.service.ts — Customer CRUD (Firestore)
  */
 import { getApps, initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import type { Customer } from '../_lib/types';
+import type { Customer } from '../internal/lib/types';
 
 if (!getApps().length) {
   initializeApp({

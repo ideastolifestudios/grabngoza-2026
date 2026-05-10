@@ -1,5 +1,5 @@
 /**
- * api/_lib/cors.ts — CORS helper for store-api.ts
+ * api../internal/lib/cors.ts — CORS helper for store-api.ts
  * Sets CORS headers on response.
  */
 import type { VercelResponse } from '@vercel/node';

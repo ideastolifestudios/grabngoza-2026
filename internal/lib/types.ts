@@ -1,5 +1,5 @@
 /**
- * api/_lib/types.ts — Shared types for API layer
+ * api../internal/lib/types.ts — Shared types for API layer
  * Fixes missing module errors in order.service.ts, zohoInventoryService.ts, zohoCRMService.ts
  */
 

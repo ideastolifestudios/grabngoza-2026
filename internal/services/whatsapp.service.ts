@@ -1,5 +1,5 @@
 /**
- * api/_services/whatsapp.service.ts — Twilio WhatsApp notifications
+ * api../internal/services/whatsapp.service.ts — Twilio WhatsApp notifications
  *
  * Sends admin alerts on new orders via Twilio WhatsApp API.
  * Non-blocking — failures are logged but never crash the caller.
@@ -11,8 +11,8 @@
  *   ADMIN_WHATSAPP_NUMBER     (e.g. whatsapp:+27821234567)
  */
 
-import type { Order } from '../_lib/types';
-import { createLogger } from '../_logger';
+import type { Order } from '../internal/lib/types';
+import { createLogger } from '../internal/utils/_logger';
 
 const log = createLogger('whatsapp');
 

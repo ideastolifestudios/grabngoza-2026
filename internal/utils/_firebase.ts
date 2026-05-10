@@ -1,4 +1,4 @@
-// api/_firebase.ts — Shared Firebase Admin initialization
+// api../internal/utils/_firebase.ts — Shared Firebase Admin initialization
 // Import `db` from this file in every API route that needs Firestore.
 // This ensures one consistent init pattern and catches missing env vars early.
 

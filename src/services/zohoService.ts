@@ -30,7 +30,7 @@ export async function syncOrderToZoho(
   // If running in a context without Zoho env vars, they fail gracefully
   const [inventoryResult, crmResult] = await Promise.allSettled([
     zohoSafe('inventory.create_salesorder', async () => {
-      const { zohoApiFetch, ZOHO_REGION } = await import('../../api/_lib/zohoAuth');
+      const { zohoApiFetch, ZOHO_REGION } = await import('../../api../internal/lib/zohoAuth');
       const BASE = `https://inventory.zoho.${ZOHO_REGION}/api/v1`;
       const ORG_ID = process.env.ZOHO_INVENTORY_ORG_ID || '';
       if (!ORG_ID) throw new Error('ZOHO_INVENTORY_ORG_ID not set');
@@ -58,7 +58,7 @@ export async function syncOrderToZoho(
     }),
 
     zohoSafe('crm.upsert_contact', async () => {
-      const { zohoApiFetch, ZOHO_REGION } = await import('../../api/_lib/zohoAuth');
+      const { zohoApiFetch, ZOHO_REGION } = await import('../../api../internal/lib/zohoAuth');
       const BASE = `https://www.zohoapis.${ZOHO_REGION}/crm/v2`;
 
       const contactData = {

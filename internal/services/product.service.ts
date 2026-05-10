@@ -1,9 +1,9 @@
 /**
- * api/_services/product.service.ts — Product CRUD (Firestore)
+ * api../internal/services/product.service.ts — Product CRUD (Firestore)
  */
 import { getApps, initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import type { Product } from '../_lib/types';
+import type { Product } from '../internal/lib/types';
 
 if (!getApps().length) {
   initializeApp({

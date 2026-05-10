@@ -1,20 +1,20 @@
 /**
-import { createLogger } from '../_logger';
- * api/_services/zohoInventoryService.ts — Zoho Inventory integration
+import { createLogger } from '../internal/utils/_logger';
+ * api../internal/services/zohoInventoryService.ts — Zoho Inventory integration
  *
  * Now uses shared productMap from _lib/ and shared auth from _lib/zohoAuth.
  */
 
-import type { Order } from '../_lib/types';
-import { zohoApiFetch, ZOHO_REGION } from '../_lib/zohoAuth';
-import { getZohoItemId, getAllMappings, getMappingStats } from '../_lib/productMap';
+import type { Order } from '../internal/lib/types';
+import { zohoApiFetch, ZOHO_REGION } from '../internal/lib/zohoAuth';
+import { getZohoItemId, getAllMappings, getMappingStats } from '../internal/lib/productMap';
 
 const BASE_URL = `https://inventory.zoho.${ZOHO_REGION}/api/v1`;
 const ORG_ID   = process.env.ZOHO_INVENTORY_ORG_ID || '';
 
 // Re-export mapping functions for controller access
 export { getAllMappings as getMappings, getMappingStats };
-export { getZohoItemId, registerMapping, registerMappings } from '../_lib/productMap';
+export { getZohoItemId, registerMapping, registerMappings } from '../internal/lib/productMap';
 
 export interface ZohoSalesOrderResult {
   success: boolean;

@@ -1,5 +1,5 @@
 /**
- * api/_lib/response.ts — Consistent JSON response helpers
+ * api../internal/lib/response.ts — Consistent JSON response helpers
  */
 import type { VercelResponse } from '@vercel/node';
 

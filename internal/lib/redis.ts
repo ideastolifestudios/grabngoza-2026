@@ -1,5 +1,5 @@
 /**
- * api/_lib/redis.ts — Upstash Redis client + idempotency
+ * api../internal/lib/redis.ts — Upstash Redis client + idempotency
  * Dynamic import — safe to import from any module.
  */
 

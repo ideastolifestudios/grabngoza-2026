@@ -1,216 +1,132 @@
 /**
- * api/create-yoco-payment.ts  (replaces the inline handler in server.ts)
+ * api/create-yoco-payment.ts — Yoco checkout session initiator (SOP-compliant)
  *
- * Server-side price verification:
- *   1. Receives cart items from the client
- *   2. Fetches authoritative prices from Firestore (never trusts client totals)
- *   3. Recomputes total server-side
- *   4. Only then creates the Yoco checkout session
+ * SOP: This endpoint ONLY creates a Yoco hosted checkout URL.
+ * NO order is created here. The order is created ONLY by webhook.ts
+ * upon verified payment success.
  *
- * This prevents price-manipulation attacks where a client sends amount=1.
+ * Input validation is enforced. No secrets are exposed to the frontend.
  */
 
-import { Request, Response } from 'express';
-import { getFirestore } from 'firebase-admin/firestore';
-import { log } from '../src/services/logger';
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-interface CartItem {
-  productId: string;
-  variantId?: string;
-  quantity: number;
-  // Client-provided price is IGNORED — we fetch from Firestore
-  clientPrice?: number;
+const ALLOWED_CURRENCIES = ["ZAR"];
+const MAX_AMOUNT_CENTS = 100_000_00; // R100,000 max
+const MIN_AMOUNT_CENTS = 100; // R1.00 min
+
+function sanitizeString(val: unknown, maxLen = 200): string | null {
+  if (typeof val !== "string") return null;
+  const trimmed = val.trim().slice(0, maxLen);
+  return trimmed.length > 0 ? trimmed : null;
 }
 
-interface VerifiedItem {
-  productId: string;
-  variantId?: string;
-  quantity: number;
-  unitPrice: number; // cents, from Firestore
-  lineTotal: number; // cents
-  name: string;
-}
+export default async function handler(
+  req: VercelRequest,
+  res: VercelResponse
+) {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
 
-const TOLERANCE_CENTS = 5; // Allow 5c rounding tolerance between client and server totals
-
-/**
- * Fetches authoritative prices from Firestore and returns verified line items.
- * Throws if any product is not found or is out of stock.
- */
-async function verifyCartPrices(items: CartItem[]): Promise<{
-  verifiedItems: VerifiedItem[];
-  serverTotalCents: number;
-}> {
-  const db = getFirestore();
-  const verifiedItems: VerifiedItem[] = [];
-
-  // Batch-fetch all products in parallel
-  const productDocs = await Promise.all(
-    items.map(item => db.collection('products').doc(item.productId).get())
-  );
-
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    const doc = productDocs[i];
-
-    if (!doc.exists) {
-      throw new Error(`Product not found: ${item.productId}`);
-    }
-
-    const product = doc.data()!;
-
-    // Support variant pricing (e.g. size-based)
-    let unitPriceCents: number;
-    let productName: string = product.name;
-
-    if (item.variantId && product.variants) {
-      const variant = product.variants[item.variantId];
-      if (!variant) throw new Error(`Variant not found: ${item.variantId} for product ${item.productId}`);
-      unitPriceCents = Math.round(variant.price * 100);
-      productName = `${product.name} (${variant.label})`;
-    } else {
-      if (typeof product.price !== 'number') {
-        throw new Error(`Invalid price for product: ${item.productId}`);
-      }
-      unitPriceCents = Math.round(product.price * 100);
-    }
-
-    if (unitPriceCents <= 0) {
-      throw new Error(`Invalid price (${unitPriceCents} cents) for product: ${item.productId}`);
-    }
-
-    const qty = Math.floor(item.quantity);
-    if (qty < 1) throw new Error(`Invalid quantity for product: ${item.productId}`);
-
-    verifiedItems.push({
-      productId: item.productId,
-      variantId: item.variantId,
-      quantity: qty,
-      unitPrice: unitPriceCents,
-      lineTotal: unitPriceCents * qty,
-      name: productName,
-    });
-  }
-
-  const serverTotalCents = verifiedItems.reduce((sum, i) => sum + i.lineTotal, 0);
-  return { verifiedItems, serverTotalCents };
-}
-
-export async function createYocoPaymentHandler(req: Request, res: Response): Promise<void> {
-  const { items, currency = 'ZAR', metadata = {}, clientTotalCents, orderId } = req.body;
-
-  // --- Input validation ---
-  if (!Array.isArray(items) || items.length === 0) {
-    res.status(400).json({ success: false, error: 'items must be a non-empty array' });
-    return;
-  }
-  if (!orderId || typeof orderId !== 'string') {
-    res.status(400).json({ success: false, error: 'orderId is required' });
-    return;
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   const secretKey = process.env.YOCO_SECRET_KEY;
   if (!secretKey) {
-    log('error', 'yoco.missing_secret_key');
-    res.status(500).json({ success: false, error: 'Payment gateway not configured' });
-    return;
+    console.error("[YOCO-INIT] YOCO_SECRET_KEY not set");
+    return res.status(500).json({ error: "Payment gateway not configured" });
   }
 
-  let verifiedItems: VerifiedItem[];
-  let serverTotalCents: number;
+  // ── Validate input ─────────────────────────────────────────────────────────
+  const { amount, currency, metadata } = req.body ?? {};
 
-  try {
-    ({ verifiedItems, serverTotalCents } = await verifyCartPrices(items));
-  } catch (err: any) {
-    log('warn', 'payment.price_verification_failed', { orderId, error: err.message });
-    res.status(400).json({ success: false, error: err.message });
-    return;
+  const amountNum = Number(amount);
+  if (
+    !Number.isFinite(amountNum) ||
+    amountNum < MIN_AMOUNT_CENTS ||
+    amountNum > MAX_AMOUNT_CENTS
+  ) {
+    return res.status(400).json({
+      error: `Amount must be between ${MIN_AMOUNT_CENTS} and ${MAX_AMOUNT_CENTS} cents`,
+    });
   }
 
-  // --- Price tamper detection ---
-  if (typeof clientTotalCents === 'number') {
-    const delta = Math.abs(clientTotalCents - serverTotalCents);
-    if (delta > TOLERANCE_CENTS) {
-      log('warn', 'payment.price_mismatch', {
-        orderId,
-        clientTotalCents,
-        serverTotalCents,
-        delta,
-      });
-      res.status(400).json({
-        success: false,
-        error: 'Cart total mismatch. Please refresh your cart and try again.',
-      });
-      return;
+  const curr = sanitizeString(currency) ?? "ZAR";
+  if (!ALLOWED_CURRENCIES.includes(curr)) {
+    return res.status(400).json({ error: "Unsupported currency" });
+  }
+
+  const orderId = sanitizeString(metadata?.orderId);
+  if (!orderId) {
+    return res.status(400).json({ error: "metadata.orderId is required" });
+  }
+
+  const email = sanitizeString(metadata?.email);
+  if (!email || !email.includes("@")) {
+    return res.status(400).json({ error: "metadata.email is required" });
+  }
+
+  // Serialize items safely
+  let itemsString = "[]";
+  if (metadata?.items) {
+    try {
+      itemsString = JSON.stringify(metadata.items).slice(0, 2000);
+    } catch {
+      itemsString = "[]";
     }
   }
 
-  // --- Build redirect URLs ---
-  const proto = req.headers['x-forwarded-proto'] || req.protocol;
-  const host = req.get('host');
-  const baseUrl = `${proto}://${host}`;
+  // ── Build redirect URLs using PRODUCTION domain ───────────────────────────
+  // Use SITE_URL env var in production. Never derive from request host.
+  const baseUrl =
+    process.env.SITE_URL?.replace(/\/$/, "") ??
+    `${req.headers["x-forwarded-proto"] ?? "https"}://${req.headers.host}`;
 
+  const successUrl = `${baseUrl}/order-success?id=${encodeURIComponent(orderId)}`;
+  const cancelUrl = `${baseUrl}/?status=cancelled`;
+  const failureUrl = `${baseUrl}/?status=failed`;
+
+  // ── Call Yoco API ──────────────────────────────────────────────────────────
   try {
-    const response = await fetch('https://online.yoco.com/v1/checkouts', {
-      method: 'POST',
+    const response = await fetch("https://online.yoco.com/v1/checkouts", {
+      method: "POST",
       headers: {
         Authorization: `Bearer ${secretKey}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        amount: serverTotalCents,  // ← authoritative server total, never the client value
-        currency,
-        cancelUrl: `${baseUrl}/?status=cancelled`,
-        successUrl: `${baseUrl}/order-success?id=${orderId}`,
-        failureUrl: `${baseUrl}/?status=failed`,
+        amount: Math.round(amountNum),
+        currency: curr,
+        cancelUrl,
+        successUrl,
+        failureUrl,
         metadata: {
-          ...metadata,
           orderId,
-          serverVerified: true,
-          itemCount: verifiedItems.length,
+          email,
+          items: itemsString,
         },
       }),
     });
 
-    const data: any = await response.json();
+    const data = await response.json();
 
     if (!response.ok) {
-      log('error', 'yoco.checkout_failed', { orderId, status: response.status, data });
-      res.status(response.status).json({ success: false, error: 'Payment gateway error', details: data });
-      return;
+      console.error("[YOCO-INIT] Yoco API error:", response.status, data);
+      return res.status(response.status).json({
+        error: "Payment gateway error",
+        detail: data?.displayMessage ?? "Please try again",
+      });
     }
 
-    log('info', 'payment.checkout_created', {
-      orderId,
-      serverTotalCents,
-      items: verifiedItems.length,
-    });
+    if (!data.redirectUrl) {
+      console.error("[YOCO-INIT] No redirectUrl in Yoco response");
+      return res.status(502).json({ error: "Invalid gateway response" });
+    }
 
-    res.json({
-      success: true,
-      data: {
-        redirectUrl: data.redirectUrl,
-        verifiedTotalCents: serverTotalCents,
-        verifiedItems,
-      },
-    });
+    console.log("[YOCO-INIT] Checkout created for order:", orderId);
+    return res.status(200).json({ redirectUrl: data.redirectUrl });
   } catch (err: any) {
-    log('error', 'yoco.network_error', { orderId, error: err.message });
-    res.status(500).json({ success: false, error: 'Failed to connect to payment gateway' });
+    console.error("[YOCO-INIT] Fetch error:", err.message);
+    return res.status(500).json({ error: "Failed to reach payment gateway" });
   }
-}
-// Add this default export so Vercel can actually run the function
-export default async function handler(req: Request, res: Response) {
-  // Handle CORS Pre-flight (important for your frontend)
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  // Vercel only supports POST for this specific logic
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
-  // Call your existing logic
-  return createYocoPaymentHandler(req, res);
 }

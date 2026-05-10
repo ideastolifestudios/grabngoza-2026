@@ -1,5 +1,5 @@
 /**
-import { createLogger } from '../_logger';
+import { createLogger } from '../internal/utils/_logger';
  * api/lib/zohoAuth.ts — Shared Zoho OAuth 2.0 auto-refresh
  *
  * Single token manager for ALL Zoho services (CRM, Inventory, FSM, Campaigns).

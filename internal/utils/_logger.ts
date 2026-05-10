@@ -1,5 +1,5 @@
-// api/_logger.ts — Structured JSON logging for Vercel Functions
-// Usage: import { createLogger } from './_logger';
+// api../internal/utils/_logger.ts — Structured JSON logging for Vercel Functions
+// Usage: import { createLogger } from '../internal/utils/_logger';
 //        const log = createLogger('payments');
 //        log.info('checkout_created', { orderId, amountCents });
 
