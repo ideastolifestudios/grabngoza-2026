@@ -3,7 +3,7 @@
 
 const WA_TOKEN    = process.env.WHATSAPP_ACCESS_TOKEN    || '';
 const WA_PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
-const ADMIN_PHONE = process.env.BUSINESS_PHONE           || '';
+const ADMIN_PHONE = process.env.WHATSAPP_ADMIN_NUMBER           || '';
 
 function normalisePhone(raw: string): string {
   let p = raw.replace(/\D/g, '');
