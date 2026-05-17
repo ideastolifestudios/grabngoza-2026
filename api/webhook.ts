@@ -232,7 +232,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await sendOrderNotification({
       orderId: order.id,
       email: order.email,
-      amountCents: order.amount,
+      amount: order.amount,
       itemCount: order.items.length,
       paymentId: order.paymentId,
       createdAt: order.createdAt,
