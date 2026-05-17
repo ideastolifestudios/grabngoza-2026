@@ -233,7 +233,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       orderId: order.id,
       email: order.email,
       amount: order.amount,
-      createdAt: order.createdAt,
     });
   } catch (err) {
     log.error("WhatsApp error (non-fatal)", err);
