@@ -1,6 +1,6 @@
 /**
 // 1. Updated Import to the new safe logger
-import { createLogger } from '../internal/lib/logger'; 
+import { createLogger } from './_logger'; 
 
 /**
  * api/create-shipment.ts — Grab & Go Shipment Creation (Vercel Serverless)
@@ -12,7 +12,7 @@ import { createLogger } from '../internal/lib/logger';
  * Body: { orderId, order }
  */
 
-import { createLogger } from '../internal/lib/logger';
+import { createLogger } from './_logger';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';

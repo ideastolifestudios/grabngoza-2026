@@ -6,7 +6,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { Redis } from "@upstash/redis";
-import { createLogger } from "../internal/lib/logger";
+import { createLogger } from "./_logger";
 
 const log = createLogger("[ORDERS]");
 

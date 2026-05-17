@@ -9,8 +9,8 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { Redis } from "@upstash/redis";
 
 // 1. Updated Import to point to the new internal folder structure
-import { sendOrderNotification } from "../internal/services/whatsapp.service";
-import { createLogger } from "../internal/lib/logger";
+import { sendOrderNotification } from "./_whatsapp";
+import { createLogger } from "./_logger";
 
 // 2. Initialize the logger with the specific prefix
 const log = createLogger("[WEBHOOK]");
