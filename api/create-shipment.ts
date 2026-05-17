@@ -12,6 +12,7 @@ import { createLogger } from '../internal/lib/logger';
  * Body: { orderId, order }
  */
 
+import { createLogger } from '../internal/lib/logger';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
