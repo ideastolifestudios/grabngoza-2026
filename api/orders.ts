@@ -6,9 +6,8 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { Redis } from "@upstash/redis";
-import { createLogger } from "./_logger";
 
-const log = createLogger("[ORDERS]");
+
 
 function getRedis(): Redis {
   const url = process.env.UPSTASH_REDIS_REST_URL;
@@ -36,7 +35,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   let redis: Redis;
   try { redis = getRedis(); }
-  catch (err) { log.error("Redis init failed", err); return res.status(503).json({ error: "Storage unavailable" }); }
+  catch (err) { console.error("Redis init failed", err); return res.status(503).json({ error: "Storage unavailable" }); }
 
   const { id, limit = "50" } = req.query;
 
@@ -47,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const order = typeof raw === "string" ? JSON.parse(raw) : raw;
       return res.status(200).json({ order });
     } catch (err) {
-      log.error("Single lookup error", err);
+      console.error("Single lookup error", err);
       return res.status(500).json({ error: "Failed to retrieve order" });
     }
   }
@@ -65,7 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ orders, total: orders.length });
   } catch (err) {
-    log.error("List error", err);
+    console.error("List error", err);
     return res.status(500).json({ error: "Failed to retrieve orders" });
   }
 }
