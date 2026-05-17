@@ -1,104 +1,65 @@
-/**
- * internal/services/whatsapp.service.ts
- *
- * Sends a WhatsApp notification via Meta Cloud API.
- * Uses plain console.log/error — no custom logger import so the
- * TS2554 "expected 1-2 arguments, got 3" error cannot occur here.
- *
- * Required env vars:
- *   WHATSAPP_ACCESS_TOKEN       — Meta system user token
- *   WHATSAPP_PHONE_NUMBER_ID    — From Meta Business → WhatsApp → API Setup
- *   WHATSAPP_ADMIN_NUMBER       — Recipient number, E.164 without +  e.g. 27821234567
- */
+// internal/services/whatsapp.service.ts
+// Sends WhatsApp order notifications (admin + customer)
 
-const PREFIX = "[WHATSAPP]";
+const WA_TOKEN    = process.env.WHATSAPP_ACCESS_TOKEN    || '';
+const WA_PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
+const ADMIN_PHONE = process.env.BUSINESS_PHONE           || '';
 
-export interface WhatsAppOrderPayload {
-  orderId: string;
-  email: string;
-  amountCents: number;
-  itemCount: number;
-  paymentId: string;
-  createdAt: string;
+function normalisePhone(raw: string): string {
+  let p = raw.replace(/\D/g, '');
+  if (p.startsWith('0')) p = '27' + p.substring(1);
+  return p;
 }
 
-function formatAmount(cents: number): string {
-  return `R${(cents / 100).toFixed(2)}`;
+async function sendWA(to: string, text: string): Promise<void> {
+  if (!WA_TOKEN || !WA_PHONE_ID || !to) return;
+  await fetch(`https://graph.facebook.com/v21.0/${WA_PHONE_ID}/messages`, {
+    method:  'POST',
+    headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to:   normalisePhone(to),
+      type: 'text',
+      text: { body: text },
+    }),
+  }).catch(e => console.error(JSON.stringify({ ts: new Date().toISOString(), level: 'error', service: '[WA]', event: 'send_failed', error: e.message })));
 }
 
-function formatTimeSA(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString("en-ZA", {
-      timeZone: "Africa/Johannesburg",
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  } catch {
-    return iso;
-  }
+export interface OrderNotification {
+  orderId:    string;
+  email:      string;
+  firstName?: string;
+  phone?:     string;
+  amount:     number;          // in cents
+  items?:     Array<{ name: string; quantity: number }>;
 }
 
-function buildMessage(order: WhatsAppOrderPayload): string {
-  const lines = [
-    `New Grab n Go Order`,
-    `Order: ${order.orderId}`,
-    `Customer: ${order.email}`,
-    `Amount: ${formatAmount(order.amountCents)}`,
-    `Items: ${order.itemCount}`,
-    `Payment ref: ${order.paymentId}`,
-    `Time: ${formatTimeSA(order.createdAt)}`,
-  ];
-  return lines.join("\n");
-}
+export async function sendOrderNotification(order: OrderNotification): Promise<void> {
+  const ref   = order.orderId.slice(-8).toUpperCase();
+  const rand  = (order.amount / 100).toFixed(2);
+  const items = (order.items || []).map(i => `  • ${i.quantity}x ${i.name}`).join('\n');
 
-/**
- * Sends an order notification to the admin WhatsApp number.
- * Never throws — all errors are caught and logged.
- * Returns true if message was sent, false if it failed or was skipped.
- */
-export async function sendOrderNotification(
-  order: WhatsAppOrderPayload
-): Promise<boolean> {
-  const token = process.env.WHATSAPP_ACCESS_TOKEN;
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  const recipient = process.env.WHATSAPP_ADMIN_NUMBER;
-
-  if (!token || !phoneNumberId || !recipient) {
-    console.warn(
-      `${PREFIX} Missing env vars (WHATSAPP_ACCESS_TOKEN / WHATSAPP_PHONE_NUMBER_ID / WHATSAPP_ADMIN_NUMBER) — skipping`
-    );
-    return false;
+  // ── Admin alert ──
+  if (ADMIN_PHONE) {
+    const adminMsg = [
+      `🛒 *NEW ORDER #${ref}*`,
+      `Customer: ${order.firstName || order.email}`,
+      `Amount: R${rand}`,
+      items ? `\nItems:\n${items}` : '',
+      `\n📧 ${order.email}`,
+    ].filter(Boolean).join('\n');
+    await sendWA(ADMIN_PHONE, adminMsg);
   }
 
-  const body = buildMessage(order);
-  const url = `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`;
-
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: recipient,
-        type: "text",
-        text: { body },
-      }),
-    });
-
-    if (!res.ok) {
-      const errText = await res.text().catch(() => "(unreadable)");
-      console.error(`${PREFIX} Send failed — status ${res.status}:`, errText);
-      return false;
-    }
-
-    console.log(`${PREFIX} Notification sent for order: ${order.orderId}`);
-    return true;
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error(`${PREFIX} Network error:`, msg);
-    return false;
+  // ── Customer confirmation ──
+  if (order.phone) {
+    const custMsg = [
+      `Hi ${order.firstName || 'there'}! 🎉`,
+      `Your Grab & Go order *#${ref}* is confirmed.`,
+      `Total: *R${rand}*`,
+      items ? `\nYour items:\n${items}` : '',
+      `\nYou'll get a tracking update once dispatched. Thanks for shopping with us! 🛍️`,
+    ].filter(Boolean).join('\n');
+    await sendWA(order.phone, custMsg);
   }
 }
