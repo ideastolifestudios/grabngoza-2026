@@ -14,7 +14,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-// ─── Toast (local, standalone — no global dep) ───────────────────────────────
+// ─── Toast ───────────────────────────────────────────────────────────────────
 const useToast = () => {
   const [toast, setToast] = React.useState<{ msg: string; type: 'success' | 'info' } | null>(null);
   const show = (msg: string, type: 'success' | 'info' = 'success') => {
@@ -40,63 +40,63 @@ const ToastBadge = ({ toast }: { toast: { msg: string; type: string } | null }) 
   );
 };
 
-// ─── Steps data ───────────────────────────────────────────────────────────────
+// ─── Steps ────────────────────────────────────────────────────────────────────
 const STEPS = [
   {
     number: '01',
     icon: Search,
     title: 'Browse Products',
-    desc: 'Explore our full collection and discover items you love. Use filters, categories, and search to find exactly what you're looking for.',
-    tip: 'Tip: use the category filters at the top for faster discovery.',
+    desc: "Explore our full collection and discover items you love. Use filters, categories, and search to find exactly what you are looking for.",
+    tip: "Tip: use the category filters at the top for faster discovery.",
   },
   {
     number: '02',
     icon: ShoppingCart,
     title: 'Add to Cart',
-    desc: 'Select your preferred quantity and any available options, then add the product to your cart. Your cart saves automatically.',
+    desc: "Select your preferred quantity and any available options, then add the product to your cart. Your cart saves automatically.",
     tip: null,
   },
   {
     number: '03',
     icon: ChevronRight,
     title: 'Proceed to Checkout',
-    desc: 'Open your cart via the bag icon in the top-right corner and tap "Checkout" to begin the secure checkout process.',
+    desc: "Open your cart via the bag icon in the top-right corner and tap Checkout to begin the secure checkout process.",
     tip: null,
   },
   {
     number: '04',
     icon: User,
     title: 'Enter Your Details',
-    desc: 'Provide your delivery address, contact number, and email address accurately. Double-check your details before continuing.',
-    tip: 'Tip: signing in saves your details for future orders.',
+    desc: "Provide your delivery address, contact number, and email address accurately. Double-check your details before continuing.",
+    tip: "Tip: signing in saves your details for future orders.",
   },
   {
     number: '05',
     icon: Lock,
     title: 'Complete Secure Payment',
-    desc: 'Pay safely and securely using Yoco — supporting Visa, Mastercard, Apple Pay, and Google Pay. All transactions are encrypted.',
+    desc: "Pay safely and securely using Yoco — supporting Visa, Mastercard, Apple Pay, and Google Pay. All transactions are encrypted.",
     tip: null,
   },
   {
     number: '06',
     icon: CheckCircle2,
     title: 'Order Confirmation',
-    desc: 'Once payment is successful your order is automatically confirmed. You'll receive a confirmation to the email address you provided.',
+    desc: "Once payment is successful your order is automatically confirmed. You will receive a confirmation to the email address you provided.",
     tip: null,
   },
   {
     number: '07',
     icon: Package,
     title: 'Processing & Delivery',
-    desc: 'Your order is picked, packed, and prepared for delivery or collection. Processing typically takes 1–2 business days.',
+    desc: "Your order is picked, packed, and prepared for delivery or collection. Processing typically takes 1-2 business days.",
     tip: null,
   },
   {
     number: '08',
     icon: Bell,
     title: 'Stay Updated',
-    desc: 'You'll receive updates regarding your order status, processing progress, and delivery tracking as your order moves through the system.',
-    tip: 'Tip: check your spam folder if you don't see updates in your inbox.',
+    desc: "You will receive updates regarding your order status, processing progress, and delivery tracking as your order moves through the system.",
+    tip: "Tip: check your spam folder if you do not see updates in your inbox.",
   },
 ];
 
@@ -112,7 +112,7 @@ const HowToOrderPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#f9f9f8] font-sans">
 
-      {/* ── Header bar ─────────────────────────────────────────────────── */}
+      {/* Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-5 md:px-10 h-14 flex items-center justify-between">
           <button
@@ -129,7 +129,7 @@ const HowToOrderPage: React.FC = () => {
         </div>
       </header>
 
-      {/* ── Hero headline ──────────────────────────────────────────────── */}
+      {/* Hero headline */}
       <section className="max-w-5xl mx-auto px-5 md:px-10 pt-16 pb-12 md:pt-24 md:pb-16">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -148,7 +148,7 @@ const HowToOrderPage: React.FC = () => {
         </motion.div>
       </section>
 
-      {/* ── Steps grid ─────────────────────────────────────────────────── */}
+      {/* Steps */}
       <section className="max-w-5xl mx-auto px-5 md:px-10 pb-24">
         <div className="space-y-0">
           {STEPS.map((step, i) => {
@@ -161,7 +161,6 @@ const HowToOrderPage: React.FC = () => {
                 transition={{ duration: 0.5, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }}
                 className="flex gap-6 md:gap-10 py-8 border-b border-gray-100 group"
               >
-                {/* Number + Icon col */}
                 <div className="flex-shrink-0 w-14 md:w-20">
                   <div className="flex flex-col items-start">
                     <span className="text-[10px] font-black text-gray-300 tabular-nums mb-3">{step.number}</span>
@@ -174,8 +173,6 @@ const HowToOrderPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-
-                {/* Content col */}
                 <div className="flex-1 pt-0.5">
                   <h2 className="text-base md:text-lg font-black uppercase tracking-tight text-gray-950 mb-3">
                     {step.title}
@@ -194,7 +191,7 @@ const HowToOrderPage: React.FC = () => {
           })}
         </div>
 
-        {/* ── CTA ──────────────────────────────────────────────────────── */}
+        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -220,7 +217,6 @@ const HowToOrderPage: React.FC = () => {
         </motion.div>
       </section>
 
-      {/* ── Toast ──────────────────────────────────────────────────────── */}
       <ToastBadge toast={toast} />
     </div>
   );
