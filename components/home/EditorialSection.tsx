@@ -19,8 +19,7 @@ headline: "MOVE DIFFERENT",
   {
     id: 2,
     tag: "2026 SEASON",
-    headline: "CURATED
-DROPS",
+    headline: "CURATED DROPS",
     sub: "Every piece is selected for quality, culture, and the community that wears it.",
     cta: { label: "SHOP NOW", href: "/collections/new-arrivals" },
     image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80",
