@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-primary: #104431;
+  --brand-accent: #18A374;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply antialiased text-brand-text bg-brand-background;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #f6f6f6; }
+::-webkit-scrollbar-thumb { background: #104431; border-radius: 2px; }
+
+/* Selection */
+::selection {
+  background: #18A374;
+  color: white;
+}
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid #18A374;
+  outline-offset: 2px;
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
