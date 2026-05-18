@@ -6909,129 +6909,178 @@ const HowToOrderGuide = () => {
   );
 };
 
-const PromoGrid = () => {
-  const promos = [
-    {
-      id: 1,
-      title: "Price Drops Up To",
-      discount: "80% Off",
-      category: "Clothing & More",
-      image: "https://picsum.photos/seed/promo1/1000/1000",
-      label: "Big Deal Energy",
-      ends: "Limited Time",
-      color: "bg-[#e34234]",
-      shape: "rounded-tl-[100px] rounded-bl-[40px]",
-      link: "/category/men"
-    },
-    {
-      id: 2,
-      title: "Price Drops Up To",
-      discount: "60% Off",
-      category: "Sneakers & More",
-      image: "https://picsum.photos/seed/promo2/1000/1000",
-      label: "Sneaker Scoop",
-      ends: "Limited Time",
-      color: "bg-black",
-      shape: "rounded-tr-[100px] rounded-br-[40px]",
-      link: "/category/sneakers"
-    },
-    {
-      id: 3,
-      brands: "Superga • Vans",
-      title: "Up To 60% Off",
-      image: "https://picsum.photos/seed/promo3/1000/1000",
-      label: "Vans & Superga",
-      ends: "Limited Time",
-      color: "bg-black",
-      shape: "rounded-bl-[100px]",
-      link: "/category/women"
-    },
-    {
-      id: 4,
-      brands: "New Season",
-      title: "Fresh Drops",
-      image: "https://picsum.photos/seed/promo4/1000/1000",
-      label: "Just Landed",
-      ends: "Shop Now",
-      color: "bg-[#e34234]",
-      shape: "rounded-br-[100px] rounded-tl-[40px]",
-      link: "/"
-    }
-  ];
+const PromoGrid = ({ products = [], categories = [] }: { products: Product[]; categories: Category[] }) => {
+  // 4 collection cards — images auto-cycle from live product data
+  const CARDS = React.useMemo(() => {
+    const getImgs = (terms: string[]): string[] =>
+      products
+        .filter(p =>
+          terms.some(t =>
+            (p.categories || []).some((c: string) => c.toLowerCase().includes(t)) ||
+            (p.brand || '').toLowerCase().includes(t) ||
+            (p.name || '').toLowerCase().includes(t)
+          )
+        )
+        .flatMap(p => (p.images && p.images.length ? p.images : p.image ? [p.image] : []))
+        .filter(Boolean)
+        .slice(0, 8);
+
+    const allImgs = (): string[] =>
+      products
+        .flatMap(p => (p.images && p.images.length ? p.images : p.image ? [p.image] : []))
+        .filter(Boolean)
+        .slice(0, 8);
+
+    const resolve = (terms: string[]): string[] => {
+      const imgs = getImgs(terms);
+      return imgs.length >= 2 ? imgs : allImgs();
+    };
+
+    return [
+      {
+        id: 1,
+        eyebrow: "Women",
+        title: "The Collection",
+        cta: "Shop Women",
+        link: "/category/women",
+        color: "bg-[#06402B]",
+        shape: "rounded-tl-[80px] rounded-bl-[30px]",
+        images: resolve(["women", "woman", "ladies", "dress", "skirt", "top"]),
+      },
+      {
+        id: 2,
+        eyebrow: "Footwear",
+        title: "Latest Kicks",
+        cta: "Shop Sneakers",
+        link: "/category/sneakers",
+        color: "bg-gray-950",
+        shape: "rounded-tr-[80px] rounded-br-[30px]",
+        images: resolve(["sneaker", "shoe", "boot", "kicks", "vans", "nike", "adidas", "puma"]),
+      },
+      {
+        id: 3,
+        eyebrow: "Men",
+        title: "Street Ready",
+        cta: "Shop Men",
+        link: "/category/men",
+        color: "bg-gray-950",
+        shape: "rounded-bl-[80px]",
+        images: resolve(["men", "man", "shirt", "hoodie", "jacket", "trouser"]),
+      },
+      {
+        id: 4,
+        eyebrow: "Just In",
+        title: "New Arrivals",
+        cta: "See All",
+        link: "/",
+        color: "bg-[#06402B]",
+        shape: "rounded-br-[80px] rounded-tl-[30px]",
+        images: allImgs(),
+      },
+    ];
+  }, [products]);
+
+  const [cycleIdx, setCycleIdx] = React.useState<number[]>([0, 1, 2, 0]);
+
+  React.useEffect(() => {
+    if (!CARDS.some(c => c.images.length > 1)) return;
+    const timers = CARDS.map((card, i) =>
+      setInterval(() => {
+        if (card.images.length < 2) return;
+        setCycleIdx(prev => {
+          const next = [...prev];
+          next[i] = (next[i] + 1) % card.images.length;
+          return next;
+        });
+      }, 3600 + i * 450)
+    );
+    return () => timers.forEach(clearInterval);
+  }, [CARDS]);
 
   return (
     <section className="max-w-[1800px] mx-auto px-4 md:px-10 py-12 md:py-24 overflow-hidden">
       <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-4">
         <div>
-          <h2 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-tighter text-black leading-none">Seasonal<br />Price Drops</h2>
-          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-black/30 mt-4">Limited Availability</p>
-    </div>
-    </div>
+          <h2 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-tighter text-black leading-none">Browse<br />the Range</h2>
+          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-black/30 mt-4">Shop by Collection</p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        {promos.map((promo) => (
-          <motion.div
-            key={promo.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            whileHover={{ y: -5 }}
-            className="group cursor-pointer"
-            onClick={() => promo.link && window.location.assign(promo.link)}
-          >
-            <div className={`relative aspect-square md:aspect-[16/9] flex items-stretch overflow-hidden shadow-2xl ${promo.shape} transition-all duration-500 group-hover:shadow-black/20`}>
-              {/* Image Side */}
-              <div className="relative w-1/2 h-full bg-gray-100 overflow-hidden">
-                <img
-                  src={promo.image}
-                  alt={promo.label}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
-    </div>
+        {CARDS.map((card, i) => {
+          const imgUrl = card.images[cycleIdx[i] ?? 0] ?? null;
+          const dotCount = Math.min(card.images.length, 5);
+          const activeDot = (cycleIdx[i] ?? 0) % Math.max(dotCount, 1);
+          return (
+            <motion.div
+              key={card.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              whileHover={{ y: -5 }}
+              className="group cursor-pointer"
+              onClick={() => window.location.assign(card.link)}
+            >
+              <div className={`relative aspect-square md:aspect-[16/9] flex items-stretch overflow-hidden shadow-2xl ${card.shape} transition-all duration-500 group-hover:shadow-black/20`}>
 
-              {/* Info Side */}
-              <div className={`w-1/2 h-full flex flex-col justify-center p-6 md:p-12 ${promo.color} text-white relative`}>
-                {/* Background Shapes (Image 2 style) */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                {/* Image panel — live product cycling */}
+                <div className="relative w-1/2 h-full bg-gray-100 overflow-hidden">
+                  {imgUrl ? (
+                    <img
+                      key={imgUrl}
+                      src={imgUrl}
+                      alt={card.title}
+                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 animate-pulse" />
+                  )}
 
-                <div className="relative z-10">
-                  {promo.brands && (
-                    <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mb-3 text-white/60">{promo.brands}</p>
+                  {/* Progress dots */}
+                  {dotCount > 1 && (
+                    <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1 z-10">
+                      {Array.from({ length: dotCount }).map((_, dot) => (
+                        <div
+                          key={dot}
+                          className={`h-[2px] rounded-full transition-all duration-500 ${dot === activeDot ? 'w-4 bg-white' : 'w-2 bg-white/40'}`}
+                        />
+                      ))}
+                    </div>
                   )}
-                  {promo.discount && (
-                    <p className="text-6xl md:text-[min(8vw,100px)] font-black uppercase tracking-tighter leading-[0.85] mb-4 drop-shadow-xl">
-                      {promo.discount}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-4 mb-2">
-                    <div className="w-[1px] h-6 md:h-12 bg-white/30" />
-                    <p className="font-black uppercase tracking-tighter leading-none text-sm md:text-xl">
-                      {promo.title}
-                    </p>
-    </div>
-                  {promo.category && (
-                    <p className="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] opacity-60 mt-6 pt-4 border-t border-white/10">
-                      {promo.category}
-                    </p>
-                  )}
-    </div>
-    </div>
-    </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
+                </div>
 
-            <div className="mt-6 flex justify-between items-end border-b border-gray-100 pb-4">
-              <div>
-                <h4 className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-black transition-colors group-hover:text-[#e34234]">{promo.label}</h4>
-                <p className="text-[8px] md:text-[9px] font-medium uppercase tracking-widest text-black/30 mt-1">{promo.ends}</p>
-    </div>
-              <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100 translate-x-4 group-hover:translate-x-0">
-                <ChevronRight size={14} />
-    </div>
-    </div>
-          </motion.div>
-        ))}
-    </div>
+                {/* Info panel */}
+                <div className={`w-1/2 h-full flex flex-col justify-center p-6 md:p-10 ${card.color} text-white relative overflow-hidden`}>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                  <div className="relative z-10">
+                    <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] mb-3 text-white/50">
+                      {card.eyebrow}
+                    </p>
+                    <p className="text-2xl md:text-3xl font-black uppercase tracking-tight leading-tight mb-8 text-white">
+                      {card.title}
+                    </p>
+                    <div className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/70 border border-white/20 px-4 py-2.5 group-hover:bg-white group-hover:text-gray-950 transition-all duration-300">
+                      {card.cta}
+                      <ChevronRight size={10} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Below-card meta */}
+              <div className="mt-5 flex justify-between items-center border-b border-gray-100 pb-4">
+                <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] text-black/40">{card.eyebrow} Collection</p>
+                <div className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100">
+                  <ChevronRight size={12} />
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
     </section>
   );
 };
@@ -7306,7 +7355,7 @@ const HomePage = ({
     </div>
       </motion.div>
 
-      <PromoGrid />
+      <PromoGrid products={filteredAndSortedProducts} categories={categories} />
               <HowToOrderGuide />
 
       {/* Products anchor for hero scroll */}
