@@ -2,6 +2,7 @@ import SupportChat from "./components/SupportChat";
 import './sentryClient';
 import AdminDashboard from './components/admin/AdminDashboard';
 import ReturnRequestPage from './pages/ReturnRequestPage';
+import HowToOrderPage from './pages/HowToOrderPage';
 import { isOrderReturnable } from './services/returnService';
 import React, { useState, useEffect, useRef, useMemo, Component } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
@@ -228,8 +229,8 @@ const Toast = ({ message, type = 'success', onClose }: { message: string, type?:
       initial={{ opacity: 0, y: 50, x: '-50%' }}
       animate={{ opacity: 1, y: 0, x: '-50%' }}
       exit={{ opacity: 0, y: 50, x: '-50%' }}
-      className={`fixed bottom-10 left-1/2 z-[300] px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 border ${
-        type === 'success' ? 'bg-black text-white border-white/10' : 'bg-red-600 text-white border-red-500'
+      className={`fixed top-5 right-5 z-[300] px-5 py-3 shadow-xl flex items-center gap-3 border ${
+        type === 'success' ? 'bg-gray-950 text-white border-gray-800' : 'bg-red-600 text-white border-red-500'
       }`}
     >
       {type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
@@ -1204,7 +1205,7 @@ const Sidebar = ({
 const Hero = () => {
   const navigate = useNavigate();
   const heroSlides = [
-    { tagline: "New Season", title: "Street Ready", sub: "Premium streetwear essentials \u2014 built for the culture" },
+    { tagline: "New \u2014 2026", title: "Shop the Next Big Thing", sub: "Premium streetwear, fresh drops & exclusive finds \u2014 curated for you." },
     { tagline: "Just Dropped", title: "Fresh Kicks", sub: "Latest sneakers from the brands you love" },
     { tagline: "Limited Edition", title: "Stand Out", sub: "Exclusive drops you won\u0027t find anywhere else" },
   ];
@@ -1232,10 +1233,10 @@ const Hero = () => {
         className="max-w-xl"
       >
         <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/50 mb-4">{slide.tagline}</p>
-        <h1 className="text-5xl md:text-7xl font-display font-black uppercase tracking-tighter text-white leading-[0.9] mb-6">
+        <h1 className="text-[2.8rem] sm:text-6xl md:text-[5.5rem] font-display font-black uppercase tracking-tighter text-white leading-[0.88] mb-5">
           {slide.title}
         </h1>
-        <p className="text-xs md:text-sm text-white/60 uppercase tracking-widest font-bold mb-10 max-w-xs leading-relaxed">
+        <p className="text-[11px] md:text-xs text-white/50 uppercase tracking-[0.25em] font-bold mb-10 max-w-sm leading-loose">
           {slide.sub}
         </p>
         <div className="flex items-center gap-4 flex-wrap">
@@ -2319,7 +2320,7 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
             <div className="space-y-3">
               <h4 className="text-[10px] font-black uppercase tracking-widest text-black">Support</h4>
               <ul className="space-y-2 text-xs text-gray-400">
-                <li><button onClick={() => window.dispatchEvent(new Event('open-how-to-order'))} className="hover:text-black transition-colors cursor-pointer">How to Order</button></li>
+                <li><Link to="/how-to-order" className="hover:text-black transition-colors">How to Order</Link></li>
                 <li><Link to="/track-order" className="hover:text-black transition-colors">Track Order</Link></li>
                 <li><Link to="/shipping" className="hover:text-black transition-colors">Shipping Info</Link></li>
                 <li><Link to="/helpdesk" className="hover:text-black transition-colors">Help Desk</Link></li>
@@ -8443,6 +8444,7 @@ function AppContent() {
             showToast={(msg, type) => setToast({ message: msg, type: type || 'success' })}
           />
         } />
+        <Route path="/how-to-order" element={<HowToOrderPage />} />
         <Route path="/order-success" element={
           <div className="min-h-screen flex items-center justify-center bg-white">
             <div className="text-center p-8">
