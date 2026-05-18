@@ -207,27 +207,27 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff', padding: '24px 20px' }}>
+      {/* Tab bar */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+        {(['orders', 'promotions'] as const).map(t => (
+          <button key={t} onClick={() => setAdminTab(t)}
+            style={{ padding: '8px 20px', background: adminTab === t ? '#fff' : 'transparent',
+              color: adminTab === t ? '#000' : '#555', border: '1px solid',
+              borderColor: adminTab === t ? '#fff' : '#333', fontWeight: 800,
+              fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, cursor: 'pointer' }}>
+            {t === 'orders' ? 'Orders' : 'Promotions'}
+          </button>
+        ))}
+      </div>
+      {adminTab === 'promotions' ? (
+        <div style={{ background: '#fff', color: '#000', minHeight: '80vh', borderRadius: 4 }}>
+          <DiscountsManager />
+        </div>
+      ) : (<>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          {/* Tabs */}
-          <div style={{display:'flex',gap:8,marginBottom:24}}>
-            {(['orders','promotions'] as const).map(t => (
-              <button key={t} onClick={()=>setAdminTab(t)}
-                style={{padding:'8px 20px',background:adminTab===t?'#fff':'transparent',
-                  color:adminTab===t?'#000':'#555',border:'1px solid',
-                  borderColor:adminTab===t?'#fff':'#333',fontWeight:800,
-                  fontSize:10,textTransform:'uppercase',letterSpacing:2,cursor:'pointer'}}>
-                {t==='orders'?'Orders':'Promotions'}
-              </button>
-            ))}
-          </div>
-          {adminTab==='promotions'?(
-            <div style={{background:'#fff',color:'#000',minHeight:'80vh',borderRadius:4}}>
-              <DiscountsManager/>
-            </div>
-          ):(<>
-<h1 style={{ fontSize: 22, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>
             Dispatch Dashboard
           </h1>
           <p style={{ color: '#444', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', marginTop: 4 }}>
@@ -327,7 +327,7 @@ export default function AdminDashboard() {
 
       {/* CSS for spinner */}
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </>)}
     </div>
-  </>)}
   );
 }
