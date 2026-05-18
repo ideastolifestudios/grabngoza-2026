@@ -1,9 +1,10 @@
-import SupportChat from "./components/SupportChat";
-import './sentryClient';
-import AdminDashboard from './components/admin/AdminDashboard';
-import ReturnRequestPage from './pages/ReturnRequestPage';
-import HowToOrderPage from './pages/HowToOrderPage';
-import { isOrderReturnable } from './services/returnService';
+import InstagramFeed from './components/InstagramFeed.tsx';
+// import SupportChat from "./components/SupportChat";
+// import './sentryClient';
+// import AdminDashboard from './components/admin/AdminDashboard';
+// import ReturnRequestPage from './pages/ReturnRequestPage';
+// import HowToOrderPage from './pages/HowToOrderPage';
+// import { isOrderReturnable } from './services/returnService';
 import React, { useState, useEffect, useRef, useMemo, Component } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -225,17 +226,22 @@ const Toast = ({ message, type = 'success', onClose }: { message: string, type?:
   }, [onClose]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 50, x: '-50%' }}
-      animate={{ opacity: 1, y: 0, x: '-50%' }}
-      exit={{ opacity: 0, y: 50, x: '-50%' }}
-      className={`fixed top-5 right-5 z-[300] px-5 py-3 shadow-xl flex items-center gap-3 border ${
-        type === 'success' ? 'bg-gray-950 text-white border-gray-800' : 'bg-red-600 text-white border-red-500'
-      }`}
-    >
-      {type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-      <span className="text-[10px] font-black uppercase tracking-widest">{message}</span>
-    </motion.div>
+    <div className="fixed bottom-8 inset-x-0 flex items-center justify-center z-[500] pointer-events-none p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="pointer-events-auto"
+      >
+        <div className={`px-5 py-2.5 rounded-full shadow-[0_15px_30px_-5px_rgba(0,0,0,0.3)] flex items-center gap-3 bg-black text-white border border-white/10`}>
+          {type === 'success' ? <CheckCircle2 size={12} className="text-white" /> : <AlertCircle size={12} className="text-white" />}
+          <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap">{message}</span>
+          <button onClick={onClose} className="ml-1 hover:opacity-50 transition-opacity">
+            <X size={10} />
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 
@@ -380,7 +386,7 @@ const WelcomePopup = () => {
             className="relative w-full max-w-lg bg-white overflow-hidden shadow-2xl rounded-sm max-h-[90vh] overflow-y-auto"
           >
             {/* Top accent line */}
-            <div className="h-1 w-full bg-[#FFA500]" />
+            <div className="h-1 w-full bg-[#18A374]" />
 
             <button
               onClick={handleClose}
@@ -603,15 +609,15 @@ const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
   if (topCats.length === 0) return null;
 
   return (
-    <div className="bg-white border-b-2 border-[#06402B]/15">
-      <div className="max-w-[1800px] mx-auto">
-        <nav className="flex items-center gap-1 px-4 md:px-10 py-2 overflow-x-auto scrollbar-hide">
+    <div className="bg-white border-b border-gray-100">
+      <div className="max-w-[1800px] mx-auto overflow-hidden">
+        <nav className="flex items-center justify-center gap-6 px-6 py-4 overflow-x-auto scrollbar-hide">
           <Link
             to="/"
-            className={`flex-shrink-0 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-full ${
+            className={`flex-shrink-0 text-[10px] font-bold uppercase tracking-[0.2em] transition-all pb-1 border-b-2 ${
               location.pathname === '/'
-                ? 'bg-[#06402B] text-white'
-                : 'text-gray-400 hover:text-[#06402B] hover:bg-[#06402B]/5'
+                ? 'border-[#06402B] text-black'
+                : 'border-transparent text-gray-400 hover:text-black'
             }`}
           >
             All
@@ -622,10 +628,10 @@ const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
               <Link
                 key={cat.id}
                 to={`/category/${encodeURIComponent(cat.name.toLowerCase())}`}
-                className={`flex-shrink-0 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-full whitespace-nowrap ${
+                className={`flex-shrink-0 text-[10px] font-bold uppercase tracking-[0.2em] transition-all pb-1 border-b-2 whitespace-nowrap ${
                   isActive
-                    ? 'bg-black text-white'
-                    : 'text-gray-400 hover:text-black hover:bg-black/5'
+                    ? 'border-[#06402B] text-black'
+                    : 'border-transparent text-gray-400 hover:text-black'
                 }`}
               >
                 {cat.name}
@@ -633,7 +639,7 @@ const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
             );
           })}
         </nav>
-    </div>
+      </div>
     </div>
   );
 };
@@ -641,32 +647,22 @@ const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
 const FreeDeliveryBar = ({ cartTotal }: { cartTotal: number }) => {
   const FREE_DELIVERY_THRESHOLD = 1000;
   const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - cartTotal);
-  const progress = Math.min(100, (cartTotal / FREE_DELIVERY_THRESHOLD) * 100);
 
   return (
-    <div className="bg-[#fafafa] border-b border-gray-100 py-2 px-4 text-center">
-      <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
-        <Truck size={14} className="text-[#06402B] flex-shrink-0" />
-        {remaining > 0 ? (
-          <p className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-gray-600">
-            Spend <span className="text-black font-black">R{remaining.toFixed(0)}</span> more for{' '}
-            <span className="text-black font-black">Free Delivery</span>
-          </p>
-        ) : (
-          <p className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-emerald-600">
-            <CheckCircle2 size={12} className="inline mr-1" />
-            You qualify for <span className="font-black">Free Delivery!</span>
-          </p>
-        )}
-    </div>
-      <div className="max-w-xs mx-auto mt-1 h-1 bg-gray-200 rounded-full overflow-hidden">
-        <motion.div
-          className="h-full bg-[#06402B] rounded-full"
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-        />
-    </div>
+    <div className="bg-[#000000] py-1.5 px-4 text-center">
+      <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+        <div className="flex items-center gap-2">
+          {remaining > 0 ? (
+            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/80">
+              Free delivery on all orders over <span className="text-white">R1000</span>
+            </p>
+          ) : (
+            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#18A374]">
+              You qualify for <span className="text-white">Free Delivery!</span>
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
@@ -729,17 +725,16 @@ const Header = ({
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-
+      setScrolled(currentScrollY > 100);
+      
       // Hide on scroll down, show on scroll up
-      // Only hide if we've scrolled past a certain threshold
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+      if (currentScrollY > lastScrollY && currentScrollY > 150) {
         setIsVisible(false);
       } else {
         setIsVisible(true);
       }
-
+      
       setLastScrollY(currentScrollY);
-      setScrolled(currentScrollY > 50);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -765,194 +760,79 @@ const Header = ({
   }, [products, localSearch]);
 
   return (
+    <>
       <motion.header
         initial={false}
         animate={{
-          y: isVisible ? 0 : -100,
-          opacity: isVisible ? 1 : 0
+          opacity: isVisible ? 1 : 0,
+          pointerEvents: isVisible ? 'auto' : 'none',
+          backgroundColor: scrolled ? 'rgba(6, 64, 43, 0.95)' : 'rgba(0, 0, 0, 0)',
+          backdropFilter: scrolled ? 'blur(12px)' : 'blur(0px)',
+          borderBottomColor: scrolled ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0)'
         }}
-        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/98 backdrop-blur-md shadow-sm border-b border-gray-100' : 'bg-white'}`}
+        transition={{ 
+          duration: 0.5, 
+          ease: [0.16, 1, 0.3, 1]
+        }}
+        className="fixed top-0 left-0 right-0 z-50 border-b transition-all flex flex-col"
       >
-        {/* Top bar: Logo + Actions */}
-        <div className="max-w-[1800px] mx-auto px-4 md:px-10 flex items-center justify-between gap-4 py-2 md:py-3">
+        <FreeDeliveryBar cartTotal={cartTotal} />
 
-        {/* Left: Logo */}
-        <div className="flex-shrink-0">
-          <Link to="/" className="block group">
-            <Logo className="h-8 md:h-12 transition-transform duration-500 group-hover:scale-105" dark />
-          </Link>
-    </div>
-
-        {/* Centre: Desktop Category Nav — Moved to CategoryBar below */}
-        {topCats.length > 0 && (
-          <nav className="hidden items-center gap-1 flex-1 justify-center" onMouseLeave={handleNavLeave}>
-            <Link
-              to="/"
-              className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-colors rounded-full ${location.pathname === '/' ? 'text-black bg-black/5' : 'text-gray-400 hover:text-black hover:bg-black/5'}`}
-            >
-              All
+        <div className={`max-w-[1800px] w-full mx-auto px-6 md:px-10 flex items-center justify-between transition-all duration-500 ${scrolled ? 'py-2.5' : 'py-5 md:py-7'}`}>
+          
+          {/* Left: Logo */}
+          <div className="flex-shrink-0 lg:w-1/4">
+            <Link to="/" className="block group">
+              <Logo className="h-6 md:h-9 transition-all duration-500 group-hover:scale-105" light />
             </Link>
-            {topCats.slice(0, 7).map(cat => {
-              const subCats = categories.filter(c => c.parentId === cat.id);
-              const isActive = location.pathname === `/category/${encodeURIComponent(cat.name.toLowerCase())}`;
-              return (
-                <div key={cat.id} className="relative" onMouseEnter={() => handleNavEnter(cat.id)} onMouseLeave={handleNavLeave}>
-                  <Link
-                    to={`/category/${encodeURIComponent(cat.name.toLowerCase())}`}
-                    className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-colors rounded-full flex items-center gap-1 ${isActive ? 'text-black bg-black/5' : 'text-gray-400 hover:text-black hover:bg-black/5'}`}
-                  >
-                    {cat.name}
-                    {subCats.length > 0 && <ChevronDown size={10} className={`transition-transform ${megaMenuOpen === cat.id ? 'rotate-180' : ''}`} />}
-                  </Link>
-                  {/* Mega dropdown for sub-categories */}
-                  <AnimatePresence>
-                    {megaMenuOpen === cat.id && subCats.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={{ duration: 0.15, ease: 'easeOut' }}
-                        onMouseEnter={() => handleNavEnter(cat.id)}
-                        onMouseLeave={handleNavLeave}
-                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white border border-gray-100 shadow-2xl rounded-xl p-4 min-w-[180px] z-50"
-                      >
-                        <div className="space-y-0.5">
-                          <Link
-                            to={`/category/${encodeURIComponent(cat.name.toLowerCase())}`}
-                            onClick={() => setMegaMenuOpen(null)}
-                            className="block px-3 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
-                          >
-                            All {cat.name}
-                          </Link>
-                          {subCats.map(sub => (
-                            <Link
-                              key={sub.id}
-                              to={`/category/${encodeURIComponent(sub.name.toLowerCase())}`}
-                              onClick={() => setMegaMenuOpen(null)}
-                              className="block px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
-                            >
-                              {sub.name}
-                            </Link>
-                          ))}
-    </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-    </div>
-              );
-            })}
-          </nav>
-        )}
+          </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center justify-end gap-2 md:gap-3">
-          {/* Search */}
-          <div className="relative hidden sm:block">
-            <div className="flex items-center border border-gray-200 rounded-full px-3 py-1.5 gap-2 bg-white hover:border-gray-400 transition-all">
-              <Search size={14} className="text-gray-400 shrink-0" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="text-xs font-medium outline-none bg-transparent w-28 md:w-36 placeholder:text-gray-300"
-              />
-    </div>
-            {/* Suggestions dropdown */}
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-xl z-50 overflow-hidden min-w-[280px]">
-                {suggestions.map(p => (
-                  <button
-                    key={p.id}
-                    onMouseDown={() => { navigate(`/product/${p.id}`); setLocalSearch(''); setShowSuggestions(false); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 text-left transition-colors"
-                  >
-                    {p.image && <img src={p.image} className="w-10 h-10 object-cover rounded-lg flex-shrink-0" referrerPolicy="no-referrer" />}
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-black truncate">{p.name}</p>
-                      <p className="text-[9px] text-gray-400 uppercase tracking-widest">{formatPrice(p.price)}</p>
-    </div>
-                    <ChevronRight size={12} className="text-gray-300 flex-shrink-0 ml-auto" />
-                  </button>
-                ))}
-                <div className="border-t border-gray-50 px-3 py-2">
-                  <button
-                    onMouseDown={() => { navigate('/'); setShowSuggestions(false); }}
-                    className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
-                  >
-                    Browse all products →
-                  </button>
-    </div>
-    </div>
-            )}
-    </div>
-
-          <button
-            onClick={onOpenWishlist}
-            className="p-2 hover:bg-black/5 rounded-full transition-colors text-black hidden sm:block relative"
-            title="Wishlist"
-          >
-            <Heart size={20} />
-          </button>
-
-          <button
-            onClick={onOpenCart}
-            className="relative p-2 hover:bg-black/5 rounded-full transition-colors text-black active:scale-90 overflow-visible"
-            title="Cart"
-          >
-            <AnimatePresence mode="wait">
-              {cartCount > 0 ? (
-                <motion.div
-                  key="cart-count"
-                  initial={{ scale: 0, rotate: -10 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  exit={{ scale: 0 }}
-                  className="w-8 h-8 bg-[#06402B] text-white rounded-full flex items-center justify-center text-xs font-black"
-                >
-                  {cartCount}
-                </motion.div>
-              ) : (
-                <motion.div key="cart-icon" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                  <ShoppingCart size={22} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-            {false && cartCount > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-[#FFA500] text-white text-[8px] font-bold rounded-full flex items-center justify-center px-1 shadow-[0_2px_10px_rgba(227,66,52,0.4)]"
+          {/* Middle: Cinematic Nav Links */}
+          <nav className="hidden lg:flex items-center justify-center gap-10 flex-1">
+            {['BUNDLES', 'NEW ARRIVALS', 'APPAREL', 'ACCESSORIES', 'FOOTWEAR'].map((item) => (
+              <Link
+                key={item}
+                to={item === 'BUNDLES' ? '/bundles' : `/category/${item.toLowerCase().replace(' ', '-')}`}
+                className="text-[11px] font-bold uppercase tracking-[0.3em] text-white hover:text-[#18A374] transition-colors"
               >
-                {cartCount}
-              </motion.span>
-            )}
-          </button>
+                {item}
+              </Link>
+            ))}
+          </nav>
 
-          {!user ? (
-            <>
-              <button onClick={onOpenAuth} className="p-2 hover:bg-black/5 rounded-full transition-colors text-black hidden sm:flex items-center gap-2">
-                <UserIcon size={20} />
-                <span className="text-[9px] font-bold uppercase tracking-widest">Login</span>
-              </button>
-              <button onClick={onOpenMenu} className="p-2 hover:bg-black/5 rounded-full transition-colors flex items-center gap-2 group text-black">
-                <Menu size={24} />
-              </button>
-            </>
-          ) : (
-            <button onClick={onOpenMenu} className="p-2 hover:bg-black/5 rounded-full transition-colors text-black flex items-center gap-2">
-              <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-[9px] font-bold uppercase ring-2 ring-offset-2 ring-black/5">
-                {user.firstName[0]}{user.lastName[0]}
-    </div>
+          {/* Right: Thin Icons Bundle */}
+          <div className="flex items-center justify-end gap-1.5 md:gap-5 lg:w-1/4">
+            <button className="p-2 text-white/90 hover:text-[#18A374] transition-colors hidden sm:block">
+              <MapPin size={20} strokeWidth={1.2} />
             </button>
-          )}
-    </div>
-    </div>
-      <FreeDeliveryBar cartTotal={cartTotal} />
+            <button 
+              onClick={onOpenAuth}
+              className="p-2 text-white/90 hover:text-[#18A374] transition-colors hidden sm:block"
+            >
+              <UserIcon size={20} strokeWidth={1.2} />
+            </button>
+            <button className="p-2 text-white/90 hover:text-[#18A374] transition-colors">
+              <Search size={20} strokeWidth={1.2} />
+            </button>
+            <button 
+              onClick={onOpenCart}
+              className="relative p-2 text-white/90 hover:text-[#18A374] transition-colors group"
+            >
+              <ShoppingCart size={20} strokeWidth={1.2} />
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#18A374] text-black text-[9px] font-black flex items-center justify-center rounded-full group-hover:scale-110 transition-transform">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+            <button onClick={onOpenMenu} className="lg:hidden p-2 text-white/90">
+              <Menu size={24} strokeWidth={1.5} />
+            </button>
+          </div>
+        </div>
+      </motion.header>
       <CategoryBar categories={categories} />
-    </motion.header>
+    </>
   );
 };
 
@@ -1206,88 +1086,118 @@ const Hero = () => {
   const navigate = useNavigate();
   const [heroImgLoaded, setHeroImgLoaded] = React.useState(false);
   const heroSlides = [
-    { tagline: "New \u2014 2026", title: "Shop the Next Big Thing", sub: "Premium streetwear, fresh drops & exclusive finds \u2014 curated for you." },
-    { tagline: "Just Dropped", title: "Fresh Kicks", sub: "Latest sneakers from the brands you love" },
-    { tagline: "Limited Edition", title: "Stand Out", sub: "Exclusive drops you won\u0027t find anywhere else" },
+    { 
+      tagline: "New — 2026", 
+      title: "Shop the Next Big Thing", 
+      sub: "Premium streetwear, fresh drops & exclusive finds — curated for you.",
+      img: "https://res.cloudinary.com/dggitwduo/image/upload/v1774452514/WhatsApp_Image_2026-03-25_at_17.25.44_zsxof4.jpg" 
+    },
+    { 
+      tagline: "Just Dropped", 
+      title: "Fresh Kicks", 
+      sub: "Latest sneakers from the brands you love",
+      img: "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&q=80&w=2000"
+    },
+    { 
+      tagline: "Limited Edition", 
+      title: "Stand Out", 
+      sub: "Exclusive drops you won't find anywhere else",
+      img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=2000"
+    },
   ];
   const [currentSlide, setCurrentSlide] = useState(0);
   const slide = heroSlides[currentSlide];
+
   return (
-  <section className="relative h-[70vh] md:h-[88vh] flex items-end overflow-hidden bg-black">
-    <div className="absolute inset-0 z-0">
-      <img
-        src="https://res.cloudinary.com/dggitwduo/image/upload/v1774452514/WhatsApp_Image_2026-03-25_at_17.25.44_zsxof4.jpg"
-        alt="Grab & Go \u2014 Shop the Next Big Thing"
-        className={`w-full h-full object-cover scale-105 transition-opacity duration-700 ${heroImgLoaded ? 'opacity-80' : 'opacity-0'}`}
-        loading="eager"
-        fetchPriority="high"
-        style={{ objectPosition: 'center 40%' }}
-        onLoad={() => setHeroImgLoaded(true)}
-        referrerPolicy="no-referrer"
-      />
-      {/* Gradient: deep shadow at bottom for text, subtle vignette top */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/35 to-black/15" />
-    </div>
-
-    {/* Hero Content */}
-    <div className="relative z-10 w-full max-w-[1800px] mx-auto px-6 md:px-10 pb-12 md:pb-20">
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-        className="max-w-xl"
-      >
-        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/50 mb-4">{slide.tagline}</p>
-        <h1 className="text-[2.8rem] sm:text-6xl md:text-[5.5rem] font-display font-black uppercase tracking-tighter text-white leading-[0.88] mb-5">
-          {slide.title}
-        </h1>
-        <p className="text-[11px] md:text-xs text-white/50 uppercase tracking-[0.25em] font-bold mb-10 max-w-sm leading-loose">
-          {slide.sub}
-        </p>
-        <div className="flex items-center gap-4 flex-wrap">
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => navigate('/')}
-            className="px-8 py-4 bg-[#06402B] text-white text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[#06402B]/90 transition-all flex items-center gap-3 shadow-2xl"
+    <section className="relative h-screen flex flex-col overflow-hidden bg-black">
+      {/* Background Image Container */}
+      <div className="absolute inset-0 z-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 1.5, ease: "circOut" }}
+            className="absolute inset-0"
           >
-            Shop Now <ArrowRight size={14} />
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
-            className="px-8 py-4 border border-white/30 text-white text-[10px] font-black uppercase tracking-[0.3em] hover:border-white/60 transition-all backdrop-blur-sm"
-          >
-            View All
-          </motion.button>
-    </div>
-      </motion.div>
-    </div>
+            <img
+              src={slide.img}
+              alt={slide.title}
+              className={`w-full h-full object-cover transition-opacity duration-1000 ${heroImgLoaded ? 'opacity-70' : 'opacity-0'}`}
+              onLoad={() => setHeroImgLoaded(true)}
+              referrerPolicy="no-referrer"
+            />
+          </motion.div>
+        </AnimatePresence>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
+      </div>
 
-    {/* Slide indicators */}
-    <div className="absolute bottom-8 left-6 md:left-10 flex gap-2 z-20">
-      {heroSlides.map((_, idx) => (
-        <button
-          key={idx}
-          onClick={() => setCurrentSlide(idx)}
-          className={`w-8 h-1 rounded-full transition-all duration-500 ${idx === currentSlide ? 'bg-white w-12' : 'bg-white/30'}`}
-        />
-      ))}
-    </div>
-
-    {/* Scroll indicator */}
-    <div className="absolute bottom-8 right-10 hidden lg:flex flex-col items-center gap-2 opacity-40 text-white">
-      <span className="text-[8px] font-black uppercase tracking-widest rotate-90 mb-4">Scroll</span>
-      <div className="w-[1px] h-20 bg-white/30 relative overflow-hidden">
+      {/* Cinematic Content - Minimal */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center pt-20">
         <motion.div
-          animate={{ y: [0, 80] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
-          className="absolute top-0 left-0 w-full h-1/2 bg-white"
-        />
-    </div>
-    </div>
-  </section>
+          key={`content-${currentSlide}`}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.5 }}
+          className="max-w-4xl"
+        >
+          {/* Reference image is very clean, we keep text minimal or hidden if requested, but let's keep it elegant */}
+          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/40 mb-6">{slide.tagline}</p>
+          <h1 className="text-5xl md:text-8xl font-display font-bold uppercase tracking-tighter text-white leading-none mb-4">
+            {slide.title}
+          </h1>
+        </motion.div>
+      </div>
+
+      {/* Bottom Bar: Slide Indicators, Scroll Arrow, and Action Buttons */}
+      <div className="relative z-20 w-full px-6 md:px-12 pb-12 flex items-end justify-between">
+        
+        {/* Pagination Dots */}
+        <div className="flex gap-1.5 order-2 md:order-1">
+          {heroSlides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentSlide(idx)}
+              className={`w-10 h-0.5 transition-all duration-700 ${idx === currentSlide ? 'bg-white' : 'bg-white/20'}`}
+            />
+          ))}
+        </div>
+
+        {/* Scroll Indicator Arrow */}
+        <motion.div 
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute left-1/2 -translate-x-1/2 bottom-12 cursor-pointer flex flex-col items-center gap-2 group"
+          onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
+        >
+          <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+            <ChevronDown size={20} className="text-white" />
+          </div>
+        </motion.div>
+
+        {/* Bottom Right: Outlined Action Buttons */}
+        <div className="flex items-center gap-4 order-1 md:order-3">
+          <motion.button
+            whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate('/category/shirts')}
+            className="px-8 py-3 border border-white/40 text-[10px] font-black uppercase tracking-[0.3em] text-white transition-all"
+          >
+            Shop Shirts
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate('/category/shades')}
+            className="px-8 py-3 border border-white/40 text-[10px] font-black uppercase tracking-[0.3em] text-white transition-all"
+          >
+            Shop Shades
+          </motion.button>
+        </div>
+
+      </div>
+    </section>
   );
 };
 
@@ -1941,7 +1851,7 @@ const ProductCard = ({
 
         {/* Discount badge */}
         {discount > 0 && !isOutOfStock && (
-          <div className="absolute top-4 left-4 px-2 py-1 bg-[#06402B] text-white text-[7px] font-bold uppercase tracking-widest z-20">
+          <div className="absolute top-4 left-4 px-2 py-1 bg-[#18A374] text-white text-[7px] font-bold uppercase tracking-widest z-20">
             -{discount}%
     </div>
         )}
@@ -1950,7 +1860,7 @@ const ProductCard = ({
         {isOutOfStock && (
           <>
             <div className="absolute inset-0 bg-white/60 z-20 pointer-events-none" />
-            <div className="absolute top-4 left-4 px-2 py-1 bg-[#FFA500] text-black text-[7px] font-bold uppercase tracking-widest z-30">
+            <div className="absolute top-4 left-4 px-2 py-1 bg-[#18A374] text-black text-[7px] font-bold uppercase tracking-widest z-30">
               Out of Stock
     </div>
           </>
@@ -1971,7 +1881,7 @@ const ProductCard = ({
           }}
           disabled={isOutOfStock}
           className={`absolute bottom-0 left-0 right-0 py-4 text-[9px] font-bold uppercase tracking-[0.2em] z-30 transition-transform duration-300 active:scale-95 md:translate-y-full md:group-hover:translate-y-0 translate-y-0 ${
-            isOutOfStock ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#06402B] text-white'
+            isOutOfStock ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#18A374] text-white'
           }`}
         >
           {isOutOfStock ? 'Out of Stock' : 'Quick Add'}
@@ -2000,52 +1910,6 @@ const ProductCard = ({
     </motion.div>
   );
 };
-
-const SocialProof = ({ testimonials }: { testimonials: Testimonial[] }) => (
-  <section className="py-12 md:py-20 px-4 md:px-6 border-y border-gray-50">
-    <div className="max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-12 gap-4 md:gap-6">
-        <div>
-          <h2 className="text-xl md:text-3xl font-semibold uppercase tracking-tight mb-1 md:mb-2 text-black">Customer Love</h2>
-          <p className="text-xs md:text-sm opacity-50 text-black">Real vibes from the community.</p>
-    </div>
-        <div className="flex items-center gap-3">
-          <div className="flex -space-x-2 md:-space-x-3">
-            {[1,2,3,4].map(i => (
-              <div key={i} className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-white bg-gray-50 overflow-hidden">
-                <img src={`https://picsum.photos/seed/user${i}/100/100`} alt="user" referrerPolicy="no-referrer" />
-    </div>
-            ))}
-    </div>
-          <div className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-black">
-            <span className="block">500+ Grabs</span>
-            <span className="opacity-40">This Month</span>
-    </div>
-    </div>
-    </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        {(testimonials.length > 0 ? testimonials : []).map((t) => (
-          <div key={t.id} className="p-6 md:p-8 bg-gray-50 border border-gray-50 relative overflow-hidden group rounded-xl">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Instagram size={32} className="text-black" />
-    </div>
-            <div className="flex items-center gap-2 mb-3 md:mb-4">
-              <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-black text-white flex items-center justify-center font-semibold text-[10px]">
-                {t.user[0]}
-    </div>
-              <div>
-                <h4 className="font-semibold text-[10px] md:text-xs text-black">{t.user}</h4>
-                <p className="text-[8px] md:text-[9px] opacity-40 font-mono text-black">{t.handle}</p>
-    </div>
-    </div>
-            <p className="text-sm md:text-base font-normal leading-relaxed italic text-black/80">"{t.content}"</p>
-    </div>
-        ))}
-    </div>
-    </div>
-  </section>
-);
 
 const PartnershipHub = ({ partners }: { partners: Partner[] }) => {
   const CAROUSEL = [
@@ -2292,7 +2156,7 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
   return (
     <footer className="bg-[#fafafa] border-t-[3px] border-[#06402B]">
       {/* Newsletter Section — Warm & Strategic */}
-      <div className="bg-[#06402B] text-white py-12 md:py-16 px-6 md:px-8">
+      <div className="bg-[#114834] text-white py-12 md:py-16 px-6 md:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div className="max-w-lg">
             <Logo className="h-8 mb-4 brightness-0 invert" />
@@ -2303,11 +2167,11 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
             </p>
             <div className="flex items-center gap-4 mt-4">
               <div className="flex items-center gap-2">
-                <Sparkles size={12} className="text-[#FFA500]" />
+                <Sparkles size={12} className="text-[#18A374]" />
                 <span className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Exclusive Drops</span>
     </div>
               <div className="flex items-center gap-2">
-                <Truck size={12} className="text-[#FFA500]" />
+                <Truck size={12} className="text-[#18A374]" />
                 <span className="text-[9px] text-white/40 uppercase tracking-wider font-bold">Free Delivery R1,000+</span>
     </div>
     </div>
@@ -2336,7 +2200,7 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
                   />
                   <button
                     type="submit"
-                    className="px-6 py-3 bg-[#FFA500] text-black text-xs font-bold uppercase tracking-wider rounded-sm hover:bg-[#e69500] transition-colors flex-shrink-0"
+                    className="px-6 py-3 bg-[#18A374] text-black text-xs font-bold uppercase tracking-wider rounded-sm hover:bg-[#18A374]/90 transition-colors flex-shrink-0"
                   >
                     Join
                   </button>
@@ -3113,66 +2977,128 @@ const OurStoryPage = () => {
   }, []);
 
   return (
-    <div className="pt-24 pb-16 px-6 md:px-12 max-w-3xl mx-auto">
+    <div className="pt-16 pb-24 overflow-x-hidden">
       <SEO
         title="Our Story | About Grab & Go"
         description="Discover the vision and journey behind Grab & Go. Premium streetwear curation for the modern South African landscape."
         url="https://grabandgo.co.za/story"
       />
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-12"
+      
+      {/* 1. Panoramic Hero Image */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.2 }}
+        className="w-full h-[40vh] md:h-[60vh] overflow-hidden"
       >
-        <header className="text-center space-y-3">
-          <h1 className="text-2xl md:text-4xl font-semibold uppercase tracking-tight">Our Story</h1>
-          <p className="text-[10px] font-semibold uppercase tracking-wider opacity-30 italic">Born in a design studio. Built for the streets.</p>
-        </header>
-
-        <div className="space-y-6 text-base md:text-lg leading-relaxed text-black/80 font-normal">
-          <p>
-            Grab & Go ZA is a ready-to-wear streetwear brand designed by <span className="font-semibold">IDEAS TO LIFE Studios</span>,
-            a creative house known for bold visuals and meaningful design & print solutions.
-          </p>
-
-          <p>
-            After years of producing various custom gear/clothing for others, we flipped the script and created something for the fast movers -
-            no approvals, no waiting & best of all <span className="font-semibold underline">100% South African products</span>.
-          </p>
-
-          <p>
-            We design and drop retail-ready merch that’s crafted, limited, and always on point. Each piece is made with intention -
-            from the fit and feel, to the colorways and artwork.
-          </p>
-
-          <p className="text-xl md:text-2xl font-semibold uppercase tracking-tight pt-6 border-t border-gray-50">
-            What you see is what you get.
-          </p>
-
-          <p>
-            No endless back-and-forth. Just fresh, finished fashion that’s ready to move when you are.
-          </p>
-    </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8">
-          <div className="aspect-[4/5] bg-gray-50 overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 rounded-lg">
-            <img
-              src="https://picsum.photos/seed/studio/800/1000"
-              alt="Studio"
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-    </div>
-          <div className="aspect-[4/5] bg-gray-50 overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 rounded-lg">
-            <img
-              src="https://picsum.photos/seed/street/800/1000"
-              alt="Street"
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-    </div>
-    </div>
+        <img 
+          src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=2000" 
+          alt="Grab & Go Team / Vibe" 
+          className="w-full h-full object-cover grayscale brightness-75"
+          referrerPolicy="no-referrer"
+        />
       </motion.div>
+
+      {/* 2. ABOUT US Section */}
+      <div className="max-w-4xl mx-auto px-6 py-16 md:py-24 text-center">
+        <motion.h2 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-2xl md:text-3xl font-display font-light uppercase tracking-[0.4em] mb-12 text-black"
+        >
+          About Us!
+        </motion.h2>
+        
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+          className="space-y-8 text-[13px] md:text-sm leading-[1.8] text-gray-600 font-medium tracking-wide max-w-2xl mx-auto"
+        >
+          <p>
+            <span className="font-bold text-black">GRAB & GO</span> is a South African streetwear brand which has its roots in the underground and rebellious youth street culture that dominates the urban centres of Mzansi. <span className="font-bold text-black">GRAB & GO</span> is the brainchild of the creative collective at <span className="font-bold text-black">IDEAS TO LIFE Studios</span>.
+          </p>
+
+          <p>
+            In 2024, we saw a gap in the market for a brand that was designed by the youth for the youth, in particular, Millennials as well as Generation Z. Through ambition, perseverance and teamwork <span className="font-bold text-black">GRAB & GO</span> was born.
+          </p>
+
+          <p>
+            The <span className="font-bold text-black">GRAB & GO</span> aesthetic is characterized by its innovative designs brought to life through a 21st-century African design philosophy that showcases the modern aspirations of South African youth. Each piece is made with intention—from the fit and feel, to the colorways and artwork.
+          </p>
+        </motion.div>
+      </div>
+
+      {/* 3. Black Tagline Banner */}
+      <div className="bg-black text-white py-24 md:py-32 relative overflow-hidden">
+        {/* Background visual element */}
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
+        
+        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center space-y-4 md:space-y-6">
+          <motion.p 
+            initial={{ opacity: 0, letterSpacing: "0.2em" }}
+            whileInView={{ opacity: 1, letterSpacing: "1em" }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.5 }}
+            className="text-[10px] md:text-xs font-black uppercase tracking-[1em] text-white/60 mb-8"
+          >
+            Smart | African | Ambitious
+          </motion.p>
+          
+          <motion.h3 
+            initial={{ scale: 0.9, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-5xl md:text-8xl font-display font-bold uppercase tracking-tighter"
+          >
+            Grab & Go
+          </motion.h3>
+        </div>
+      </div>
+
+      {/* 4. OUR VISION Section */}
+      <div className="max-w-4xl mx-auto px-6 py-16 md:py-24 text-center">
+        <motion.h2 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-2xl md:text-3xl font-display font-light uppercase tracking-[0.4em] mb-12 text-black"
+        >
+          Our Vision.
+        </motion.h2>
+
+        <motion.p 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+          className="text-[13px] md:text-sm leading-[1.8] text-gray-600 font-medium tracking-wide max-w-2xl mx-auto"
+        >
+          <span className="font-bold text-black">GRAB & GO</span> aims to become the leading streetwear brand on the African continent, inspiring the youth through creative design, innovation and affordable pricing driven by the brand's mantra of <span className="font-bold text-black">"SMART • AFRICAN • AMBITIOUS"</span>.
+        </motion.p>
+      </div>
+
+      {/* Image Grid - Keeping the spirit of the previous design but matching the new aesthetic */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 md:px-8 max-w-7xl mx-auto mt-8">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          className="aspect-[16/9] md:aspect-square overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 bg-gray-100"
+        >
+          <img src="https://picsum.photos/seed/studio/1200/1200" alt="Studio View" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          className="aspect-[16/9] md:aspect-square overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 bg-gray-100"
+        >
+          <img src="https://picsum.photos/seed/street/1200/1200" alt="Street View" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+        </motion.div>
+      </div>
     </div>
   );
 };
@@ -6926,10 +6852,10 @@ const HowToOrderGuide = () => {
   const steps = [
     { num: 1, icon: <Search size={20} />, title: "Browse & Choose", desc: "Explore our curated collections. Use categories or search to find your gear.", color: "bg-[#06402B]" },
     { num: 2, icon: <Ruler size={20} />, title: "Pick Your Size", desc: "Check the size guide on each product. Between sizes? Go one up for a relaxed fit.", color: "bg-[#06402B]" },
-    { num: 3, icon: <ShoppingCart size={20} />, title: "Add to Cart", desc: "Hit 'Add to Cart' or 'Buy Now' for instant checkout. Cart icon shows your count.", color: "bg-[#FFA500]" },
+    { num: 3, icon: <ShoppingCart size={20} />, title: "Add to Cart", desc: "Hit 'Add to Cart' or 'Buy Now' for instant checkout. Cart icon shows your count.", color: "bg-[#18A374]" },
     { num: 4, icon: <CreditCard size={20} />, title: "Secure Checkout", desc: "Fill in your details. Pay safely with Visa, Mastercard, Apple Pay or Google Pay via Yoco.", color: "bg-[#06402B]" },
     { num: 5, icon: <Package size={20} />, title: "We Ship It", desc: "Standard delivery 5-10 days. Free on orders over R650! Track your order anytime.", color: "bg-[#06402B]" },
-    { num: 6, icon: <CheckCircle2 size={20} />, title: "Rock It", desc: "Unbox your fresh gear. Not happy? Easy 14-day returns, no stress.", color: "bg-[#FFA500]" },
+    { num: 6, icon: <CheckCircle2 size={20} />, title: "Rock It", desc: "Unbox your fresh gear. Not happy? Easy 14-day returns, no stress.", color: "bg-[#18A374]" },
   ];
 
   return (
@@ -7065,7 +6991,7 @@ const PromoGrid = ({ products = [], categories = [] }: { products: Product[]; ca
                   <div className="w-full h-full bg-gray-200 animate-pulse" />
                 )}
                 {discount > 0 && (
-                  <div className="absolute top-3 left-3 px-2 py-1 bg-[#06402B] text-white text-[9px] font-black uppercase tracking-wider">
+                  <div className="absolute top-3 left-3 px-2 py-1 bg-[#18A374] text-white text-[9px] font-black uppercase tracking-wider">
                     -{discount}%
                   </div>
                 )}
@@ -7129,53 +7055,53 @@ const FilterDropdown = ({
     <div className="relative">
       <button
         onClick={(e) => { e.stopPropagation(); onToggle(); }}
-        className={`group flex items-center justify-between gap-4 py-2 border-b-2 transition-all duration-300 w-full md:w-56 text-left ${isOpen ? 'border-[#e34234]' : 'border-gray-200 hover:border-black'}`}
+        className={`group flex items-center justify-between gap-2 py-1.5 border-b-2 transition-all duration-300 w-auto min-w-[100px] md:min-w-[140px] text-left ${isOpen ? 'border-[#06402B]' : 'border-gray-50 hover:border-black'}`}
       >
-        <span className="text-[9px] font-medium uppercase tracking-[0.2em] text-black">
+        <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.15em] text-black whitespace-nowrap">
           {label}
         </span>
-        <ChevronDown size={14} className={`transition-transform duration-500 ease-out ${isOpen ? 'rotate-180 text-[#e34234]' : 'text-black'}`} />
+        <ChevronDown size={10} className={`transition-transform duration-500 ease-out ${isOpen ? 'rotate-180 text-[#06402B]' : 'text-black'}`} />
       </button>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 15, scale: 0.98 }}
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 15, scale: 0.98 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="absolute top-full left-0 mt-3 w-[320px] bg-white shadow-[0_30px_60px_-12px_rgba(0,0,0,0.25)] z-[100] p-8 border border-gray-100 rounded-sm"
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            className="absolute top-full left-0 mt-2 w-[280px] md:w-[320px] bg-white shadow-[0_30px_60px_-12px_rgba(0,0,0,0.25)] z-[100] p-6 md:p-8 border border-gray-100 rounded-sm"
           >
-            <div className="flex items-center justify-between mb-8 pb-8 border-b border-gray-100">
+            <div className="flex items-center justify-between mb-6 pb-6 border-b border-gray-100">
               <div className="flex flex-col gap-1">
-                <span className="text-[9px] font-medium uppercase tracking-[0.2em] text-black">
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black">
                   {selectedCount} Selected
                 </span>
-                <span className="text-[11px] text-gray-400 font-medium">
+                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate max-w-[140px]">
                   {displayValue || 'All'}
                 </span>
     </div>
               <button
                 onClick={(e) => { e.stopPropagation(); onClear(); }}
-                className="px-5 py-2.5 border-2 border-black text-[9px] font-medium uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-all transform active:scale-95"
+                className="px-4 py-2 border border-black text-[9px] font-black uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-all transform active:scale-95"
               >
-                Clear All
+                Reset
               </button>
     </div>
 
-            <div className="space-y-1 max-h-[340px] overflow-y-auto no-scrollbar pr-2">
+            <div className="space-y-0.5 max-h-[300px] md:max-h-[350px] overflow-y-auto no-scrollbar pr-2">
               {options.map((option) => {
                 const isSelected = value === option.value;
                 return (
                   <button
                     key={JSON.stringify(option.value)}
                     onClick={(e) => { e.stopPropagation(); onChange(option.value); onToggle(); }}
-                    className="flex items-center gap-5 w-full group text-left py-4 border-b border-gray-50 last:border-0 last:pb-0"
+                    className="flex items-center gap-4 w-full group text-left py-3 border-b border-gray-50 last:border-0 last:pb-0"
                   >
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${isSelected ? 'border-[#e34234]' : 'border-gray-200 group-hover:border-black'}`}>
-                      {isSelected && <div className="w-3 h-3 rounded-full bg-[#e34234] animate-in fade-in zoom-in duration-300" />}
+                    <div className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center transition-all duration-300 ${isSelected ? 'border-[#06402B] bg-[#06402B]' : 'border-gray-200 group-hover:border-black'}`}>
+                      {isSelected && <div className="w-2 h-2 bg-white rounded-full animate-in fade-in zoom-in duration-300" />}
     </div>
-                    <span className={`text-[12px] font-bold uppercase tracking-wide transition-all duration-300 ${isSelected ? 'text-black translate-x-1' : 'text-gray-400 group-hover:text-black group-hover:translate-x-1'}`}>
+                    <span className={`text-[11px] font-black uppercase tracking-wider transition-all duration-300 ${isSelected ? 'text-black translate-x-1' : 'text-gray-400 group-hover:text-black group-hover:translate-x-1'}`}>
                       {option.label}
                     </span>
                   </button>
@@ -7185,15 +7111,81 @@ const FilterDropdown = ({
           </motion.div>
         )}
       </AnimatePresence>
-      <SupportChat />
+      {/* <SupportChat /> */}
+    </div>
+  );
+};
+
+const FilterBar = ({
+  sortBy,
+  setSortBy,
+  filterBrand,
+  setFilterBrand,
+  maxPrice,
+  setMaxPrice,
+  activeDropdown,
+  setActiveDropdown,
+  sortOptions,
+  brandOptions,
+  priceOptions,
+  searchQuery,
+  topOffset = "sticky top-[56px] md:top-[60px]"
+}: any) => {
+  return (
+    <div className={`${topOffset} z-40 py-1.5 md:py-2 px-4 md:px-10 bg-white border-b border-gray-100 shadow-sm transition-all duration-300`}>
+      <div className="max-w-[1800px] mx-auto flex items-center justify-between gap-3">
+        <div className="flex flex-nowrap items-center gap-4 md:gap-8 overflow-x-auto no-scrollbar py-0.5 w-full md:w-auto" onClick={e => e.stopPropagation()}>
+          <FilterDropdown
+            label="Sort By"
+            value={sortBy}
+            options={sortOptions}
+            onChange={setSortBy}
+            onClear={() => setSortBy('default')}
+            displayValue={sortOptions.find((o: any) => o.value === sortBy)?.label as string}
+            isOpen={activeDropdown === 'sort'}
+            onToggle={() => setActiveDropdown(activeDropdown === 'sort' ? null : 'sort')}
+          />
+
+          <FilterDropdown
+            label="Brand"
+            value={filterBrand}
+            options={brandOptions}
+            onChange={setFilterBrand}
+            onClear={() => setFilterBrand('All')}
+            displayValue={filterBrand}
+            isOpen={activeDropdown === 'brands'}
+            onToggle={() => setActiveDropdown(activeDropdown === 'brands' ? null : 'brands')}
+          />
+
+          <FilterDropdown
+            label="Price"
+            value={maxPrice}
+            options={priceOptions}
+            onChange={setMaxPrice}
+            onClear={() => setMaxPrice(Infinity)}
+            displayValue={maxPrice === Infinity ? 'All' : `Under R${maxPrice}`}
+            isOpen={activeDropdown === 'price'}
+            onToggle={() => setActiveDropdown(activeDropdown === 'price' ? null : 'price')}
+          />
+        </div>
+
+        {searchQuery && (
+          <div className="hidden lg:flex items-center gap-2 opacity-30">
+            <Search size={10} />
+            <p className="text-[8px] font-black uppercase tracking-widest whitespace-nowrap">
+              "{searchQuery}"
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
 const HomePage = ({
   filteredAndSortedProducts,
-  filterCategory,
-  setFilterCategory,
+  filterBrand,
+  setFilterBrand,
   maxPrice,
   setMaxPrice,
   sortBy,
@@ -7210,11 +7202,12 @@ const HomePage = ({
   brands,
   categories,
   testimonials,
-  partners
+  partners,
+  onClearAll
 }: {
   filteredAndSortedProducts: Product[],
-  filterCategory: string,
-  setFilterCategory: (c: string) => void,
+  filterBrand: string,
+  setFilterBrand: (b: string) => void,
   maxPrice: number,
   setMaxPrice: (p: number) => void,
   sortBy: string,
@@ -7231,25 +7224,10 @@ const HomePage = ({
   brands: Brand[],
   categories: Category[],
   testimonials: Testimonial[],
-  partners: Partner[]
+  partners: Partner[],
+  onClearAll: () => void
 }) => {
-  const [isBarVisible, setIsBarVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 400) {
-        setIsBarVisible(false);
-      } else {
-        setIsBarVisible(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -7259,6 +7237,11 @@ const HomePage = ({
     }
     return () => window.removeEventListener('click', handleClickOutside);
   }, [activeDropdown]);
+
+  const brandOptions = [
+    { value: 'All', label: 'All Brands' },
+    ...brands.map(b => ({ value: b.name, label: b.name }))
+  ];
 
   const brandNames = useMemo(() => {
     const b = new Set<string>();
@@ -7276,16 +7259,11 @@ const HomePage = ({
 
   const priceOptions = [
     { value: Infinity, label: 'All Prices' },
-    { value: 100, label: <span>Under <span className="text-[#e34234]">R100</span></span> },
-    { value: 200, label: <span>Under <span className="text-[#e34234]">R200</span></span> },
-    { value: 400, label: <span>Under <span className="text-[#e34234]">R400</span></span> },
-    { value: 600, label: <span>Under <span className="text-[#e34234]">R600</span></span> },
-    { value: 800, label: <span>Under <span className="text-[#e34234]">R800</span></span> },
-  ];
-
-  const catOptions = [
-    { value: 'All', label: 'All Items' },
-    ...categories.map(c => ({ value: c.name, label: c.name }))
+    { value: 100, label: <span>Under <span className="text-[#06402B]">R100</span></span> },
+    { value: 200, label: <span>Under <span className="text-[#06402B]">R200</span></span> },
+    { value: 400, label: <span>Under <span className="text-[#06402B]">R400</span></span> },
+    { value: 600, label: <span>Under <span className="text-[#06402B]">R600</span></span> },
+    { value: 800, label: <span>Under <span className="text-[#06402B]">R800</span></span> },
   ];
 
   const organizationSchema = {
@@ -7316,63 +7294,21 @@ const HomePage = ({
         schema={organizationSchema}
       />
       <Hero />
-
-      {/* Category & Filter Bar */}
-      <motion.div
-        initial={false}
-        animate={{
-          y: isBarVisible ? 0 : -100,
-          opacity: isBarVisible ? 1 : 0
-        }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="sticky top-0 z-40 py-4 md:py-6 px-4 md:px-10 bg-white/90 backdrop-blur-xl border-b border-gray-100"
-      >
-        <div className="max-w-[1800px] mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-          <div className="flex flex-wrap items-center gap-6 md:gap-12 w-full md:w-auto" onClick={e => e.stopPropagation()}>
-            <FilterDropdown
-              label="Sort"
-              value={sortBy}
-              options={sortOptions}
-              onChange={setSortBy}
-              onClear={() => setSortBy('default')}
-              displayValue={sortOptions.find(o => o.value === sortBy)?.label as string}
-              isOpen={activeDropdown === 'sort'}
-              onToggle={() => setActiveDropdown(activeDropdown === 'sort' ? null : 'sort')}
-            />
-
-            <FilterDropdown
-              label="Categories"
-              value={filterCategory}
-              options={catOptions}
-              onChange={setFilterCategory}
-              onClear={() => setFilterCategory('All')}
-              displayValue={filterCategory}
-              isOpen={activeDropdown === 'categories'}
-              onToggle={() => setActiveDropdown(activeDropdown === 'categories' ? null : 'categories')}
-            />
-
-            <FilterDropdown
-              label="Price"
-              value={maxPrice}
-              options={priceOptions}
-              onChange={setMaxPrice}
-              onClear={() => setMaxPrice(Infinity)}
-              displayValue={maxPrice === Infinity ? 'All' : `Under R${maxPrice}`}
-              isOpen={activeDropdown === 'price'}
-              onToggle={() => setActiveDropdown(activeDropdown === 'price' ? null : 'price')}
-            />
-    </div>
-
-          {searchQuery && (
-            <div className="flex items-center gap-3">
-              <Search size={12} className="opacity-30" />
-              <p className="text-[9px] font-medium uppercase tracking-widest opacity-30">
-                Results for: "{searchQuery}"
-              </p>
-    </div>
-          )}
-    </div>
-      </motion.div>
+      <FilterBar
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        filterBrand={filterBrand}
+        setFilterBrand={setFilterBrand}
+        maxPrice={maxPrice}
+        setMaxPrice={setMaxPrice}
+        activeDropdown={activeDropdown}
+        setActiveDropdown={setActiveDropdown}
+        brandOptions={brandOptions}
+        sortOptions={sortOptions}
+        priceOptions={priceOptions}
+        searchQuery={searchQuery}
+        topOffset="sticky top-[56px] md:top-[60px]"
+      />
 
       <PromoGrid products={filteredAndSortedProducts} categories={categories} />
 
@@ -7463,7 +7399,7 @@ const HomePage = ({
             No products match your selection
           </p>
           <button
-            onClick={() => { setFilterCategory('All'); setSortBy('default'); }}
+            onClick={onClearAll}
             className="mt-6 text-[10px] font-black uppercase tracking-widest underline underline-offset-4 hover:opacity-60 transition-opacity"
           >
             Clear All Filters
@@ -7512,7 +7448,7 @@ const HomePage = ({
         </section>
       )}
 
-      <SocialProof testimonials={testimonials} />
+      <InstagramFeed />
       <PartnershipHub partners={partners} />
     </main>
   );
@@ -7547,6 +7483,7 @@ const CategoryPage = ({
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<'default' | 'price-low' | 'price-high' | 'newest'>('default');
   const [maxPrice, setMaxPrice] = useState<number>(Infinity);
+  const [filterBrand, setFilterBrand] = useState<string>('All');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [selectedSubCat, setSelectedSubCat] = useState<string>('All');
 
@@ -7574,13 +7511,16 @@ const CategoryPage = ({
     if (selectedSubCat !== 'All') {
       result = result.filter(p => (p.categories || []).includes(selectedSubCat));
     }
+    if (filterBrand !== 'All') {
+      result = result.filter(p => p.brand === filterBrand);
+    }
     if (maxPrice !== Infinity) {
       result = result.filter(p => p.price <= maxPrice);
     }
     if (sortBy === 'price-low') result.sort((a, b) => a.price - b.price);
     else if (sortBy === 'price-high') result.sort((a, b) => b.price - a.price);
     return result;
-  }, [products, categories, matchedCat, decodedSlug, selectedSubCat, maxPrice, sortBy]);
+  }, [products, categories, matchedCat, decodedSlug, selectedSubCat, filterBrand, maxPrice, sortBy]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -7594,7 +7534,27 @@ const CategoryPage = ({
     setMaxPrice(Infinity);
     setSortBy('default');
     setSelectedSubCat('All');
+    setFilterBrand('All');
   }, [slug]);
+
+  const brandOptions = [
+    { value: 'All', label: 'All Brands' },
+    ...brands.map(b => ({ value: b.name, label: b.name }))
+  ];
+
+  const sortOptions = [
+    { value: 'default', label: 'Recommended' },
+    { value: 'price-low', label: 'Price: Low — High' },
+    { value: 'price-high', label: 'Price: High — Low' },
+  ];
+
+  const priceOptions = [
+    { value: Infinity, label: 'All Prices' },
+    { value: 200, label: 'Under R200' },
+    { value: 400, label: 'Under R400' },
+    { value: 800, label: 'Under R800' },
+    { value: 1500, label: 'Under R1500' },
+  ];
 
   const brandNames = useMemo(() => {
     const b = new Set<string>();
@@ -7657,45 +7617,20 @@ const CategoryPage = ({
       )}
 
       {/* Filter bar */}
-      <div className={`sticky z-20 bg-white/95 backdrop-blur-xl border-b border-gray-100 py-3 px-4 md:px-10 ${subCats.length > 0 ? 'top-[110px] md:top-[120px]' : 'top-[56px] md:top-[64px]'}`}>
-        <div className="max-w-[1800px] mx-auto flex items-center justify-between gap-4" onClick={e => e.stopPropagation()}>
-          <div className="flex items-center gap-8">
-            <FilterDropdown
-              label="Sort"
-              value={sortBy}
-              options={[
-                { value: 'default', label: 'Recommended' },
-                { value: 'price-low', label: 'Price: Low — High' },
-                { value: 'price-high', label: 'Price: High — Low' },
-              ]}
-              onChange={setSortBy}
-              onClear={() => setSortBy('default')}
-              displayValue={sortBy === 'default' ? 'Recommended' : sortBy === 'price-low' ? 'Price: Low — High' : 'Price: High — Low'}
-              isOpen={activeDropdown === 'sort'}
-              onToggle={() => setActiveDropdown(activeDropdown === 'sort' ? null : 'sort')}
-            />
-            <FilterDropdown
-              label="Price"
-              value={maxPrice}
-              options={[
-                { value: Infinity, label: 'All Prices' },
-                { value: 200, label: 'Under R200' },
-                { value: 400, label: 'Under R400' },
-                { value: 800, label: 'Under R800' },
-                { value: 1500, label: 'Under R1500' },
-              ]}
-              onChange={setMaxPrice}
-              onClear={() => setMaxPrice(Infinity)}
-              displayValue={maxPrice === Infinity ? 'All' : `Under R${maxPrice}`}
-              isOpen={activeDropdown === 'price'}
-              onToggle={() => setActiveDropdown(activeDropdown === 'price' ? null : 'price')}
-            />
-    </div>
-          <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 hidden md:block">
-            {categoryProducts.length} Results
-          </span>
-    </div>
-    </div>
+      <FilterBar
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        filterBrand={filterBrand}
+        setFilterBrand={setFilterBrand}
+        maxPrice={maxPrice}
+        setMaxPrice={setMaxPrice}
+        activeDropdown={activeDropdown}
+        setActiveDropdown={setActiveDropdown}
+        brandOptions={brandOptions}
+        sortOptions={sortOptions}
+        priceOptions={priceOptions}
+        topOffset={subCats.length > 0 ? 'top-[110px] md:top-[120px]' : 'top-[56px] md:top-[64px]'}
+      />
 
       {/* Products — grouped by brand if multiple brands, otherwise plain grid */}
       <div className="max-w-[1800px] mx-auto px-4 md:px-10 py-10 md:py-16">
@@ -8307,6 +8242,7 @@ function AppContent() {
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'price-low' | 'price-high' | 'default'>('default');
   const [filterCategory, setFilterCategory] = useState<string>('All');
+  const [filterBrand, setFilterBrand] = useState<string>('All');
   const [maxPrice, setMaxPrice] = useState<number>(Infinity);
 
   const filteredAndSortedProducts = useMemo(() => {
@@ -8314,6 +8250,10 @@ function AppContent() {
 
     if (filterCategory !== 'All') {
       result = result.filter(p => (p.categories || []).includes(filterCategory));
+    }
+
+    if (filterBrand !== 'All') {
+      result = result.filter(p => p.brand === filterBrand);
     }
 
     if (maxPrice !== Infinity) {
@@ -8337,7 +8277,7 @@ function AppContent() {
     }
 
     return result;
-  }, [products, sortBy, filterCategory, searchQuery]);
+  }, [products, sortBy, filterCategory, filterBrand, searchQuery, maxPrice]);
 
   useEffect(() => {
     localStorage.setItem('grab_and_go_cart', JSON.stringify(cart));
@@ -8441,7 +8381,8 @@ function AppContent() {
         categories={categories}
       />
 
-      <Routes>
+      <div className="">
+        <Routes>
         <Route path="/" element={
           isDataLoading ? (
             <div className="min-h-screen flex items-center justify-center bg-white">
@@ -8450,15 +8391,15 @@ function AppContent() {
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-[#06402B] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                   <div className="w-2 h-2 bg-[#06402B] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-[#FFA500] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div className="w-2 h-2 bg-[#18A374] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
     </div>
     </div>
     </div>
           ) : (
             <HomePage
               filteredAndSortedProducts={filteredAndSortedProducts}
-              filterCategory={filterCategory}
-              setFilterCategory={setFilterCategory}
+              filterBrand={filterBrand}
+              setFilterBrand={setFilterBrand}
               maxPrice={maxPrice}
               setMaxPrice={setMaxPrice}
               sortBy={sortBy}
@@ -8479,6 +8420,12 @@ function AppContent() {
               categories={categories}
               testimonials={testimonials}
               partners={partners}
+              onClearAll={() => {
+                setFilterBrand('All');
+                setFilterCategory('All');
+                setSortBy('default');
+                setMaxPrice(Infinity);
+              }}
             />
           )
         } />
@@ -8516,7 +8463,7 @@ function AppContent() {
             showToast={(msg, type) => setToast({ message: msg, type: type || 'success' })}
           />
         } />
-        <Route path="/how-to-order" element={<HowToOrderPage />} />
+        {/* <Route path="/how-to-order" element={<HowToOrderPage />} /> */}
         <Route path="/order-success" element={
           <div className="min-h-screen flex items-center justify-center bg-white">
             <div className="text-center p-8">
@@ -8531,7 +8478,7 @@ function AppContent() {
     </div>
     </div>
         } />
-        <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <NotFoundPage />} />
+        {/* <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <NotFoundPage />} /> */}
         <Route path="/legal" element={<LegalPage />} />
         <Route path="/refunds" element={<RefundPolicyPage />} />
         <Route path="/shipping" element={<ShippingPolicyPage />} />
@@ -8541,9 +8488,10 @@ function AppContent() {
         <Route path="/story" element={<OurStoryPage />} />
         <Route path="/admin/system" element={user?.role === 'admin' ? <SystemHealthDashboard /> : <NotFoundPage />} />
         <Route path="*" element={<NotFoundPage />} />
-        <Route path="/orders/:orderId/return" element={<ReturnRequestPage />} />
+        {/* <Route path="/orders/:orderId/return" element={<ReturnRequestPage />} /> */}
 
       </Routes>
+      </div>
 
       <EmailProductModal
         isOpen={isSendingEmail}
@@ -8674,7 +8622,7 @@ function AppContent() {
           </>
         )}
       </AnimatePresence>
-      <SupportChat />
+      {/* <SupportChat /> */}
     </div>
   );
 }
