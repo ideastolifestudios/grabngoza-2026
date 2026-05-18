@@ -1,4 +1,3 @@
-"use server";
 import type { Metadata } from "next";
 import HeroSection from "@/components/home/HeroSection";
 import TrustBar from "@/components/home/TrustBar";
