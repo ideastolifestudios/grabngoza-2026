@@ -6979,8 +6979,8 @@ const PromoGrid = ({ products = [], categories = [] }: { products: Product[]; ca
     const seen = new Set<string>();
     return [...products]
       .sort((a, b) => {
-        const da = (a.compareAtPrice && a.price) ? ((a.compareAtPrice - a.price) / a.compareAtPrice) : 0;
-        const db = (b.compareAtPrice && b.price) ? ((b.compareAtPrice - b.price) / b.compareAtPrice) : 0;
+        const da = (a.originalPrice && a.price) ? ((a.originalPrice - a.price) / a.originalPrice) : 0;
+        const db = (b.originalPrice && b.price) ? ((b.originalPrice - b.price) / b.originalPrice) : 0;
         return db - da;
       })
       .filter(p => {
@@ -7045,8 +7045,8 @@ const PromoGrid = ({ products = [], categories = [] }: { products: Product[]; ca
         {promoCards.map(p => {
           const imgs = (p.images && p.images.length) ? p.images : p.image ? [p.image] : [];
           const currentImg = imgs[imgIdx[p.id] ?? 0] ?? imgs[0];
-          const discount = (p.compareAtPrice && p.price && p.compareAtPrice > p.price)
-            ? Math.round(((p.compareAtPrice - p.price) / p.compareAtPrice) * 100) : 0;
+          const discount = (p.originalPrice && p.price && p.originalPrice > p.price)
+            ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100) : 0;
           const cat = (p.categories && p.categories[0]) || p.brand || '';
           return (
             <motion.div
@@ -7078,8 +7078,8 @@ const PromoGrid = ({ products = [], categories = [] }: { products: Product[]; ca
                 <p className="text-sm font-bold uppercase tracking-tight text-black leading-tight mb-1.5 truncate">{p.name}</p>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-black text-black">R{p.price?.toLocaleString()}</span>
-                  {p.compareAtPrice && p.compareAtPrice > p.price && (
-                    <span className="text-xs text-black/30 line-through">R{p.compareAtPrice?.toLocaleString()}</span>
+                  {p.originalPrice && p.originalPrice > p.price && (
+                    <span className="text-xs text-black/30 line-through">R{p.originalPrice?.toLocaleString()}</span>
                   )}
                 </div>
               </div>
