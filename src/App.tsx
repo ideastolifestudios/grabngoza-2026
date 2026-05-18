@@ -1204,6 +1204,7 @@ const Sidebar = ({
 
 const Hero = () => {
   const navigate = useNavigate();
+  const [heroImgLoaded, setHeroImgLoaded] = React.useState(false);
   const heroSlides = [
     { tagline: "New \u2014 2026", title: "Shop the Next Big Thing", sub: "Premium streetwear, fresh drops & exclusive finds \u2014 curated for you." },
     { tagline: "Just Dropped", title: "Fresh Kicks", sub: "Latest sneakers from the brands you love" },
@@ -1215,13 +1216,17 @@ const Hero = () => {
   <section className="relative h-[70vh] md:h-[88vh] flex items-end overflow-hidden bg-black">
     <div className="absolute inset-0 z-0">
       <img
-        src="https://picsum.photos/seed/streetwear-hero/1920/1080"
-        alt="HeroBackground"
-        className="w-full h-full object-cover opacity-70 scale-105" loading="eager"
-        style={{ objectPosition: 'center 30%' }}
+        src="https://res.cloudinary.com/dggitwduo/image/upload/v1774452514/WhatsApp_Image_2026-03-25_at_17.25.44_zsxof4.jpg"
+        alt="Grab & Go \u2014 Shop the Next Big Thing"
+        className={`w-full h-full object-cover scale-105 transition-opacity duration-700 ${heroImgLoaded ? 'opacity-80' : 'opacity-0'}`}
+        loading="eager"
+        fetchPriority="high"
+        style={{ objectPosition: 'center 40%' }}
+        onLoad={() => setHeroImgLoaded(true)}
         referrerPolicy="no-referrer"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      {/* Gradient: deep shadow at bottom for text, subtle vignette top */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/35 to-black/15" />
     </div>
 
     {/* Hero Content */}
