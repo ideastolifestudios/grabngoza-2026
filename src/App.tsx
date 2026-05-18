@@ -2047,62 +2047,121 @@ const SocialProof = ({ testimonials }: { testimonials: Testimonial[] }) => (
   </section>
 );
 
-const PartnershipHub = ({ partners }: { partners: Partner[] }) => (
-  <section id="collabs" className="py-12 md:py-20 px-4 md:px-6">
-    <div className="max-w-7xl mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-        <div>
-          <div className="flex items-center gap-3 mb-6 md:mb-8">
-            <Logo className="h-6 md:h-8" dark />
-            <div className="h-px w-12 bg-black/10" />
-            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] text-black/30">Collective</span>
-    </div>
-          <h2 className="text-4xl md:text-7xl font-bold uppercase tracking-tighter mb-6 md:mb-8 text-black leading-[0.9]">
-            The Culture<br />Collective
-          </h2>
-          <p className="text-sm md:text-xl font-medium opacity-70 mb-8 md:mb-12 leading-relaxed text-black max-w-lg">
-            We don't just sell products; we build bridges. Collaborating with micro-influencers and cultural events to bring you exclusive limited edition drops.
-          </p>
-          <div className="space-y-3 md:space-y-4">
-            {(partners.length > 0 ? partners : []).map(p => (
-              <div
-                key={p.id}
-                onClick={() => document.getElementById('drops')?.scrollIntoView({ behavior: 'smooth' })}
-                className="flex items-center gap-3 md:gap-4 p-2 md:p-3 hover:bg-black/5 transition-colors border-l border-black/10 cursor-pointer group"
-              >
-                <div className="w-10 h-10 bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden rounded-md">
-                   <img
-                     src={p.logo || null}
-                     alt={p.name}
-                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
-                     referrerPolicy="no-referrer"
-                   />
-    </div>
-                <div>
-                  <h4 className="font-semibold uppercase tracking-wider text-[10px] md:text-xs text-black">{p.name}</h4>
-                  <p className="text-[9px] md:text-[10px] opacity-40 text-black">{p.description}</p>
-    </div>
-    </div>
-            ))}
-    </div>
-    </div>
-        <div className="relative aspect-square">
-          <img
-            src="https://picsum.photos/seed/culture/1000/1000"
-            alt="Culture"
-            className="w-full h-full object-cover grayscale rounded-2xl"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute -bottom-3 -right-3 md:-bottom-6 md:-right-6 w-24 h-24 md:w-32 md:h-32 bg-black text-white p-4 md:p-6 flex flex-col justify-center items-center text-center rounded-xl shadow-xl">
-            <span className="text-xl md:text-3xl font-semibold">2026</span>
-            <span className="text-[8px] md:text-[9px] font-semibold uppercase tracking-wider">Season Drop</span>
-    </div>
-    </div>
-    </div>
-    </div>
-  </section>
-);
+const PartnershipHub = ({ partners }: { partners: Partner[] }) => {
+  const CAROUSEL = [
+    "https://res.cloudinary.com/dggitwduo/image/upload/v1774452514/WhatsApp_Image_2026-03-25_at_17.25.44_zsxof4.jpg",
+  ];
+  const [slide, setSlide] = React.useState(0);
+  const [dragging, setDragging] = React.useState(false);
+  const dragStart = React.useRef(0);
 
+  React.useEffect(() => {
+    const t = setInterval(() => setSlide(s => (s + 1) % CAROUSEL.length), 5000);
+    return () => clearInterval(t);
+  }, [CAROUSEL.length]);
+
+  const prev = () => setSlide(s => (s - 1 + CAROUSEL.length) % CAROUSEL.length);
+  const next = () => setSlide(s => (s + 1) % CAROUSEL.length);
+
+  return (
+    <section id="collabs" className="py-12 md:py-20 px-4 md:px-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <div>
+            <div className="flex items-center gap-3 mb-6 md:mb-8">
+              <Logo className="h-6 md:h-8" dark />
+              <div className="h-px w-12 bg-black/10" />
+              <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] text-black/30">Collective</span>
+            </div>
+            <h2 className="text-4xl md:text-7xl font-bold uppercase tracking-tighter mb-6 md:mb-8 text-black leading-[0.9]">
+              The Culture<br />Collective
+            </h2>
+            <p className="text-sm md:text-xl font-medium opacity-70 mb-8 md:mb-12 leading-relaxed text-black max-w-lg">
+              We don't just sell products; we build bridges. Collaborating with micro-influencers and cultural events to bring you exclusive limited edition drops.
+            </p>
+            <div className="space-y-3 md:space-y-4">
+              {(partners.length > 0 ? partners : []).map(p => (
+                <div
+                  key={p.id}
+                  onClick={() => document.getElementById('drops')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="flex items-center gap-3 md:gap-4 p-2 md:p-3 hover:bg-black/5 transition-colors border-l border-black/10 cursor-pointer group"
+                >
+                  <div className="w-10 h-10 bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden rounded-md">
+                    <img src={p.logo || undefined} alt={p.name}
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                      referrerPolicy="no-referrer" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold uppercase tracking-wider text-[10px] md:text-xs text-black">{p.name}</h4>
+                    <p className="text-[9px] md:text-[10px] opacity-40 text-black">{p.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Carousel */}
+          <div className="relative aspect-[4/5] md:aspect-square rounded-2xl overflow-hidden bg-gray-100 select-none"
+            onMouseDown={e => { setDragging(true); dragStart.current = e.clientX; }}
+            onMouseUp={e => {
+              if (!dragging) return;
+              setDragging(false);
+              const diff = e.clientX - dragStart.current;
+              if (Math.abs(diff) > 40) { diff < 0 ? next() : prev(); }
+            }}
+            onTouchStart={e => { dragStart.current = e.touches[0].clientX; }}
+            onTouchEnd={e => {
+              const diff = e.changedTouches[0].clientX - dragStart.current;
+              if (Math.abs(diff) > 40) { diff < 0 ? next() : prev(); }
+            }}
+          >
+            {CAROUSEL.map((img, i) => (
+              <motion.img
+                key={img}
+                src={img}
+                alt={`Grab & Go — Culture Collective ${i + 1}`}
+                className="absolute inset-0 w-full h-full object-cover"
+                initial={{ opacity: 0, scale: 1.04 }}
+                animate={{ opacity: i === slide ? 1 : 0, scale: i === slide ? 1 : 1.04 }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                draggable={false}
+                referrerPolicy="no-referrer"
+              />
+            ))}
+
+            {/* Prev / Next arrows */}
+            {CAROUSEL.length > 1 && (
+              <>
+                <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-black hover:bg-white transition-all shadow-lg z-10">
+                  <ChevronLeft size={16} />
+                </button>
+                <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-black hover:bg-white transition-all shadow-lg z-10">
+                  <ChevronRight size={16} />
+                </button>
+              </>
+            )}
+
+            {/* Dot indicators */}
+            {CAROUSEL.length > 1 && (
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-10">
+                {CAROUSEL.map((_, i) => (
+                  <button key={i} onClick={() => setSlide(i)}
+                    className={`h-[3px] rounded-full transition-all duration-400 ${i === slide ? 'w-6 bg-white' : 'w-3 bg-white/40'}`} />
+                ))}
+              </div>
+            )}
+
+            {/* Season tag */}
+            <div className="absolute bottom-4 right-4 bg-black text-white px-3 py-2 rounded-lg shadow-xl z-10">
+              <span className="text-lg md:text-2xl font-semibold block">2026</span>
+              <span className="text-[8px] font-semibold uppercase tracking-wider">Season Drop</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
 
 const FAQChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -6910,176 +6969,136 @@ const HowToOrderGuide = () => {
 };
 
 const PromoGrid = ({ products = [], categories = [] }: { products: Product[]; categories: Category[] }) => {
-  // 4 collection cards — images auto-cycle from live product data
-  const CARDS = React.useMemo(() => {
-    const getImgs = (terms: string[]): string[] =>
-      products
-        .filter(p =>
-          terms.some(t =>
-            (p.categories || []).some((c: string) => c.toLowerCase().includes(t)) ||
-            (p.brand || '').toLowerCase().includes(t) ||
-            (p.name || '').toLowerCase().includes(t)
-          )
-        )
-        .flatMap(p => (p.images && p.images.length ? p.images : p.image ? [p.image] : []))
-        .filter(Boolean)
-        .slice(0, 8);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = React.useState(false);
+  const [canScrollRight, setCanScrollRight] = React.useState(true);
+  const [imgIdx, setImgIdx] = React.useState<Record<string, number>>({});
 
-    const allImgs = (): string[] =>
-      products
-        .flatMap(p => (p.images && p.images.length ? p.images : p.image ? [p.image] : []))
-        .filter(Boolean)
-        .slice(0, 8);
-
-    const resolve = (terms: string[]): string[] => {
-      const imgs = getImgs(terms);
-      return imgs.length >= 2 ? imgs : allImgs();
-    };
-
-    return [
-      {
-        id: 1,
-        eyebrow: "Women",
-        title: "The Collection",
-        cta: "Shop Women",
-        link: "/category/women",
-        color: "bg-[#06402B]",
-        shape: "rounded-tl-[80px] rounded-bl-[30px]",
-        images: resolve(["women", "woman", "ladies", "dress", "skirt", "top"]),
-      },
-      {
-        id: 2,
-        eyebrow: "Footwear",
-        title: "Latest Kicks",
-        cta: "Shop Sneakers",
-        link: "/category/sneakers",
-        color: "bg-gray-950",
-        shape: "rounded-tr-[80px] rounded-br-[30px]",
-        images: resolve(["sneaker", "shoe", "boot", "kicks", "vans", "nike", "adidas", "puma"]),
-      },
-      {
-        id: 3,
-        eyebrow: "Men",
-        title: "Street Ready",
-        cta: "Shop Men",
-        link: "/category/men",
-        color: "bg-gray-950",
-        shape: "rounded-bl-[80px]",
-        images: resolve(["men", "man", "shirt", "hoodie", "jacket", "trouser"]),
-      },
-      {
-        id: 4,
-        eyebrow: "Just In",
-        title: "New Arrivals",
-        cta: "See All",
-        link: "/",
-        color: "bg-[#06402B]",
-        shape: "rounded-br-[80px] rounded-tl-[30px]",
-        images: allImgs(),
-      },
-    ];
+  // Deduplicated product cards — discounted items first
+  const promoCards = React.useMemo(() => {
+    const seen = new Set<string>();
+    return [...products]
+      .sort((a, b) => {
+        const da = (a.compareAtPrice && a.price) ? ((a.compareAtPrice - a.price) / a.compareAtPrice) : 0;
+        const db = (b.compareAtPrice && b.price) ? ((b.compareAtPrice - b.price) / b.compareAtPrice) : 0;
+        return db - da;
+      })
+      .filter(p => {
+        const img = (p.images && p.images[0]) || p.image || '';
+        if (!img || seen.has(img)) return false;
+        seen.add(img);
+        return true;
+      })
+      .slice(0, 14);
   }, [products]);
 
-  const [cycleIdx, setCycleIdx] = React.useState<number[]>([0, 1, 2, 0]);
-
+  // Cycle images within each card (staggered intervals)
   React.useEffect(() => {
-    if (!CARDS.some(c => c.images.length > 1)) return;
-    const timers = CARDS.map((card, i) =>
-      setInterval(() => {
-        if (card.images.length < 2) return;
-        setCycleIdx(prev => {
-          const next = [...prev];
-          next[i] = (next[i] + 1) % card.images.length;
-          return next;
-        });
-      }, 3600 + i * 450)
-    );
+    const timers: ReturnType<typeof setInterval>[] = [];
+    promoCards.forEach((p, i) => {
+      const imgs = (p.images && p.images.length > 1) ? p.images : null;
+      if (!imgs) return;
+      const t = setInterval(() => {
+        setImgIdx(prev => ({ ...prev, [p.id]: ((prev[p.id] ?? 0) + 1) % imgs.length }));
+      }, 4200 + i * 300);
+      timers.push(t);
+    });
     return () => timers.forEach(clearInterval);
-  }, [CARDS]);
+  }, [promoCards]);
+
+  const scroll = (dir: 'left' | 'right') => {
+    scrollRef.current?.scrollBy({ left: dir === 'right' ? 340 : -340, behavior: 'smooth' });
+  };
+
+  const onScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+  };
+
+  if (promoCards.length === 0) return null;
 
   return (
-    <section className="max-w-[1800px] mx-auto px-4 md:px-10 py-12 md:py-24 overflow-hidden">
-      <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-4">
+    <section className="max-w-[1800px] mx-auto px-4 md:px-10 py-12 md:py-24">
+      <div className="flex items-end justify-between mb-8">
         <div>
           <h2 className="text-4xl md:text-6xl font-display font-bold uppercase tracking-tighter text-black leading-none">Browse<br />the Range</h2>
-          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-black/30 mt-4">Shop by Collection</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-black/30 mt-3">Shop by Collection</p>
+        </div>
+        <div className="hidden md:flex items-center gap-2">
+          <button onClick={() => scroll('left')} disabled={!canScrollLeft} className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-black hover:text-black transition-all disabled:opacity-20 disabled:cursor-not-allowed">
+            <ChevronLeft size={16} />
+          </button>
+          <button onClick={() => scroll('right')} disabled={!canScrollRight} className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-black hover:text-black transition-all disabled:opacity-20 disabled:cursor-not-allowed">
+            <ChevronRight size={16} />
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        {CARDS.map((card, i) => {
-          const imgUrl = card.images[cycleIdx[i] ?? 0] ?? null;
-          const dotCount = Math.min(card.images.length, 5);
-          const activeDot = (cycleIdx[i] ?? 0) % Math.max(dotCount, 1);
+      <div
+        ref={scrollRef}
+        onScroll={onScroll}
+        className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+      >
+        {promoCards.map(p => {
+          const imgs = (p.images && p.images.length) ? p.images : p.image ? [p.image] : [];
+          const currentImg = imgs[imgIdx[p.id] ?? 0] ?? imgs[0];
+          const discount = (p.compareAtPrice && p.price && p.compareAtPrice > p.price)
+            ? Math.round(((p.compareAtPrice - p.price) / p.compareAtPrice) * 100) : 0;
+          const cat = (p.categories && p.categories[0]) || p.brand || '';
           return (
             <motion.div
-              key={card.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -5 }}
-              className="group cursor-pointer"
-              onClick={() => window.location.assign(card.link)}
+              key={p.id}
+              whileHover={{ y: -4 }}
+              transition={{ duration: 0.22 }}
+              className="flex-none w-[240px] md:w-[280px] snap-start cursor-pointer group"
+              onClick={() => window.location.assign(`/product/${p.id}`)}
             >
-              <div className={`relative aspect-square md:aspect-[16/9] flex items-stretch overflow-hidden shadow-2xl ${card.shape} transition-all duration-500 group-hover:shadow-black/20`}>
-
-                {/* Image panel — live product cycling */}
-                <div className="relative w-1/2 h-full bg-gray-100 overflow-hidden">
-                  {imgUrl ? (
-                    <img
-                      key={imgUrl}
-                      src={imgUrl}
-                      alt={card.title}
-                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-200 animate-pulse" />
-                  )}
-
-                  {/* Progress dots */}
-                  {dotCount > 1 && (
-                    <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1 z-10">
-                      {Array.from({ length: dotCount }).map((_, dot) => (
-                        <div
-                          key={dot}
-                          className={`h-[2px] rounded-full transition-all duration-500 ${dot === activeDot ? 'w-4 bg-white' : 'w-2 bg-white/40'}`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10" />
-                </div>
-
-                {/* Info panel */}
-                <div className={`w-1/2 h-full flex flex-col justify-center p-6 md:p-10 ${card.color} text-white relative overflow-hidden`}>
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-                  <div className="relative z-10">
-                    <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] mb-3 text-white/50">
-                      {card.eyebrow}
-                    </p>
-                    <p className="text-2xl md:text-3xl font-black uppercase tracking-tight leading-tight mb-8 text-white">
-                      {card.title}
-                    </p>
-                    <div className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/70 border border-white/20 px-4 py-2.5 group-hover:bg-white group-hover:text-gray-950 transition-all duration-300">
-                      {card.cta}
-                      <ChevronRight size={10} />
-                    </div>
+              <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 mb-3">
+                {currentImg ? (
+                  <img key={currentImg} src={currentImg} alt={p.name}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    loading="lazy" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 animate-pulse" />
+                )}
+                {discount > 0 && (
+                  <div className="absolute top-3 left-3 px-2 py-1 bg-[#06402B] text-white text-[9px] font-black uppercase tracking-wider">
+                    -{discount}%
                   </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-end p-3">
+                  <span className="text-[9px] font-black uppercase tracking-[0.25em] text-white flex items-center gap-1">View <ChevronRight size={10} /></span>
                 </div>
               </div>
-
-              {/* Below-card meta */}
-              <div className="mt-5 flex justify-between items-center border-b border-gray-100 pb-4">
-                <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] text-black/40">{card.eyebrow} Collection</p>
-                <div className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100">
-                  <ChevronRight size={12} />
+              <div>
+                {cat && <p className="text-[9px] font-black uppercase tracking-[0.3em] text-black/30 mb-1 truncate">{cat}</p>}
+                <p className="text-sm font-bold uppercase tracking-tight text-black leading-tight mb-1.5 truncate">{p.name}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-black text-black">R{p.price?.toLocaleString()}</span>
+                  {p.compareAtPrice && p.compareAtPrice > p.price && (
+                    <span className="text-xs text-black/30 line-through">R{p.compareAtPrice?.toLocaleString()}</span>
+                  )}
                 </div>
               </div>
             </motion.div>
           );
         })}
+
+        {/* See All end-cap */}
+        <div
+          className="flex-none w-[180px] snap-start flex items-center justify-center cursor-pointer group"
+          onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
+        >
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-full border-2 border-black flex items-center justify-center mx-auto mb-3 group-hover:bg-black group-hover:text-white transition-all duration-300">
+              <ChevronRight size={18} />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-black">See All</p>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -7356,7 +7375,6 @@ const HomePage = ({
       </motion.div>
 
       <PromoGrid products={filteredAndSortedProducts} categories={categories} />
-              <HowToOrderGuide />
 
       {/* Products anchor for hero scroll */}
       <div id="products-section" />
