@@ -9,8 +9,7 @@ const EDITORIAL_PANELS = [
   {
     id: 1,
     tag: "THE COLLECTIVE",
-    headline: "MOVE
-DIFFERENT",
+headline: "MOVE DIFFERENT",
     sub: "Collaborating with micro-influencers and cultural events to bring you exclusive limited edition drops.",
     cta: { label: "OUR STORY", href: "/our-story" },
     image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&q=80",
