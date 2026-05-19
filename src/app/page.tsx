@@ -1,11 +1,8 @@
 'use client';
 
+import React from 'react';
 import App from '../App';
 
-export default function Home() {
-  return (
-    <div id="root">
-      <App />
-    </div>
-  );
+export default function NextHomeGraftPage() {
+  return <App />;
 }
