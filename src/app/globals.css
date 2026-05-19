@@ -7,6 +7,9 @@
   
   --animate-spin-slow: spin 8s linear infinite;
 }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   html {
@@ -64,6 +67,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── 1. Slim Premium Scrollbar ────────────────────────────────── */
+/* Slim Premium Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }

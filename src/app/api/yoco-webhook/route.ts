@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getApps, initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { syncOrderToZoho } from '@/app/utils/zoho';
+import { syncOrderToZoho } from '../../utils/zoho';
+import { syncOrderToZoho } from '../../utils/zoho';
 
 // Enforce runtime evaluation so Vercel doesn't run page data checks at build time
 export const dynamic = 'force-dynamic';
