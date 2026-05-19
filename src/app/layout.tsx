@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
-import AnnouncementBar from "@/components/layout/AnnouncementBar";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import MobileBottomNav from "@/components/layout/MobileBottomNav";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -49,11 +45,7 @@ export default function RootLayout({
   return (
     <html lang="en-ZA" className={dmSans.variable}>
       <body className="min-h-screen flex flex-col">
-        <AnnouncementBar />
-        <Navbar />
-        <main className="flex-1 pt-[104px] md:pt-[120px]">{children}</main>
-        <Footer />
-        <MobileBottomNav />
+        {children}
       </body>
     </html>
   );
