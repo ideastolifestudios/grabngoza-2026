@@ -13,7 +13,7 @@
 
 import { Request, Response } from 'express';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-const log = { info: console.log, error: console.error, warn: console.warn };
+const log = (level, message, ...args) => console.log(`[${level.toUpperCase()}] ${message}`, ...args);
 
 type YocoEventType =
   | 'payment.succeeded'
