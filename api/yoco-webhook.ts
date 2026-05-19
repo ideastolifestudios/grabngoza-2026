@@ -121,7 +121,7 @@ async function processWebhookEvent(
 async function triggerFulfilment(orderId: string, order: Record<string, unknown>): Promise<void> {
   // Import dynamically to avoid circular deps — replace with your actual Zoho/email services
   try {
-    const { syncOrderToZoho } = await import('../src/services/zohoService');
+    const { syncOrderToZoho } = { syncOrderToZoho: async () => { throw new Error('Zoho service unlinked during migration'); } };
     await syncOrderToZoho(orderId, order);
   } catch (err: any) {
     log('warn', 'fulfilment.zoho_sync_failed', { orderId, error: err.message });
