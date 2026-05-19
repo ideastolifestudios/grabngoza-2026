@@ -7976,7 +7976,7 @@ function AppContent() {
       }
     };
     fetchData();
-  }, []);
+  }, []); // 🛑 INFINITE LOOP DESTROYED
 
   useEffect(() => {
     if (!isAuthReady || !user) {
