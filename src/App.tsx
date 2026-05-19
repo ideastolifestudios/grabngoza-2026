@@ -789,15 +789,15 @@ const Header = ({
             </Link>
           </div>
 
-          {/* Middle: Cinematic Nav Links */}
+          {/* Middle: Category Nav Links from Firebase */}
           <nav className="hidden lg:flex items-center justify-center gap-10 flex-1">
-            {['BUNDLES', 'NEW ARRIVALS', 'APPAREL', 'ACCESSORIES', 'FOOTWEAR'].map((item) => (
+            {categories.map((cat) => (
               <Link
-                key={item}
-                href={item === 'BUNDLES' ? '/bundles' : `/category/${item.toLowerCase().replace(' ', '-')}`}
+                key={cat.name}
+                href={`/category/${encodeURIComponent(cat.name.toLowerCase())}`}
                 className="text-[11px] font-bold uppercase tracking-[0.3em] text-white hover:text-[#18A374] transition-colors"
               >
-                {item}
+                {cat.name}
               </Link>
             ))}
           </nav>
