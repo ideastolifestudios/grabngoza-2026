@@ -617,7 +617,7 @@ const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
           <Link
             href="/"
             className={`flex-shrink-0 text-[10px] font-bold uppercase tracking-[0.2em] transition-all pb-1 border-b-2 ${
-              location.pathname === '/'
+              pathname === '/'
                 ? 'border-[#06402B] text-black'
                 : 'border-transparent text-gray-400 hover:text-black'
             }`}
@@ -625,7 +625,7 @@ const CategoryBar = ({ categories = [] }: { categories?: Category[] }) => {
             All
           </Link>
           {topCats.slice(0, 10).map(cat => {
-            const isActive = location.pathname === `/category/${encodeURIComponent(cat.name.toLowerCase())}`;
+            const isActive = pathname === `/category/${encodeURIComponent(cat.name.toLowerCase())}`;
             return (
               <Link
                 key={cat.id}
@@ -960,8 +960,8 @@ const Sidebar = ({
                               }
                             }}
                             className={`group py-3 flex items-center justify-between text-lg font-medium transition-all ${
-                              (location.pathname === `/category/${encodeURIComponent(link.filter.toLowerCase())}` ||
-                               (link.filter === 'All' && location.pathname === '/'))
+                              (pathname === `/category/${encodeURIComponent(link.filter.toLowerCase())}` ||
+                               (link.filter === 'All' && pathname === '/'))
                                 ? 'text-black font-bold' : 'text-gray-500 hover:text-black'
                             }`}
                           >
@@ -7839,6 +7839,7 @@ export default function App() {
 }
 
 function AppContent() {
+  const pathname = usePathname();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   useEffect(() => {
@@ -8391,7 +8392,7 @@ function AppContent() {
       />
 
       <div className="">
-          isDataLoading ? (
+          {isDataLoading ? (
             <div className="min-h-screen flex items-center justify-center bg-white">
               <div className="flex flex-col items-center gap-6">
                 <Logo className="h-12 md:h-16" dark />
@@ -8402,7 +8403,7 @@ function AppContent() {
     </div>
     </div>
     </div>
-          ) : (
+          ) : pathname === '/' ? (
             <HomePage
               filteredAndSortedProducts={filteredAndSortedProducts}
               filterBrand={filterBrand}
@@ -8434,49 +8435,55 @@ function AppContent() {
                 setMaxPrice(Infinity);
               }}
             />
-          )
-          <ProductPage
-            products={products}
-            addToCart={addToCart}
-            handleBuyNow={handleBuyNow}
-            onEmailDetails={(p) => {
-              setSelectedProduct(p);
-              setIsSendingEmail(true);
-            }}
-            searchQuery={searchQuery}
-            wishlist={wishlist}
-            onToggleWishlist={toggleWishlist}
-            isCartLoading={isCartLoading}
-            categories={categories}
-            brands={brands}
-          />
-          <CategoryPage
-            products={products}
-            categories={categories}
-            brands={brands}
-            addToCart={addToCart}
-            handleBuyNow={handleBuyNow}
-            onEmailDetails={(p) => {
-              setSelectedProduct(p);
-              setIsSendingEmail(true);
-            }}
-            wishlist={wishlist}
-            toggleWishlist={toggleWishlist}
-            isCartLoading={isCartLoading}
-            showToast={(msg, type) => setToast({ message: msg, type: type || 'success' })}
-          />
-          <div className="min-h-screen flex items-center justify-center bg-white">
-            <div className="text-center p-8">
-              <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 size={32} />
-    </div>
-              <h1 className="text-2xl font-display font-bold uppercase tracking-tighter mb-4">Processing Your Order...</h1>
-              <p className="text-sm text-gray-500 max-w-md mx-auto">Please wait while we finalize your order details.</p>
-              <div className="mt-8">
-                <Loader2 className="animate-spin mx-auto text-black" size={24} />
-    </div>
-    </div>
-    </div>
+          ) : null}
+          {pathname?.startsWith('/product/') && (
+            <ProductPage
+              products={products}
+              addToCart={addToCart}
+              handleBuyNow={handleBuyNow}
+              onEmailDetails={(p) => {
+                setSelectedProduct(p);
+                setIsSendingEmail(true);
+              }}
+              searchQuery={searchQuery}
+              wishlist={wishlist}
+              onToggleWishlist={toggleWishlist}
+              isCartLoading={isCartLoading}
+              categories={categories}
+              brands={brands}
+            />
+          )}
+          {(pathname?.startsWith('/category/') || pathname?.startsWith('/collections/')) && (
+            <CategoryPage
+              products={products}
+              categories={categories}
+              brands={brands}
+              addToCart={addToCart}
+              handleBuyNow={handleBuyNow}
+              onEmailDetails={(p) => {
+                setSelectedProduct(p);
+                setIsSendingEmail(true);
+              }}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+              isCartLoading={isCartLoading}
+              showToast={(msg, type) => setToast({ message: msg, type: type || 'success' })}
+            />
+          )}
+          {pathname === '/order-success' && (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+              <div className="text-center p-8">
+                <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle2 size={32} />
+                </div>
+                <h1 className="text-2xl font-display font-bold uppercase tracking-tighter mb-4">Processing Your Order...</h1>
+                <p className="text-sm text-gray-500 max-w-md mx-auto">Please wait while we finalize your order details.</p>
+                <div className="mt-8">
+                  <Loader2 className="animate-spin mx-auto text-black" size={24} />
+                </div>
+              </div>
+            </div>
+          )}
 
       </div>
 
