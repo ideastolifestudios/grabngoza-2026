@@ -3,7 +3,7 @@
  */
 import { getApps, initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import type { Customer } from '../internal/lib/types';
+import type { Customer } from '../lib/types';
 
 if (!getApps().length) {
   initializeApp({
