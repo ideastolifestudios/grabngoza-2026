@@ -4,8 +4,8 @@
  * Now uses shared auto-refresh OAuth from lib/zohoAuth.ts.
  */
 
-import type { Order } from '../internal/lib/types';
-import { zohoApiFetch, ZOHO_REGION } from '../internal/lib/zohoAuth';
+import type { Order } from '../lib/types';
+import { zohoApiFetch, ZOHO_REGION } from '../lib/zohoAuth';
 
 const BASE_URL = `https://www.zohoapis.${ZOHO_REGION}/crm/v2`;
 

@@ -5,16 +5,16 @@ import { createLogger } from '../internal/utils/_logger';
  * Now uses shared productMap from _lib/ and shared auth from _lib/zohoAuth.
  */
 
-import type { Order } from '../internal/lib/types';
-import { zohoApiFetch, ZOHO_REGION } from '../internal/lib/zohoAuth';
-import { getZohoItemId, getAllMappings, getMappingStats } from '../internal/lib/productMap';
+import type { Order } from '../lib/types';
+import { zohoApiFetch, ZOHO_REGION } from '../lib/zohoAuth';
+import { getZohoItemId, getAllMappings, getMappingStats } from '../lib/productMap';
 
 const BASE_URL = `https://inventory.zoho.${ZOHO_REGION}/api/v1`;
 const ORG_ID   = process.env.ZOHO_INVENTORY_ORG_ID || '';
 
 // Re-export mapping functions for controller access
 export { getAllMappings as getMappings, getMappingStats };
-export { getZohoItemId, registerMapping, registerMappings } from '../internal/lib/productMap';
+export { getZohoItemId, registerMapping, registerMappings } from '../lib/productMap';
 
 export interface ZohoSalesOrderResult {
   success: boolean;

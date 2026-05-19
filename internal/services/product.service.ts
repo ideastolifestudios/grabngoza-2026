@@ -3,7 +3,7 @@
  */
 import { getApps, initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import type { Product } from '../internal/lib/types';
+import type { Product } from '../lib/types';
 
 if (!getApps().length) {
   initializeApp({
