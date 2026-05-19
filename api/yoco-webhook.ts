@@ -13,7 +13,7 @@
 
 import { Request, Response } from 'express';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { log } from '../src/services/logger';
+const log = { info: console.log, error: console.error, warn: console.warn };
 
 type YocoEventType =
   | 'payment.succeeded'
