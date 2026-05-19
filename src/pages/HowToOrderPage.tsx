@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import Link from 'next/link';
 import { motion } from 'motion/react';
 import {
   ArrowLeft,
@@ -102,7 +102,7 @@ const STEPS = [
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 const HowToOrderPage: React.FC = () => {
-  const navigate = useNavigate();
+  
   const { toast, show } = useToast();
 
   useEffect(() => {
@@ -116,13 +116,13 @@ const HowToOrderPage: React.FC = () => {
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-5 md:px-10 h-14 flex items-center justify-between">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => window.history.back()}
             className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors group"
           >
             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
             Back
           </button>
-          <Link to="/" className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-900">
+          <Link href="/" className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-900">
             Grab & Go
           </Link>
           <div className="w-16" />
@@ -201,7 +201,7 @@ const HowToOrderPage: React.FC = () => {
           <button
             onClick={() => {
               show('Taking you to the shop!');
-              setTimeout(() => navigate('/'), 600);
+              setTimeout(() => window.location.href = '/', 600);
             }}
             className="inline-flex items-center gap-3 px-8 py-4 bg-gray-950 text-white text-[10px] font-black uppercase tracking-[0.3em] hover:bg-gray-800 active:scale-95 transition-all"
           >

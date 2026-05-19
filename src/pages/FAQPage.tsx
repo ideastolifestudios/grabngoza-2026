@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { motion } from 'motion/react';
 import SEO from '../components/SEO';
 
@@ -126,7 +126,7 @@ const FAQPage = () => {
         <footer className="pt-8 border-t border-gray-50 text-center">
           <p className="text-sm text-gray-500">
             Still have questions? Contact us on
-            <Link to="/helpdesk" className="underline font-semibold ml-1">Help Desk</Link>.
+            <Link href="/helpdesk" className="underline font-semibold ml-1">Help Desk</Link>.
           </p>
         </footer>
       </motion.div>

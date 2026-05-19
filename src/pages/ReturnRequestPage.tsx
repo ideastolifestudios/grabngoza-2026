@@ -1,5 +1,8 @@
+'use client';
+'use client';
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useRouter } from 'next/navigation';
+;
 import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from '../firebase';
 import { useAuth } from "../hooks/useAuth";
@@ -56,8 +59,8 @@ function isReturnable(order: any): boolean {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function ReturnRequestPage() {
-  const { orderId } = useParams<{ orderId: string }>();
-  const navigate    = useNavigate();
+  const params = useParams(); const orderId = params?.orderId as string;
+  const router = useRouter();
   const { user }    = useAuth();
 
   const [order,     setOrder]     = useState<any>(null);
@@ -180,7 +183,7 @@ export default function ReturnRequestPage() {
         </div>
         <p className="text-gray-700">{error}</p>
         <button
-          onClick={() => navigate("/orders")}
+          onClick={() => router.push('/orders')}
           className="text-[#06402B] underline text-sm"
         >
           Back to orders
@@ -203,7 +206,7 @@ export default function ReturnRequestPage() {
           Estimated refund: <strong>R{refundAmount.toFixed(2)}</strong>
         </p>
         <button
-          onClick={() => navigate("/orders")}
+          onClick={() => router.push('/orders')}
           className="mt-4 w-full bg-[#06402B] text-white py-3 rounded-xl font-medium"
         >
           Back to orders
@@ -217,7 +220,7 @@ export default function ReturnRequestPage() {
       <div className="max-w-xl mx-auto px-4 pt-8">
 
         {/* Header */}
-        <button onClick={() => navigate(-1)} className="text-sm text-gray-500 mb-6 flex items-center gap-1">
+        <button onClick={() => router.back()} className="text-sm text-gray-500 mb-6 flex items-center gap-1">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>

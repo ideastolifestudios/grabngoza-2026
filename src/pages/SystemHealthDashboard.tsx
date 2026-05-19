@@ -1,3 +1,4 @@
+'use client';
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Mail, Database, ShieldAlert, Activity, RefreshCw, ExternalLink } from 'lucide-react';

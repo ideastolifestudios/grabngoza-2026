@@ -1,3 +1,4 @@
+'use client';
 // src/pages/HelpDeskPage.tsx
 import { useState, useMemo } from "react";
 

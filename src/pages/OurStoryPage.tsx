@@ -1,3 +1,4 @@
+'use client';
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import SEO from '../components/SEO';
