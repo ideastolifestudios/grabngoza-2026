@@ -1,19 +1,32 @@
-// app/api/yoco-webhook/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getApps, initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { syncOrderToZoho } from '@/app/utils/zoho';
 
-// 1. Initialize Firebase Admin
-if (!getApps().length) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}');
-  initializeApp({ credential: cert(serviceAccount) });
+// Enforce runtime evaluation so Vercel doesn't run page data checks at build time
+export const dynamic = 'force-dynamic';
+
+function getFirebaseDb() {
+  if (!getApps().length) {
+    const credentialKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    
+    if (!credentialKey) {
+      console.warn('[FIREBASE WARN] Delaying init: FIREBASE_SERVICE_ACCOUNT_KEY is undefined.');
+      return null;
+    }
+    
+    try {
+      const serviceAccount = JSON.parse(credentialKey);
+      initializeApp({ credential: cert(serviceAccount) });
+    } catch (err: any) {
+      console.error(`[FIREBASE ERROR] Failed to parse credentials structure: ${err.message}`);
+      return null;
+    }
+  }
+  return getFirestore();
 }
 
-const db = getFirestore();
-
-// Exact types from your original Express implementation
 type YocoEventType = 'payment.succeeded' | 'payment.failed' | 'payment.cancelled' | 'checkout.expired';
 
 interface YocoWebhookPayload {
@@ -33,7 +46,11 @@ interface YocoWebhookPayload {
 
 export async function POST(request: NextRequest) {
   try {
-    // 2. Yoco Signature Verification (Replaces your Express middleware)
+    const db = getFirebaseDb();
+    if (!db) {
+      return NextResponse.json({ error: 'Database service unavailable' }, { status: 500 });
+    }
+
     const rawBody = await request.text();
     const signatureHeader = request.headers.get('yoco-signature');
     const webhookSecret = process.env.YOCO_WEBHOOK_SECRET;
@@ -43,13 +60,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Standard Yoco HMAC-SHA256 signature verification
     const expectedSignature = crypto
       .createHmac('sha256', webhookSecret)
       .update(rawBody)
-      .digest('base64'); // Note: Adjust to 'hex' if Yoco uses hex strings for your specific API version
+      .digest('base64');
 
-    // 3. Parse your exact payload
     const event = JSON.parse(rawBody) as YocoWebhookPayload;
     const { type, payload } = event;
     const orderId = payload.metadata?.orderId;
@@ -63,7 +78,6 @@ export async function POST(request: NextRequest) {
 
     const orderRef = db.collection('orders').doc(orderId);
 
-    // 4. Process event types (Awaited to survive Vercel Serverless freezing)
     switch (type) {
       case 'payment.succeeded': {
         const snap = await orderRef.get();
@@ -74,13 +88,11 @@ export async function POST(request: NextRequest) {
 
         const order = snap.data()!;
 
-        // Idempotency: don't re-process an already confirmed order
         if (order.status === 'confirmed') {
           console.info(`[WEBHOOK INFO] Duplicate success event skipped for Order: ${orderId}`);
           break;
         }
 
-        // Apply your exact Firestore schema updates
         await orderRef.update({
           status: 'confirmed',
           paymentId: payload.id,
@@ -91,7 +103,6 @@ export async function POST(request: NextRequest) {
 
         console.info(`[WEBHOOK SUCCESS] Order ${orderId} confirmed.`);
 
-        // Trigger fulfilment (Safe try/catch so Zoho doesn't crash the webhook)
         try {
           await syncOrderToZoho(orderId, order);
         } catch (zohoErr: any) {
@@ -117,7 +128,6 @@ export async function POST(request: NextRequest) {
         console.info(`[WEBHOOK INFO] Unhandled event type: ${type}`);
     }
 
-    // 5. Final Acknowledgement (Closes the Vercel function)
     return NextResponse.json({ success: true, received: true }, { status: 200 });
 
   } catch (error: any) {
