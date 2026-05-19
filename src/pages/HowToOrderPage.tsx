@@ -209,7 +209,7 @@ const HowToOrderPage: React.FC = () => {
             <ChevronRight size={13} />
           </button>
           <Link
-            to="/helpdesk"
+            href="/helpdesk"
             className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors underline underline-offset-4"
           >
             Need help? Contact us
