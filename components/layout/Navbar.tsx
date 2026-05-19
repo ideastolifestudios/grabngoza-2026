@@ -15,7 +15,7 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { totalItems } = useCart();
+  const { totalItems, openCart } = useCart();
 
   useEffect(() => {
     const close = () => setMobileOpen(false);
@@ -28,7 +28,6 @@ export default function Navbar() {
       <header className="fixed top-[36px] left-0 right-0 z-40 bg-brand-primary">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-[84px]">
-            {/* Logo */}
             <Link href="/" className="flex items-center gap-2 flex-shrink-0">
               <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
                 <rect width="36" height="36" rx="4" fill="#18A374" fillOpacity="0.15"/>
@@ -43,7 +42,6 @@ export default function Navbar() {
               </div>
             </Link>
 
-            {/* Desktop Nav */}
             <nav className="hidden lg:flex items-center gap-8" aria-label="Main navigation">
               {NAV_LINKS.map((link) => (
                 <Link key={link.label} href={link.href}
@@ -54,19 +52,23 @@ export default function Navbar() {
               ))}
             </nav>
 
-            {/* Icons */}
             <div className="flex items-center gap-4">
               <button aria-label="Store locator" className="hidden lg:flex text-white hover:text-brand-accent transition-colors duration-200 cursor-pointer"><MapPin size={18} /></button>
               <Link href="/account" aria-label="Account" className="hidden lg:flex text-white hover:text-brand-accent transition-colors duration-200"><User size={18} /></Link>
               <button aria-label="Search" className="text-white hover:text-brand-accent transition-colors duration-200 cursor-pointer"><Search size={18} /></button>
-              <Link href="/cart" aria-label={`Cart (${totalItems} items)`} className="text-white hover:text-brand-accent transition-colors duration-200 relative">
+              {/* Cart opens drawer */}
+              <button
+                onClick={openCart}
+                aria-label={`Open cart — ${totalItems} items`}
+                className="text-white hover:text-brand-accent transition-colors duration-200 relative cursor-pointer"
+              >
                 <ShoppingBag size={20} />
                 {totalItems > 0 && (
                   <span className="absolute -top-2 -right-2 bg-brand-accent text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                     {totalItems > 9 ? "9+" : totalItems}
                   </span>
                 )}
-              </Link>
+              </button>
               <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="lg:hidden text-white hover:text-brand-accent transition-colors duration-200 cursor-pointer ml-1"><Menu size={22} /></button>
             </div>
           </div>
