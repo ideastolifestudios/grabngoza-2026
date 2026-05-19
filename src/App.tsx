@@ -7839,11 +7839,20 @@ export default function App() {
 }
 
 function AppContent() {
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('grab_and_go_cart');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("grab_and_go_cart");
+      if (saved) setCart(JSON.parse(saved));
+    }
+  }, []);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('grab_and_go_cart');
+      if (saved) setCart(JSON.parse(saved));
+    }
+  }, []);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
