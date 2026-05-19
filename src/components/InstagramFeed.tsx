@@ -57,7 +57,7 @@ const InstagramFeed: React.FC = () => {
 
   useEffect(() => {
     const fetchIGFeed = async () => {
-      const token = (import.meta as any).env.VITE_INSTAGRAM_ACCESS_TOKEN;
+      const token = (import.meta as any).env.NEXT_PUBLIC_INSTAGRAM_ACCESS_TOKEN;
       if (!token) return;
 
       setLoading(true);

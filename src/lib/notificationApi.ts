@@ -3,7 +3,7 @@
 
 const API_BASE = "https://runtime.codewords.ai/run";
 const SERVICE_ID = "sizabantu_notifications_1c72124a";
-const API_KEY = import.meta.env.VITE_CODEWORDS_API_KEY;
+const API_KEY = import.meta.env.NEXT_PUBLIC_CODEWORDS_API_KEY;
 
 interface NotifyResponse {
   success: boolean;

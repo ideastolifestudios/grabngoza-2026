@@ -4,14 +4,14 @@
  *
  * Setup:
  *   1. npm install @sentry/react
- *   2. Set VITE_SENTRY_DSN in .env / Vercel env vars
+ *   2. Set NEXT_PUBLIC_SENTRY_DSN in .env / Vercel env vars
  *   3. Import this file at the very top of src/main.tsx, before React renders:
  *        import './sentryClient';
  */
 
 import * as Sentry from '@sentry/react';
 
-const dsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
+const dsn = import.meta.env.NEXT_PUBLIC_SENTRY_DSN as string | undefined;
 
 if (dsn) {
   Sentry.init({
@@ -29,7 +29,7 @@ if (dsn) {
   });
   console.log('[Sentry] Client initialised ✓');
 } else {
-  console.warn('[Sentry] VITE_SENTRY_DSN not set — client error monitoring disabled');
+  console.warn('[Sentry] NEXT_PUBLIC_SENTRY_DSN not set — client error monitoring disabled');
 }
 
 export { Sentry };

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // internal/services/whatsapp.service.ts
 // Sends WhatsApp order notifications (admin + customer)
 

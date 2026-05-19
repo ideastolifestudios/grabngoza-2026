@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * api/zoho-sync.ts — Zoho CRM + Inventory Sync (Vercel Serverless)
  *

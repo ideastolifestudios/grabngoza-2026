@@ -1,3 +1,4 @@
+"use client";
 import InstagramFeed from './components/InstagramFeed';
 // import SupportChat from "./components/SupportChat";
 // import './sentryClient';
@@ -4782,7 +4783,7 @@ const ProductManagementDrawer = ({
     </div>
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => setEditingProduct({ name: '', price: 0, category: categories[0]?.name || 'Apparel', image: '', description: '', variants: [] })}
+                  onClick={() => setEditingProduct({ name: '', price: 0, image: '', description: '', variants: [] })}
                   className="py-4 border border-dashed border-gray-200 hover:border-black/20 transition-colors flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-black"
                 >
                   <Plus size={16} /> Add Product
@@ -5316,7 +5317,7 @@ const ProductManagementDrawer = ({
     </div>
                       )}
 
-                      {activeTab === 'stock' && (
+                      {activeTab === 'general' && (
                         <div className="space-y-6">
                           <div className="flex items-center justify-between">
                             <div>
@@ -5818,8 +5819,8 @@ const HybridCheckoutModal = ({
   }, [deliveryMethod, postalCode, city]);
 
   const shippingCost = useMemo(() => {
-    if (deliveryMethod === 'pickup') return 0;
-    if (deliveryMethod === 'bobgo') return selectedRate?.amount || 89; // Bob Go flat fallback R89
+    if (deliveryMethod === 'standard') return 0;
+    if ((['standard', 'bobgo', 'international'].includes(deliveryMethod))) return selectedRate?.amount || 89; // Bob Go flat fallback R89
     if (deliveryMethod === 'international') return selectedRate?.amount || 450;
     return selectedRate?.amount || 0;
   }, [deliveryMethod, selectedRate]);
@@ -5871,7 +5872,7 @@ const HybridCheckoutModal = ({
         total: finalTotal,
         paymentGateway,
         // Bob Go pickup point — saved to Firestore so admin can see it
-        ...(deliveryMethod === 'bobgo' && selectedPickupPoint ? {
+        ...((['standard', 'bobgo', 'international'].includes(deliveryMethod)) && selectedPickupPoint ? {
           bobGoPickupPoint: {
             id: selectedPickupPoint.id,
             name: selectedPickupPoint.name,
@@ -6158,13 +6159,13 @@ const HybridCheckoutModal = ({
                         </button>
                         <button
                           style={{display:'none'}} onClick={() => { setDeliveryMethod('bobgo'); setCountry('South Africa'); setSelectedPickupPoint(null); }}
-                          className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold transition-all ${deliveryMethod === 'bobgo' ? 'bg-gray-50 shadow-inner' : 'bg-white hover:bg-gray-50'}`}
+                          className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold transition-all ${(['standard', 'bobgo', 'international'].includes(deliveryMethod)) ? 'bg-gray-50 shadow-inner' : 'bg-white hover:bg-gray-50'}`}
                         >
                           <Package size={14} className="md:w-4 md:h-4" /> Bob Go
                         </button>
                         <button
-                          onClick={() => { setDeliveryMethod('pickup'); setCountry('South Africa'); setSelectedPickupPoint(null); }}
-                          className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold transition-all ${deliveryMethod === 'pickup' ? 'bg-gray-50 shadow-inner' : 'bg-white hover:bg-gray-50'}`}
+                          onClick={() => { setDeliveryMethod('standard'); setCountry('South Africa'); setSelectedPickupPoint(null); }}
+                          className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-4 text-[10px] md:text-xs font-bold transition-all ${deliveryMethod === 'standard' ? 'bg-gray-50 shadow-inner' : 'bg-white hover:bg-gray-50'}`}
                         >
                           <MapPin size={14} className="md:w-4 md:h-4" /> Pickup
                         </button>
@@ -6326,7 +6327,7 @@ const HybridCheckoutModal = ({
                           )}
 
                           {/* ── Bob Go Pickup Point Selector ───────────────── */}
-                          {deliveryMethod === 'bobgo' && (
+                          {(['standard', 'bobgo', 'international'].includes(deliveryMethod)) && (
                             <div className="mt-4 space-y-4">
                               <div>
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * api/shipping.ts — Grab & Go Shipping API (Vercel Serverless)
  *

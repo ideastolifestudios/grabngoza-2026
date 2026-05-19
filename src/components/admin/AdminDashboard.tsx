@@ -7,7 +7,7 @@ import DiscountsManager from './DiscountsManager';
 import ShipmentTable from './ShipmentTable';
 import BulkActions from './BulkActions';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE = import.meta.env.NEXT_PUBLIC_API_URL || '';
 
 export default function AdminDashboard() {
   const [orders, setOrders] = useState<any[]>([]);

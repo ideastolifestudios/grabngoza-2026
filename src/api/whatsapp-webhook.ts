@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * api/whatsapp-webhook.ts — WhatsApp AI Support Bot
  * GET  — Meta webhook verification

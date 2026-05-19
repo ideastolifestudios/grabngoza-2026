@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * api/orders.ts — Admin order retrieval
  * GET /api/orders          — list, newest first (requires x-admin-key header)

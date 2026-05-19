@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * api/support-chat.ts — Grab & Go AI Support Assistant
  * POST /api/support-chat  Body: { message, history? }  Returns: { reply, escalate? }

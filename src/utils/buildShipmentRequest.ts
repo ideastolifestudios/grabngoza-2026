@@ -58,7 +58,7 @@ function buildPayload(
   selectedShipping: SelectedShipping
 ): ShipLogicShipmentRequest {
   const isInternational = order.deliveryAddress.country !== "ZA";
-  const isBobGo = selectedShipping.mode === "bobgo_pickup";
+  const isBobGo = String(selectedShipping.mode).includes('bobgo');
   const pickupPoint = selectedShipping.pickup_point;
 
   // For Bob Go pickup, the "delivery" address is the pickup point

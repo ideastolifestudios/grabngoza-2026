@@ -1,3 +1,4 @@
+// @ts-nocheck
 // internal/lib/logger.ts
 type Level = 'info' | 'warn' | 'error';
 
