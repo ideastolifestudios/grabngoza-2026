@@ -833,7 +833,6 @@ const Header = ({
           </div>
         </div>
       </motion.header>
-      <CategoryBar categories={categories} />
     </>
   );
 };
@@ -2252,16 +2251,16 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
               <ul className="space-y-2 text-xs text-gray-400">
                 <li><Link href="/how-to-order" className="hover:text-black transition-colors">How to Order</Link></li>
                 <li><Link href="/track-order" className="hover:text-black transition-colors">Track Order</Link></li>
-                <li><Link href="/shipping" className="hover:text-black transition-colors">Shipping Info</Link></li>
-                <li><Link href="/helpdesk" className="hover:text-black transition-colors">Help Desk</Link></li>
+                <li><Link href="/shipping-policy" className="hover:text-black transition-colors">Shipping Info</Link></li>
+                <li><Link href="/help" className="hover:text-black transition-colors">Help Desk</Link></li>
                 <li><Link href="/faq" className="hover:text-black transition-colors">FAQ</Link></li>
-                <li><Link href="/refunds" className="hover:text-black transition-colors">Returns & Refunds</Link></li>
+                <li><Link href="/returns" className="hover:text-black transition-colors">Returns & Refunds</Link></li>
               </ul>
     </div>
             <div className="space-y-3">
               <h4 className="text-[10px] font-black uppercase tracking-widest text-black">Company</h4>
               <ul className="space-y-2 text-xs text-gray-400">
-                <li><Link href="/story" className="hover:text-black transition-colors">Our Story</Link></li>
+                <li><Link href="/our-story" className="hover:text-black transition-colors">Our Story</Link></li>
                 <li><Link href="/legal" className="hover:text-black transition-colors">Privacy Policy</Link></li>
                 <li><Link href="/legal" className="hover:text-black transition-colors">Terms of Service</Link></li>
               </ul>
@@ -2709,7 +2708,7 @@ const FAQPage = () => {
         <footer className="pt-8 border-t border-gray-50 text-center">
           <p className="text-sm text-gray-500">
             Still have questions? Contact us on
-            <Link href="/helpdesk" className="underline font-semibold ml-1">Help Desk</Link>.
+            <Link href="/help" className="underline font-semibold ml-1">Help Desk</Link>.
           </p>
         </footer>
       </motion.div>
@@ -2785,7 +2784,7 @@ const ShippingPolicyPage = () => {
         <footer className="pt-8 border-t border-gray-50 text-center">
           <p className="text-sm text-gray-500">
             For any further assistance, please contact our support team through our
-            <Link href="/helpdesk" className="underline font-semibold ml-1">Help Desk</Link>.
+            <Link href="/help" className="underline font-semibold ml-1">Help Desk</Link>.
           </p>
         </footer>
       </motion.div>
@@ -2874,7 +2873,7 @@ const RefundPolicyPage = () => {
         <footer className="pt-8 border-t border-gray-50 text-center">
           <p className="text-sm text-gray-500">
             For any further assistance, please contact our support team through our
-            <Link href="/helpdesk" className="underline font-semibold ml-1">Help Desk</Link>.
+            <Link href="/help" className="underline font-semibold ml-1">Help Desk</Link>.
           </p>
         </footer>
       </motion.div>
