@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
+    "@google/generative-ai": "^0.24.1",
     "@sentry/node": "^10.53.1",
     "@sentry/react": "^10.53.1",
     "@tailwindcss/vite": "^4.3.0",
