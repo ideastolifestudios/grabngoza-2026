@@ -6,7 +6,7 @@ import { createLogger } from '../internal/utils/_logger';
  * Module load NEVER crashes, even if @upstash/redis or env vars are missing.
  */
 
-import type { Order } from '../internal/lib/types';
+import type { Order } from '../lib/types';
 
 const ORDER_PREFIX    = 'order:';
 const ORDER_LIST      = 'orders:list';
