@@ -62,9 +62,9 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
-  org: "grab-go",
-  project: "nextjs",
-  silent: !process.env.CI,
+  // org and project are auto-detected via SENTRY_ORG and SENTRY_PROJECT env vars in Vercel
+  // or via the auth token. We'll set silent to true to avoid build noise.
+  silent: true,
   widenClientFileUpload: true,
   tunnelRoute: "/monitoring",
   disableLogger: true,
