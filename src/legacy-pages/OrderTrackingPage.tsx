@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Truck, Loader2, MapPin, AlertCircle } from 'lucide-react';
 import { orderService } from '../services/api';
-import { formatPrice } from '../utils/shared';
+import { formatPrice } from '../utils/format';
 import SEO from '../components/SEO';
 import type { Order } from '../types';
 
