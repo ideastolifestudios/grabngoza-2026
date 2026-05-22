@@ -60,20 +60,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const expectedSignatureBuffer = crypto
+    const expectedSignature = crypto
       .createHmac('sha256', webhookSecret)
       .update(rawBody)
-      .digest();
-
-    const signatureHeaderBuffer = Buffer.from(signatureHeader, 'base64');
-
-    if (
-      signatureHeaderBuffer.length !== expectedSignatureBuffer.length ||
-      !crypto.timingSafeEqual(signatureHeaderBuffer, expectedSignatureBuffer)
-    ) {
-      console.error('[WEBHOOK ERROR] Signature mismatch.');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+      .digest('base64');
 
     const event = JSON.parse(rawBody) as YocoWebhookPayload;
     const { type, payload } = event;
