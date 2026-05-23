@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "firebasestorage.googleapis.com" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "*.cdninstagram.com" },
+      { protocol: "https", hostname: "*.fbcdn.net" },
     ],
   },
   // ── Redirect old slugs to new pages ───────────────────────
@@ -45,9 +47,9 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.yoco.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://browser.sentry-cdn.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://firebasestorage.googleapis.com https://lh3.googleusercontent.com https://www.google-analytics.com",
+              "img-src 'self' data: blob: https://picsum.photos https://*.picsum.photos https://res.cloudinary.com https://www.transparenttextures.com https://upload.wikimedia.org https://images.unsplash.com https://firebasestorage.googleapis.com https://lh3.googleusercontent.com https://www.google-analytics.com https://*.cdninstagram.com https://*.fbcdn.net",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://online.yoco.com https://www.google-analytics.com https://vitals.vercel-insights.com https://*.sentry.io",
+              "connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://online.yoco.com https://www.google-analytics.com https://vitals.vercel-insights.com https://*.sentry.io https://graph.instagram.com",
               "frame-src 'self' https://js.yoco.com",
               "object-src 'none'",
               "base-uri 'self'",
@@ -62,8 +64,6 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
-  // org and project are auto-detected via SENTRY_ORG and SENTRY_PROJECT env vars in Vercel
-  // or via the auth token. We'll set silent to true to avoid build noise.
   silent: true,
   widenClientFileUpload: true,
   tunnelRoute: "/monitoring",

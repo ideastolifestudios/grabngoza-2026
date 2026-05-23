@@ -3091,7 +3091,7 @@ const OurStoryPage = () => {
           viewport={{ once: true }}
           className="aspect-[16/9] md:aspect-square overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 bg-gray-100"
         >
-          <img src="https://picsum.photos/seed/studio/1200/1200" alt="Studio View" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=1200" alt="Studio View" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
         </motion.div>
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
@@ -3099,7 +3099,7 @@ const OurStoryPage = () => {
           viewport={{ once: true }}
           className="aspect-[16/9] md:aspect-square overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 bg-gray-100"
         >
-          <img src="https://picsum.photos/seed/street/1200/1200" alt="Street View" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          <img src="https://images.unsplash.com/photo-1555689410-90345d34204d?auto=format&fit=crop&q=80&w=1200" alt="Street View" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
         </motion.div>
       </div>
     </div>
@@ -3404,7 +3404,7 @@ const BrandBanner = ({ brand, banner, description, logo }: { brand: string, bann
     >
       <div className="absolute inset-0 bg-black/40 z-10 group-hover:bg-black/30 transition-all duration-700" />
       <img
-        src={banner || `https://picsum.photos/seed/${brand}/1920/1080?grayscale`}
+        src={banner || `https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1920`}
         alt={brand}
         className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000 -skew-y-1 md:-skew-y-2"
         referrerPolicy="no-referrer"
@@ -4257,7 +4257,7 @@ const CategoryPage = ({
           <img src={matchedCat.image} alt={categoryName} loading="lazy"
           className="absolute inset-0 w-full h-full object-cover opacity-60" referrerPolicy="no-referrer" />
         ) : (
-          <img src={`https://picsum.photos/seed/${categoryName}/1920/600?grayscale`} alt={categoryName} className="absolute inset-0 w-full h-full object-cover opacity-40" referrerPolicy="no-referrer" />
+          <img src={`https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1920`} alt={categoryName} className="absolute inset-0 w-full h-full object-cover opacity-40" referrerPolicy="no-referrer" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-end px-6 md:px-12 pb-8 md:pb-12">
