@@ -1,361 +1,215 @@
-// src/components/ChatWidget.tsx
-// Drop-in replacement for your existing chat widget.
-// Uses your existing /api/chat → Gemini backend.
-// No new dependencies needed — uses lucide-react already in package.json.
-
+"use client";
+// ChatWidget.tsx — Upgraded: AI + Quick Actions + Order Lookup + WhatsApp Handoff
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Loader2, Phone, Mail } from "lucide-react";
+import {
+  MessageCircle, X, Send, Loader2, Phone, Package,
+  RotateCcw, HelpCircle, Search, ChevronDown, ChevronUp
+} from "lucide-react";
 
-// ── Types ────────────────────────────────────────────────────────────────────
 interface Message {
   id: string;
-  role: "user" | "model" | "system";
+  role: "user" | "model";
   text: string;
   ts: Date;
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
 let _id = 0;
 const uid = () => `m${Date.now()}${++_id}`;
 
 function isBusinessHours(): boolean {
-  const sast = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Africa/Johannesburg" })
-  );
+  const sast = new Date(new Date().toLocaleString("en-US", { timeZone: "Africa/Johannesburg" }));
   const d = sast.getDay();
   const h = sast.getHours();
-  return d >= 1 && d <= 5 && h >= 8 && h < 16;
+  return d >= 1 && d <= 5 && h >= 8 && h < 18;
 }
 
-function formatTime(d: Date) {
-  return d.toLocaleTimeString("en-ZA", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "Africa/Johannesburg",
-  });
-}
+const QUICK_ACTIONS = [
+  { icon: Package,    label: "Track Order",  msg: "I want to track my order. Can you help?" },
+  { icon: RotateCcw,  label: "Start Return", msg: "I need to start a return or exchange." },
+  { icon: HelpCircle, label: "FAQ",          msg: "What are the most common questions you get?" },
+];
 
-// ── Component ────────────────────────────────────────────────────────────────
+const WHATSAPP = "27691630778";
+const WA_URL   = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent("Hi Grab & Go! I need help with my order.")}`;
+
 export default function ChatWidget() {
-  const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: uid(),
-      role: "model",
-      text: "Hey! Welcome to Grab & Go. I'm your support assistant — ask me anything about orders, shipping, payments, returns, or sizing! 🛍️",
-      ts: new Date(),
-    },
-  ]);
-  const [input, setInput] = useState("");
+  const [open,    setOpen]    = useState(false);
+  const [input,   setInput]   = useState("");
   const [loading, setLoading] = useState(false);
-  const [unread, setUnread] = useState(0);
+  const [unread,  setUnread]  = useState(0);
+  const [showLookup, setShowLookup] = useState(false);
+  const [lookupId,   setLookupId]   = useState("");
+  const [lookupEmail, setLookupEmail] = useState("");
+  const [messages, setMessages] = useState<Message[]>([{
+    id: uid(), role: "model", ts: new Date(),
+    text: "Hey! Welcome to Grab & Go 👋 I'm your AI support assistant. Ask me anything about orders, shipping, returns, or sizing — I've got you."
+  }]);
+
   const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const online = isBusinessHours();
+  const inputRef  = useRef<HTMLInputElement>(null);
+  const online    = isBusinessHours();
 
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
+  useEffect(() => { if (open) { setUnread(0); setTimeout(() => inputRef.current?.focus(), 120); } }, [open]);
 
-  // Focus input when opened
-  useEffect(() => {
-    if (open) {
-      setUnread(0);
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [open]);
-
-  const addMessage = (msg: Omit<Message, "id" | "ts">) => {
-    const m: Message = { ...msg, id: uid(), ts: new Date() };
-    setMessages((prev) => [...prev, m]);
+  const addMsg = (role: "user" | "model", text: string) => {
+    const m: Message = { id: uid(), role, text, ts: new Date() };
+    setMessages(prev => [...prev, m]);
     return m;
   };
 
-  const sendMessage = async () => {
-    const text = input.trim();
+  const sendMessage = async (override?: string) => {
+    const text = (override ?? input).trim();
     if (!text || loading) return;
     setInput("");
-
-    // Add user message
-    addMessage({ role: "user", text });
+    setShowLookup(false);
+    addMsg("user", text);
     setLoading(true);
 
-    // Build history for API (exclude system messages)
     const history = messages
-      .filter((m) => m.role === "user" || m.role === "model")
-      .map((m) => ({ role: m.role as "user" | "model", text: m.text }));
+      .filter(m => m.role === "user" || m.role === "model")
+      .map(m => ({ role: m.role, text: m.text }));
     history.push({ role: "user", text });
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history }),
-      });
-
+      const res  = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: history }) });
       const data = await res.json();
-
-      if (res.ok && data.reply) {
-        addMessage({ role: "model", text: data.reply });
-        if (!open) setUnread((u) => u + 1);
-      } else {
-        addMessage({
-          role: "model",
-          text:
-            data.reply ||
-            "Something went wrong on my end. For immediate help, WhatsApp us at +27 69 163 0778 or email support@grabandgo.co.za.",
-        });
-      }
+      const reply = data?.reply ?? data?.text ?? "I'm having trouble right now. Please reach us on WhatsApp below!";
+      addMsg("model", reply);
     } catch {
-      addMessage({
-        role: "model",
-        text: "I couldn't reach the server right now. Please WhatsApp us at https://wa.me/27691630778 for instant help.",
-      });
+      addMsg("model", "Something went wrong — please reach us on WhatsApp below for immediate help!");
     } finally {
       setLoading(false);
+      if (!open) setUnread(n => n + 1);
     }
   };
 
-  const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  // Render message text with basic link detection
-  const renderText = (text: string) => {
-    const parts = text.split(/(https?:\/\/[^\s]+)/g);
-    return parts.map((part, i) =>
-      /^https?:\/\//.test(part) ? (
-        <a
-          key={i}
-          href={part}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline text-blue-300 hover:text-blue-200"
-        >
-          {part.includes("wa.me") ? "Chat on WhatsApp →" : part}
-        </a>
-      ) : (
-        <span key={i}>{part}</span>
-      )
-    );
+  const handleOrderLookup = () => {
+    if (!lookupId.trim()) return;
+    const msg = `Can you help me check on order #${lookupId.trim()}${lookupEmail ? ` for ${lookupEmail.trim()}` : ""}?`;
+    setLookupId(""); setLookupEmail(""); setShowLookup(false);
+    sendMessage(msg);
   };
 
   return (
-    <>
-      {/* ── Floating Button ── */}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        aria-label={open ? "Close chat" : "Open support chat"}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
-      >
-        {open ? <X size={22} /> : <MessageCircle size={22} />}
-        {!open && unread > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">
-            {unread > 9 ? "9+" : unread}
-          </span>
-        )}
-      </button>
-
-      {/* ── Chat Window ── */}
+    <div className="fixed bottom-6 right-6 z-[500] flex flex-col items-end gap-3">
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 max-h-[80vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-gray-200 bg-white">
+        <div className="w-[360px] bg-[#080f0b] border border-[#1a2e23] rounded-2xl shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "calc(100vh - 100px)" }}>
 
-          {/* Header */}
-          <div className="bg-blue-600 text-white px-4 py-3 flex items-center gap-3 flex-shrink-0">
-            <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-lg flex-shrink-0">
-              🛍️
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm leading-tight">Grab & Go Support</div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span
-                  className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                    online ? "bg-green-400" : "bg-yellow-400"
-                  }`}
-                />
-                <span className="text-xs text-blue-100 truncate">
-                  {online
-                    ? "AI Assistant · Team online"
-                    : "AI Assistant · Team offline (Mon–Fri 8–16 SAST)"}
-                </span>
+          {/* ── Header ── */}
+          <div className="bg-[#06402B] px-5 py-4 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#18A374] flex items-center justify-center flex-shrink-0">
+                <MessageCircle size={14} className="text-black" />
+              </div>
+              <div>
+                <p className="text-white text-[11px] font-black uppercase tracking-widest leading-none">G&G Support</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className={`w-1.5 h-1.5 rounded-full ${online ? "bg-[#18A374]" : "bg-yellow-400"}`} />
+                  <span className="text-white/50 text-[9px] uppercase tracking-widest">
+                    {online ? "Live · Mon–Fri 8–18" : "AI Available 24/7"}
+                  </span>
+                </div>
               </div>
             </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="p-1 hover:bg-blue-500 rounded-lg transition-colors flex-shrink-0"
-              aria-label="Close chat"
-            >
-              <X size={16} />
+            <button onClick={() => setOpen(false)} className="p-1.5 hover:bg-white/10 rounded-full transition-colors">
+              <X size={16} className="text-white/70" />
             </button>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50 min-h-0">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex flex-col ${
-                  msg.role === "user" ? "items-end" : "items-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm leading-relaxed ${
-                    msg.role === "user"
-                      ? "bg-blue-600 text-white rounded-br-sm"
-                      : msg.role === "system"
-                      ? "bg-gray-200 text-gray-600 text-xs text-center rounded-lg mx-auto"
-                      : "bg-white text-gray-800 shadow-sm border border-gray-100 rounded-bl-sm"
-                  }`}
-                >
-                  {renderText(msg.text)}
+          {/* ── Quick Actions ── */}
+          <div className="flex gap-1.5 px-4 py-3 border-b border-[#1a2e23] flex-shrink-0">
+            {QUICK_ACTIONS.map(a => (
+              <button key={a.label} onClick={() => sendMessage(a.msg)}
+                className="flex-1 py-2 px-1.5 bg-[#0d1410] border border-[#1a2e23] rounded-lg text-[9px] font-black uppercase tracking-wide text-[#18A374] hover:bg-[#18A374]/10 transition-colors flex flex-col items-center gap-1">
+                <a.icon size={13} />
+                <span>{a.label}</span>
+              </button>
+            ))}
+            <button onClick={() => setShowLookup(s => !s)}
+              className="flex-1 py-2 px-1.5 bg-[#0d1410] border border-[#1a2e23] rounded-lg text-[9px] font-black uppercase tracking-wide text-[#18A374] hover:bg-[#18A374]/10 transition-colors flex flex-col items-center gap-1">
+              <Search size={13} />
+              <span>Order #</span>
+            </button>
+          </div>
+
+          {/* ── Order Lookup Panel ── */}
+          {showLookup && (
+            <div className="px-4 py-3 bg-[#0a1209] border-b border-[#1a2e23] flex-shrink-0">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#18A374] mb-2">Order Lookup</p>
+              <input value={lookupId} onChange={e => setLookupId(e.target.value)}
+                placeholder="Order #GNG-..."
+                className="w-full bg-[#0d1410] border border-[#1a2e23] rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/30 outline-none focus:border-[#18A374]/40 mb-2" />
+              <input value={lookupEmail} onChange={e => setLookupEmail(e.target.value)}
+                placeholder="Email (optional)"
+                className="w-full bg-[#0d1410] border border-[#1a2e23] rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/30 outline-none focus:border-[#18A374]/40 mb-2" />
+              <button onClick={handleOrderLookup}
+                className="w-full py-2 bg-[#18A374] text-black text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-[#18A374]/90 transition-colors">
+                Look Up Order
+              </button>
+            </div>
+          )}
+
+          {/* ── Messages ── */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0">
+            {messages.map(m => (
+              <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed ${
+                  m.role === "user"
+                    ? "bg-[#18A374] text-black font-medium rounded-br-sm"
+                    : "bg-[#111c14] text-white/80 border border-[#1a2e23] rounded-bl-sm"
+                }`}>
+                  {m.text}
                 </div>
-                <span className="text-[10px] text-gray-400 mt-1 px-1">
-                  {formatTime(msg.ts)}
-                </span>
               </div>
             ))}
-
-            {/* Typing indicator */}
             {loading && (
-              <div className="flex items-start">
-                <div className="bg-white border border-gray-100 shadow-sm px-3 py-2 rounded-2xl rounded-bl-sm flex items-center gap-1.5">
-                  {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
-                      style={{ animationDelay: `${i * 0.15}s` }}
-                    />
-                  ))}
+              <div className="flex justify-start">
+                <div className="bg-[#111c14] border border-[#1a2e23] rounded-2xl rounded-bl-sm px-4 py-2.5 flex items-center gap-2">
+                  <Loader2 size={12} className="animate-spin text-[#18A374]" />
+                  <span className="text-white/40 text-[10px]">Typing...</span>
                 </div>
               </div>
             )}
             <div ref={bottomRef} />
           </div>
 
-          {/* Quick replies */}
-          {messages.length <= 2 && !loading && (
-            <div className="px-3 py-2 bg-gray-50 border-t border-gray-100 flex-shrink-0">
-              <p className="text-xs text-gray-500 mb-1.5">Quick questions:</p>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  "Track my order",
-                  "Returns & refunds",
-                  "Sizing help",
-                  "Payment options",
-                ].map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => {
-                      setInput(q);
-                      setTimeout(() => sendMessage(), 0);
-                      // Use a small hack since setInput is async:
-                      // directly call with the text
-                      setInput("");
-                      addMessage({ role: "user", text: q });
-                      setLoading(true);
-                      const history = [
-                        ...messages
-                          .filter((m) => m.role === "user" || m.role === "model")
-                          .map((m) => ({
-                            role: m.role as "user" | "model",
-                            text: m.text,
-                          })),
-                        { role: "user" as const, text: q },
-                      ];
-                      fetch("/api/chat", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ messages: history }),
-                      })
-                        .then((r) => r.json())
-                        .then((data) => {
-                          addMessage({
-                            role: "model",
-                            text:
-                              data.reply ||
-                              "Sorry, something went wrong. WhatsApp us at +27 69 163 0778.",
-                          });
-                        })
-                        .catch(() => {
-                          addMessage({
-                            role: "model",
-                            text: "Network error. WhatsApp us at https://wa.me/27691630778.",
-                          });
-                        })
-                        .finally(() => setLoading(false));
-                    }}
-                    className="text-xs bg-white border border-gray-200 text-gray-700 px-2.5 py-1 rounded-full hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
+          {/* ── WhatsApp CTA ── */}
+          {!online && (
+            <div className="px-4 py-2 border-t border-[#1a2e23] flex-shrink-0">
+              <a href={WA_URL} target="_blank" rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 py-2 bg-[#25D366]/10 border border-[#25D366]/20 rounded-lg text-[#25D366] text-[10px] font-black uppercase tracking-widest hover:bg-[#25D366]/20 transition-colors">
+                <Phone size={11} />
+                Continue on WhatsApp
+              </a>
             </div>
           )}
 
-          {/* Input */}
-          <div className="p-3 border-t border-gray-200 bg-white flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKey}
-                placeholder="Type your question…"
-                disabled={loading}
-                className="flex-1 text-sm px-3 py-2 bg-gray-100 rounded-full outline-none focus:ring-2 focus:ring-blue-200 placeholder:text-gray-400 disabled:opacity-50 transition-all"
-              />
-              <button
-                onClick={sendMessage}
-                disabled={!input.trim() || loading}
-                className="w-9 h-9 flex-shrink-0 rounded-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white flex items-center justify-center transition-colors"
-                aria-label="Send message"
-              >
-                {loading ? (
-                  <Loader2 size={15} className="animate-spin" />
-                ) : (
-                  <Send size={15} />
-                )}
-              </button>
-            </div>
-
-            {/* Footer links */}
-            <div className="flex items-center justify-center gap-3 mt-2">
-              <a
-                href="https://wa.me/27691630778"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[10px] text-green-600 hover:text-green-700 font-medium"
-              >
-                <MessageCircle size={10} />
-                WhatsApp
-              </a>
-              <span className="text-gray-300 text-xs">·</span>
-              <a
-                href="tel:+27691630778"
-                className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-gray-700 font-medium"
-              >
-                <Phone size={10} />
-                Call
-              </a>
-              <span className="text-gray-300 text-xs">·</span>
-              <a
-                href="mailto:support@grabandgo.co.za"
-                className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-gray-700 font-medium"
-              >
-                <Mail size={10} />
-                Email
-              </a>
-            </div>
+          {/* ── Input ── */}
+          <div className="px-4 py-3 flex gap-2 border-t border-[#1a2e23] flex-shrink-0">
+            <input ref={inputRef} value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && !e.shiftKey && !loading && sendMessage()}
+              placeholder="Ask anything..."
+              className="flex-1 bg-[#111c14] border border-[#1a2e23] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-white/30 outline-none focus:border-[#18A374]/40 transition-colors" />
+            <button onClick={() => sendMessage()} disabled={!input.trim() || loading}
+              className="w-9 h-9 bg-[#18A374] rounded-xl flex items-center justify-center hover:bg-[#18A374]/80 transition-colors disabled:opacity-30 flex-shrink-0">
+              <Send size={14} className="text-black" />
+            </button>
           </div>
         </div>
       )}
-    </>
+
+      {/* ── Toggle FAB ── */}
+      <button onClick={() => setOpen(o => !o)}
+        className="relative w-14 h-14 bg-[#18A374] rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all">
+        {open ? <X size={22} className="text-black" /> : <MessageCircle size={22} className="text-black" />}
+        {!open && unread > 0 && (
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
+            {unread}
+          </span>
+        )}
+      </button>
+    </div>
   );
 }

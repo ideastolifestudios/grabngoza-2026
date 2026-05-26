@@ -1,58 +1,45 @@
-import React from 'react';
-import Link from 'next/link';
+import React from "react";
+import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Our Story | Grab & Go" };
 
 export default function OurStoryPage() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans flex flex-col justify-between">
-      <div>
-
-        {/* Header */}
-        <div className="bg-[#143427] text-white border-b border-[#0f281e]">
-          <div className="max-w-7xl mx-auto px-4 pt-4">
-            <Link href="/" className="inline-flex items-center text-xs font-bold tracking-widest text-emerald-400 hover:text-emerald-300 uppercase transition-colors">
-              ← Back to Navigation
-            </Link>
-          </div>
-          <div className="text-center px-4 pt-10 pb-24">
-            <div className="text-3xl mb-2">🔥</div>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase mb-2">
-              Our Story
-            </h1>
-            <p className="text-emerald-100/70 text-sm md:text-base max-w-xl mx-auto font-medium mb-6">
-              The vision, the hustle, and the culture behind Grab&Go.
-            </p>
-          </div>
-        </div>
-
-        <div className="max-w-4xl mx-auto px-4 -mt-12 relative z-10 mb-16">
-          <div className="bg-white border border-gray-200/80 p-8 md:p-12 shadow-sm text-center">
-            <span className="text-xs uppercase tracking-widest text-emerald-600 font-bold block mb-4">Established 2026</span>
-            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-gray-900 mb-6">Redefining the Culture.</h2>
-            <div className="space-y-6 text-sm md:text-base text-gray-600 font-medium leading-relaxed max-w-2xl mx-auto">
-              <p>Grab&Go wasn't just built to sell clothes; it was engineered to be a central node for premium streetwear in South Africa. We saw a gap between high-end international drops and local accessibility, and we decided to bridge it.</p>
-              <p>Our curation team scours global and local markets to secure authentic, high-quality pieces. From exclusive sneaker drops to heavy-weight graphic tees, every item in our catalog is strictly verified for authenticity and quality.</p>
-              <p className="font-black text-gray-900 text-lg border-t border-b border-gray-100 py-6 my-8">"We don't follow trends. We supply the individuals who set them."</p>
-              <p>Welcome to the new standard of digital retail. Welcome to Grab&Go.</p>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* Hero */}
+      <div className="bg-[#06402B] pt-28 pb-20 text-center px-6">
+        <Link href="/" className="inline-flex items-center text-[10px] font-black uppercase tracking-widest text-[#18A374] hover:text-[#18A374]/70 mb-8 group">
+          <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span> Back to store
+        </Link>
+        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] block mb-4">Established 2026</span>
+        <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white mb-4">Our Story</h1>
+        <p className="text-sm text-white/50 max-w-md mx-auto">The vision, the hustle, and the culture behind Grab & Go.</p>
       </div>
 
-      {/* Footer Anchor */}
-      <div className="bg-[#143427] py-12 text-center px-4 mt-auto">
-        <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-wider mb-6">
-          READY TO SHOP?
-        </h2>
-        <div className="flex flex-wrap justify-center gap-4">
-          <Link href="/search" className="bg-[#1d4d3a] hover:bg-[#235d46] text-white font-bold text-xs uppercase tracking-wider px-6 py-3 border border-emerald-600/30 transition-colors duration-200">
-            SHOP NEW ARRIVALS →
-          </Link>
-          <Link href="/help" className="bg-transparent hover:bg-white/5 text-gray-300 hover:text-white font-bold text-xs uppercase tracking-wider px-6 py-3 border border-gray-500 transition-colors duration-200">
-            HELP CENTER
-          </Link>
-        </div>
+      {/* Content */}
+      <div className="max-w-3xl mx-auto w-full px-6 py-16 flex-1 space-y-8">
+        {[
+          { title: "Where It Started", body: "Grab & Go was born from a simple idea: bring premium streetwear to South Africa fast, clean, and without the hype tax. We saw a gap — quality pieces, accessible prices, instant delivery — and we moved on it." },
+          { title: "The Vision",       body: "We're not just selling clothes. We're building a culture. Every drop is curated, every piece has a story, and every customer is part of the G&G family. We collaborate with local brands, micro-influencers, and creatives who move different." },
+          { title: "The Culture",      body: "The Culture Collective is at our core. We partner with MINNIEPRESS, CUSTOMSBYEBA, RESILIENT PALS, and emerging SA brands to bring you exclusive limited drops you won't find anywhere else." },
+          { title: "What's Next",      body: "2026 is just the beginning. New brands, bigger drops, more collections. We're building something real — a streetwear hub that represents South African culture on a global stage. Stay locked in." },
+        ].map(sec => (
+          <div key={sec.title} className="bg-[#0d1410] border border-[#1a2e23] p-6 md:p-8">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] mb-4">{sec.title}</h3>
+            <p className="text-sm text-white/70 leading-relaxed">{sec.body}</p>
+          </div>
+        ))}
       </div>
 
+      {/* CTA */}
+      <div className="bg-[#06402B] py-12 text-center px-6">
+        <h2 className="text-2xl font-black uppercase tracking-tighter text-white mb-6">Be Part of the Culture</h2>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link href="/" className="px-8 py-3 bg-[#18A374] text-black text-[10px] font-black uppercase tracking-widest hover:bg-[#18A374]/90 transition-colors">Shop the Drops</Link>
+          <a href="https://www.instagram.com/grabngoza" target="_blank" rel="noopener noreferrer" className="px-8 py-3 border border-white/20 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-colors">Follow @grabngoza</a>
+        </div>
+      </div>
     </div>
   );
 }

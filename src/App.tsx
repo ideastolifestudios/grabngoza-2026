@@ -1,6 +1,7 @@
 "use client";
 import InstagramFeed from './components/InstagramFeed';
 // import SupportChat from "./components/SupportChat";
+import ChatWidget from "./components/ChatWidget";
 // import './sentryClient';
 // import AdminDashboard from './components/admin/AdminDashboard';
 // import ReturnRequestPage from './pages/ReturnRequestPage';
@@ -1097,13 +1098,13 @@ const Hero = () => {
       tagline: "Just Dropped", 
       title: "Fresh Kicks", 
       sub: "Latest sneakers from the brands you love",
-      img: "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&q=80&w=2000"
+      img: "https://res.cloudinary.com/dggitwduo/image/upload/v1779107822/grab-go-za/mumxdlfw7ijmrc0plyfh.jpg"
     },
     { 
       tagline: "Limited Edition", 
       title: "Stand Out", 
       sub: "Exclusive drops you won't find anywhere else",
-      img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=2000"
+      img: "https://res.cloudinary.com/dggitwduo/image/upload/v1774451791/grab-go-za/ccvw1hia86fbxskoqvjc.png"
     },
   ];
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -1831,16 +1832,8 @@ const ProductCard = ({
         {allImages.map((img, i) => (
           <img
             key={i}
-            src={img || undefined}
-            alt={i === 0 ? product.name : `${product.name} ${i + 1}`}
-            onClick={() => router.push(`/product/${product.id}`)}
-            onError={(e) => {
-              e.currentTarget.src = `https://picsum.photos/seed/${product.id}-${i}/800/1000`;
-            }}
-            loading={i === 0 ? undefined : "lazy"}
-            className={`${i === 0 ? '' : 'absolute inset-0'} w-full h-full object-cover transition-opacity duration-700 ease-in-out group-hover:scale-105 ${i === imgIdx ? 'opacity-100' : 'opacity-0'}`}
-            referrerPolicy="no-referrer"
-          />
+            src={banner || ''}
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}/>
         ))}
         {allImages.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-20">
@@ -7112,7 +7105,7 @@ const FilterDropdown = ({
           </motion.div>
         )}
       </AnimatePresence>
-      {/* <SupportChat /> */}
+      <ChatWidget />
     </div>
   );
 };
@@ -8615,7 +8608,7 @@ function AppContent() {
           </>
         )}
       </AnimatePresence>
-      {/* <SupportChat /> */}
+      
     </div>
   );
 }

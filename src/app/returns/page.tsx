@@ -1,68 +1,60 @@
-import React from 'react';
-import Link from 'next/link';
+import React from "react";
+import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Returns & Exchanges | Grab & Go" };
+
+const STEPS = [
+  { num: "01", title: "Check Eligibility",     body: "Items must be returned within 7 days of verified delivery, unworn, with original tags attached. Sale items and custom orders are final sale." },
+  { num: "02", title: "Contact Support",        body: "Reach out via our Help Desk or WhatsApp with your Order ID and the items you wish to return. We'll confirm eligibility and issue return instructions." },
+  { num: "03", title: "Ship It Back",           body: "Package your items securely. Drop off at your nearest courier. Return shipping costs are covered by the customer unless the item was defective." },
+  { num: "04", title: "Quality Check",          body: "Once we receive your return, our team inspects it within 1–2 business days." },
+  { num: "05", title: "Exchange or Store Credit", body: "Approved returns receive store credit or an exchange within 5–7 business days. Refunds to original payment are available for defective items." },
+];
 
 export default function ReturnsPage() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans flex flex-col justify-between">
-      <div>
+    <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* Hero */}
+      <div className="bg-[#06402B] pt-28 pb-20 text-center px-6">
+        <Link href="/" className="inline-flex items-center text-[10px] font-black uppercase tracking-widest text-[#18A374] hover:text-[#18A374]/70 mb-8 group">
+          <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span> Back to store
+        </Link>
+        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] block mb-4">Hassle-Free</span>
+        <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white mb-4">Returns</h1>
+        <p className="text-sm text-white/50 max-w-md mx-auto">Not happy? We'll make it right. 7-day returns, no drama.</p>
+      </div>
 
-        {/* Header */}
-        <div className="bg-[#143427] text-white border-b border-[#0f281e]">
-          <div className="max-w-7xl mx-auto px-4 pt-4">
-            <Link href="/" className="inline-flex items-center text-xs font-bold tracking-widest text-emerald-400 hover:text-emerald-300 uppercase transition-colors">
-              ← Back to Navigation
-            </Link>
-          </div>
-          <div className="text-center px-4 pt-10 pb-24">
-            <div className="text-3xl mb-2">↩️</div>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase mb-2">
-              Returns & Exchanges
-            </h1>
-            <p className="text-emerald-100/70 text-sm md:text-base max-w-xl mx-auto font-medium mb-6">
-              Hassle-free returns because your satisfaction is our priority.
-            </p>
-          </div>
-        </div>
-
-        <div className="max-w-4xl mx-auto px-4 -mt-12 relative z-10 mb-16">
-          <div className="bg-white border border-gray-200/80 p-8 md:p-12 shadow-sm">
-            <div className="space-y-8 text-sm text-gray-600 font-medium leading-relaxed">
-              <section>
-                <h2 className="text-lg font-black uppercase tracking-tight text-gray-900 mb-3 border-l-4 border-[#143427] pl-3">Our 7-Day Guarantee</h2>
-                <p>We want you to be completely satisfied with your purchase. If you are not entirely happy with your items, we offer a straightforward return and exchange policy within 7 days of receiving your order.</p>
-              </section>
-              <section>
-                <h2 className="text-lg font-black uppercase tracking-tight text-gray-900 mb-3 border-l-4 border-[#143427] pl-3">Condition Requirements</h2>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>Items must be unworn, unwashed, and in their original pristine condition.</li>
-                  <li>All original tags, authenticity cards, and packaging must be intact and attached.</li>
-                  <li>Footwear must be returned in the original branded box without postal labels attached directly to the box.</li>
-                </ul>
-              </section>
-              <section>
-                <h2 className="text-lg font-black uppercase tracking-tight text-gray-900 mb-3 border-l-4 border-[#143427] pl-3">How to Initiate</h2>
-                <p>To start a return, please contact our support team via WhatsApp or Email within the 7-day window. Provide your Order ID and the reason for the return. Our team will generate a unique Return Authorization Number and provide courier instructions.</p>
-              </section>
+      {/* Steps */}
+      <div className="max-w-3xl mx-auto w-full px-6 py-16 flex-1">
+        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] block mb-6">Return Process</span>
+        <div className="space-y-4">
+          {STEPS.map((step, i) => (
+            <div key={i} className="flex gap-6 bg-[#0d1410] border border-[#1a2e23] p-6">
+              <span className="text-4xl font-black text-[#18A374]/20 flex-shrink-0 leading-none">{step.num}</span>
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-tight text-white mb-2">{step.title}</h3>
+                <p className="text-sm text-white/60 leading-relaxed">{step.body}</p>
+              </div>
             </div>
-          </div>
+          ))}
+        </div>
+
+        {/* Policy Note */}
+        <div className="mt-10 bg-[#06402B]/30 border border-[#06402B] p-6">
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#18A374] mb-2">Important</p>
+          <p className="text-sm text-white/70 leading-relaxed">Items that are worn, washed, damaged, or returned without original tags will not be accepted. For defective or incorrect items, we cover return shipping and issue a full refund.</p>
         </div>
       </div>
 
-      {/* Footer Anchor */}
-      <div className="bg-[#143427] py-12 text-center px-4 mt-auto">
-        <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-wider mb-6">
-          READY TO SHOP?
-        </h2>
-        <div className="flex flex-wrap justify-center gap-4">
-          <Link href="/search" className="bg-[#1d4d3a] hover:bg-[#235d46] text-white font-bold text-xs uppercase tracking-wider px-6 py-3 border border-emerald-600/30 transition-colors duration-200">
-            SHOP NEW ARRIVALS →
-          </Link>
-          <Link href="/help" className="bg-transparent hover:bg-white/5 text-gray-300 hover:text-white font-bold text-xs uppercase tracking-wider px-6 py-3 border border-gray-500 transition-colors duration-200">
-            HELP CENTER
-          </Link>
+      {/* CTA */}
+      <div className="bg-[#06402B] py-12 text-center px-6">
+        <h2 className="text-2xl font-black uppercase tracking-tighter text-white mb-6">Ready to start a return?</h2>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link href="/help" className="px-8 py-3 bg-[#18A374] text-black text-[10px] font-black uppercase tracking-widest hover:bg-[#18A374]/90 transition-colors">Contact Support</Link>
+          <a href="https://wa.me/27691630778" target="_blank" rel="noopener noreferrer" className="px-8 py-3 border border-white/20 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-colors">WhatsApp Us</a>
         </div>
       </div>
-
     </div>
   );
 }
