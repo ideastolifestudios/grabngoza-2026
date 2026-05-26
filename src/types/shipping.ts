@@ -129,10 +129,14 @@ export interface ShipLogicShipmentResponse {
 }
 
 // ── Checkout shipping state (used in React) ───────────────────────────────────
-export type ShippingMode = "domestic" | "bobgo_pickup" | "international";
+export type ShippingMode = "domestic" | "bobgo_courier" | "international";
 
 export interface SelectedShipping {
   mode: ShippingMode;
-  rate: ShipLogicRate | null;
-  pickup_point?: BobGoPickupPoint;   // only for bobgo_pickup mode
+  rate: ShipLogicRate | null; 
+  // 'rate' will hold the Bob Go cost, ensuring it's never free unless the rate.price is 0
+  pickup_point?: BobGoPickupPoint; 
 }
+
+// 2. Ensure your logic knows Bob Go is a courier service
+export const IS_BOBGO_ENABLED = true;

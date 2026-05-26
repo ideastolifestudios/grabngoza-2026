@@ -1,20 +1,62 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Grab N Go ZA — Next.js Overhaul (Phase 1)
 
-# Run and deploy your AI Studio app
+> Premium streetwear. Curated drops. A community that moves different.
 
-This contains everything you need to run your app locally.
+## Stack
+- **Next.js 15** (App Router, SSR/SSG)
+- **TypeScript**
+- **Tailwind CSS 3.4**
+- **Framer Motion** (animations)
+- **Firebase 10** (Firestore)
+- **Cloudinary** (images)
+- **Yoco** (payments — Phase 3)
 
-View your app in AI Studio: https://ai.studio/apps/881dc237-7fb5-4c20-846a-1c6088c5e3c3
+## Setup
 
-## Run Locally
+```bash
+# 1. Clone this repo
+git clone <this-repo-url>
+cd grabngoza-2026
 
-**Prerequisites:**  Node.js
+# 2. Install dependencies
+npm install
 
+# 3. Set up environment variables
+cp .env.example .env.local
+# Fill in your Firebase credentials in .env.local
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+# 4. Run development server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+## Environment Variables
+See `.env.example` for required variables. Copy to `.env.local` and fill in your values.
+
+## Brand Colors
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `brand-primary` | `#104431` | Navbar, sections, headings |
+| `brand-accent` | `#18A374` | CTAs, badges, highlights |
+| `brand-background` | `#ffffff` | Page background |
+| `brand-text` | `#0a0a0a` | Body text |
+| `brand-surface` | `#f6f6f6` | Cards, subtle backgrounds |
+
+## Structure
+```
+app/              — Next.js App Router pages
+components/
+  layout/         — Navbar, Footer, MobileNav, etc.
+  home/           — Homepage sections
+  ui/             — Reusable components
+lib/              — Firebase, types, utils
+public/           — Static assets
+```
+
+## Phases
+- [x] **Phase 1**: Foundation + Homepage
+- [ ] **Phase 2**: Product system (collections, PDP)
+- [ ] **Phase 3**: Cart + Yoco checkout
+- [ ] **Phase 4**: Supporting pages
+- [ ] **Phase 5**: AI features + advanced

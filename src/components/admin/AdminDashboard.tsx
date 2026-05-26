@@ -3,10 +3,11 @@ import { collection, getDocs, query, orderBy, where, doc, updateDoc } from 'fire
 import { db } from '../../firebase';
 import { RefreshCw, Search, Package, Truck, CheckCircle2, Clock, Loader2 } from 'lucide-react';
 import StatusFilter, { StatusTab } from './StatusFilter';
+import DiscountsManager from './DiscountsManager';
 import ShipmentTable from './ShipmentTable';
 import BulkActions from './BulkActions';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE = import.meta.env.NEXT_PUBLIC_API_URL || '';
 
 export default function AdminDashboard() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -15,6 +16,7 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dispatchStatus, setDispatchStatus] = useState<string | null>(null);
+  const [adminTab, setAdminTab] = useState<'orders' | 'promotions'>('orders');
 
   // Fetch all orders from Firebase
   const fetchOrders = async () => {
@@ -157,16 +159,16 @@ export default function AdminDashboard() {
 
     for (const order of pending) {
       try {
-        const res = await fetch(`${API_BASE}/api/shipping?action=create`, {
+        const res = await fetch(`${API_BASE}/api/create-shipment`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order, serviceLevel: 'standard' }),
+          body: JSON.stringify({ orderId: order.id, order }),
         });
         const data = await res.json();
         console.log('Dispatch response for', order.id, data);
 
-        if (data.success) {
-          const shipId = data.shipmentId || data.raw?.id || null;
+        if (data.ok || data.success) {
+          const shipId = data.shipmentId || data.raw?.id || undefined;
           const trackRef = data.trackingRef || data.raw?.custom_tracking_reference || `GNG-${order.id}`;
           const trackNum = data.trackingNumber || data.raw?.tracking_reference || '';
 
@@ -205,6 +207,23 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff', padding: '24px 20px' }}>
+      {/* Tab bar */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+        {(['orders', 'promotions'] as const).map(t => (
+          <button key={t} onClick={() => setAdminTab(t)}
+            style={{ padding: '8px 20px', background: adminTab === t ? '#fff' : 'transparent',
+              color: adminTab === t ? '#000' : '#555', border: '1px solid',
+              borderColor: adminTab === t ? '#fff' : '#333', fontWeight: 800,
+              fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, cursor: 'pointer' }}>
+            {t === 'orders' ? 'Orders' : 'Promotions'}
+          </button>
+        ))}
+      </div>
+      {adminTab === 'promotions' ? (
+        <div style={{ background: '#fff', color: '#000', minHeight: '80vh', borderRadius: 4 }}>
+          <DiscountsManager />
+        </div>
+      ) : (<>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
@@ -308,6 +327,7 @@ export default function AdminDashboard() {
 
       {/* CSS for spinner */}
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </>)}
     </div>
   );
 }

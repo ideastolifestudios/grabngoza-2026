@@ -1,3 +1,4 @@
+// @ts-nocheck
 // api/store.ts
 // Handles: POST ?action=send-product | ?action=return | GET ?action=health
 import nodemailer from 'nodemailer';

@@ -57,8 +57,8 @@ export default function ShippingMethod({
   const [loadingPoints, setLoadingPoints] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const apiBase = typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL
-    ? (import.meta as any).env.VITE_API_URL
+  const apiBase = typeof import.meta !== 'undefined' && (import.meta as any).env?.NEXT_PUBLIC_API_URL
+    ? (import.meta as any).env.NEXT_PUBLIC_API_URL
     : '';
 
   const ratesUrl = useMemo(() => {

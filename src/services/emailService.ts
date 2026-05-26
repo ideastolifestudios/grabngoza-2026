@@ -104,7 +104,7 @@ export const emailService = {
       </div>
     `;
     // Send to business email
-    return emailService.sendEmail(process.env.VITE_BUSINESS_EMAIL || 'support@grabandgo.co.za', subject, html, text);
+    return emailService.sendEmail(process.env.NEXT_PUBLIC_BUSINESS_EMAIL || 'support@grabandgo.co.za', subject, html, text);
   },
 
   sendNewsletterConfirmation: async (email: string) => {

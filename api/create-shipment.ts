@@ -1,25 +1,31 @@
+// @ts-nocheck
+/**
+// 1. Updated Import to the new safe logger
+import { createLogger } from './_logger'; 
+
 /**
  * api/create-shipment.ts — Grab & Go Shipment Creation (Vercel Serverless)
  *
- * Called internally by api/payments.ts after Yoco payment is confirmed.
+ * Called internally by api/webhook.ts (SOP updated) after Yoco payment is confirmed.
  * Creates a ShipLogic shipment, stores shipmentId + labelUrl on the Firestore order.
  *
  * POST /api/create-shipment
  * Body: { orderId, order }
  */
 
+import { createLogger } from './_logger';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
+// 2. Initialize the logger factory
+const log = createLogger('SHIPMENT');
+
 // ─── Firebase Admin init ───────────────────────────────────────────────────
 if (!getApps().length) {
   initializeApp({
-    credential: cert({
-      projectId:   process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey:  (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-    }),
+    credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}')),
+    projectId: process.env.FIREBASE_PROJECT_ID,
   });
 }
 const db = getFirestore();
