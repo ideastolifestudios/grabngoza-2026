@@ -790,15 +790,18 @@ const Header = ({
 
           {/* Right: Thin Icons Bundle */}
           <div className="flex items-center justify-end gap-1.5 md:gap-5 lg:w-1/4">
-            <button aria-label="Store Locator" className="p-2 text-white/90 hover:text-[#18A374] transition-colors hidden sm:block">
-              <MapPin size={20} strokeWidth={1.2} />
-            </button>
-            <button 
-              onClick={onOpenAuth}
+            <button
+              onClick={user ? onOpenMenu : onOpenAuth}
               aria-label="Account"
               className="p-2 text-white/90 hover:text-[#18A374] transition-colors hidden sm:block"
             >
-              <UserIcon size={20} strokeWidth={1.2} />
+              {user?.photoURL ? (
+                <img src={user.photoURL} alt={user.firstName} className="w-5 h-5 rounded-full object-cover" referrerPolicy="no-referrer" />
+              ) : user ? (
+                <span className="w-5 h-5 rounded-full bg-[#18A374] text-black text-[8px] font-black inline-flex items-center justify-center">{user.firstName?.[0]}{user.lastName?.[0]}</span>
+              ) : (
+                <UserIcon size={20} strokeWidth={1.2} />
+              )}
             </button>
             <button aria-label="Search" className="p-2 text-white/90 hover:text-[#18A374] transition-colors">
               <Search size={20} strokeWidth={1.2} />
@@ -815,7 +818,7 @@ const Header = ({
                 </span>
               )}
             </button>
-            <button onClick={onOpenMenu} aria-label="Menu" className="lg:hidden p-2 text-white/90">
+            <button onClick={onOpenMenu} aria-label="Menu" className="p-2 text-white/90">
               <Menu size={24} strokeWidth={1.5} />
             </button>
           </div>
@@ -3084,7 +3087,8 @@ const OurStoryPage = () => {
           viewport={{ once: true }}
           className="aspect-[16/9] md:aspect-square overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 bg-gray-100"
         >
-          <img src="https://picsum.photos/seed/studio/1200/1200" alt="Studio View" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          src={banner || ''}
+          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
         </motion.div>
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
