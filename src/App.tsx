@@ -1833,7 +1833,7 @@ const ProductCard = ({
             alt={i === 0 ? product.name : `${product.name} ${i + 1}`}
             onClick={() => router.push(`/product/${product.id}`)}
             onError={(e) => {
-              e.currentTarget.src = `https://picsum.photos/seed/${product.id}-${i}/800/1000`;
+              (e.currentTarget as HTMLImageElement).src = ""; (e.currentTarget as HTMLImageElement).style.display = "none";
             }}
             loading={i === 0 ? undefined : "lazy"}
             className={`${i === 0 ? '' : 'absolute inset-0'} w-full h-full object-cover transition-opacity duration-700 ease-in-out group-hover:scale-105 ${i === imgIdx ? 'opacity-100' : 'opacity-0'}`}
