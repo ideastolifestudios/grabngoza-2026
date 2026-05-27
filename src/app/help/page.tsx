@@ -1,195 +1,245 @@
 "use client";
-import React, { useState, useMemo } from "react";
+// G&G Help Center — hub page inspired by help.bash.com/support/home
+// Uses home-page aesthetic: bg-white / bg-gray-50 sections / bg-[#06402B] hero
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import {
+  Package, RotateCcw, Truck, HelpCircle, FileText,
+  Shield, MessageCircle, Search, ChevronDown, ArrowRight,
+  Phone, Mail, Clock, Zap
+} from "lucide-react";
 
-const FAQ_DATA = [
-  { id: "q1",  category: "orders",   question: "How quickly will my order be processed?",       answer: "Orders are processed within 1–2 business days. Once dispatched you will receive a tracking confirmation via email." },
-  { id: "q2",  category: "orders",   question: "Can I modify or cancel my order after placing it?", answer: "Modifications are only possible within 60 minutes of placing the order — reach out via WhatsApp immediately." },
-  { id: "q3",  category: "orders",   question: "Will I receive an order confirmation?",          answer: "Yes — an automated confirmation email is dispatched immediately upon secure payment authorisation." },
-  { id: "q4",  category: "payments", question: "What payment methods do you accept?",            answer: "We support credit/debit cards (Visa, Mastercard), Instant EFT, and selected BNPL providers. Checkout is powered by Yoco." },
-  { id: "q5",  category: "payments", question: "How do installment payments work?",              answer: "Select your preferred BNPL option at checkout to split your total into equal interest-free monthly payments." },
-  { id: "q6",  category: "payments", question: "Is my payment information secure?",              answer: "Completely. All transactions are PCI-DSS compliant and SSL-encrypted. Your card details are never stored." },
-  { id: "q7",  category: "shipping", question: "What are the delivery timeframes?",              answer: "Standard: 2–5 business days. Express: 1–2 business days. Tracked courier nationwide." },
-  { id: "q8",  category: "shipping", question: "Do you ship nationwide?",                       answer: "Yes — we deliver to all provinces across South Africa, door-to-door via courier." },
-  { id: "q9",  category: "shipping", question: "How do I track my order?",                      answer: "Use the Track Order page with the reference in your dispatch confirmation email." },
-  { id: "q10", category: "returns",  question: "What is your return policy?",                   answer: "Items can be returned within 7 days of delivery for store credit or exchange. Must be unworn with original tags." },
-  { id: "q11", category: "returns",  question: "How do I initiate a return or exchange?",       answer: "Visit our Returns page or contact support with your Order ID and items you wish to return." },
-  { id: "q12", category: "returns",  question: "How long does a refund take?",                  answer: "5–7 business days after your return passes our quality inspection." },
-  { id: "q13", category: "support",  question: "What are your support hours?",                  answer: "Monday–Friday, 08:00–18:00 SAST. Our AI assistant is available 24/7." },
-  { id: "q14", category: "support",  question: "How quickly will I get a response?",            answer: "WhatsApp within minutes during business hours. Email within 24 hours." },
-  { id: "q15", category: "support",  question: "Do you have a physical store?",                 answer: "Grab & Go is exclusively online — fast, trackable delivery to your door." },
+const POPULAR = [
+  { q: "Where is my order? Can I track it?",
+    a: "Once dispatched you'll receive a tracking email with a live courier link. You can also use our Track Order page — enter your order reference (GNG-XXXXXXXX) for live status.",
+    href: "/track-order" },
+  { q: "What is your return policy?",
+    a: "Returns accepted within 7 days of verified delivery. Items must be unworn with original tags attached. Head to our Returns page to start the process.",
+    href: "/returns" },
+  { q: "How long does delivery take?",
+    a: "Standard: 2–5 business days nationwide. Express: 1–2 business days (major cities). Free delivery on all orders over R1,000.",
+    href: "/shipping-policy" },
+  { q: "What payment methods do you accept?",
+    a: "We accept Visa, Mastercard, Instant EFT, Apple Pay, and Google Pay. All payments are processed securely via Yoco — your card details are never stored.",
+    href: "/faq" },
+  { q: "Can I modify or cancel my order after placing it?",
+    a: "Contact us on WhatsApp (+27 69 163 0778) within 60 minutes of placing. After that, orders move to fulfilment and changes may not be possible.",
+    href: "/faq" },
+  { q: "How do I place an order on Grab & Go?",
+    a: "Browse our collections, choose your size, add to cart, then checkout securely. No account needed to order. See our step-by-step guide.",
+    href: "/how-to-order" },
 ];
 
-const CATEGORIES = [
-  { id: "all",      label: "All" },
-  { id: "orders",   label: "Orders" },
-  { id: "payments", label: "Payments" },
-  { id: "shipping", label: "Shipping" },
-  { id: "returns",  label: "Returns" },
-  { id: "support",  label: "Support" },
+const TOPICS = [
+  { icon: Package,     title: "How to Order",        desc: "Step-by-step guide to placing your first order.",           href: "/how-to-order",    count: "5 articles"  },
+  { icon: Search,      title: "Track My Order",       desc: "Get live status and courier tracking for your parcel.",     href: "/track-order",     count: "3 articles"  },
+  { icon: Truck,       title: "Shipping & Delivery",  desc: "Delivery rates, timeframes, and nationwide coverage.",      href: "/shipping-policy", count: "6 articles"  },
+  { icon: RotateCcw,   title: "Returns & Refunds",    desc: "Start a return, exchange, or claim store credit.",          href: "/returns",         count: "5 articles"  },
+  { icon: HelpCircle,  title: "FAQs",                 desc: "Quick answers to our most common questions.",               href: "/faq",             count: "15 articles" },
+  { icon: FileText,    title: "Our Story",            desc: "The vision and culture behind Grab & Go.",                  href: "/our-story",       count: "1 article"   },
+  { icon: Shield,      title: "Privacy & Legal",      desc: "Terms of service and how we protect your data.",            href: "/legal",           count: "2 articles"  },
+  { icon: MessageCircle, title: "Contact Support",    desc: "WhatsApp, email, or phone — we're always available.",       href: "#contact",         count: "Direct"      },
 ];
 
 const CHANNELS = [
-  { title: "WhatsApp", sub: "Fastest response during business hours", href: "https://wa.me/27691630778", cta: "Chat Now →" },
-  { title: "Email",    sub: "Detailed tickets, within 24 hours",       href: "mailto:support@shopgrabngo.co.za", cta: "Email Us →" },
-  { title: "Phone",    sub: "+27 69 163 0778",                         href: "tel:+27691630778", cta: "Call Now →" },
-  { title: "Hours",    sub: "Mon–Fri  08:00–18:00 SAST",               href: null, cta: "Leave a message" },
+  { icon: MessageCircle, title: "WhatsApp",       tag: "Fastest",        desc: "Instant replies during business hours (Mon–Fri 08:00–18:00).",    action: "Chat Now",  href: "https://wa.me/27691630778", ext: true  },
+  { icon: Zap,           title: "AI Chat",        tag: "24/7",           desc: "Get instant answers on orders, returns, sizing, and more.",        action: "Open Chat", href: "#chat",                     ext: false },
+  { icon: Mail,          title: "Email",          tag: "Within 24h",     desc: "Detailed queries handled within one business day.",                action: "Email Us",  href: "mailto:support@shopgrabngo.co.za", ext: true },
+  { icon: Phone,         title: "Phone",          tag: "Business Hours", desc: "+27 69 163 0778 · Mon–Fri 08:00–18:00 SAST.",                      action: "Call Now",  href: "tel:+27691630778",          ext: true  },
 ];
 
 export default function HelpCenterPage() {
-  const [search,      setSearch]      = useState("");
-  const [category,    setCategory]    = useState("all");
-  const [accordion,   setAccordion]   = useState<string | null>(null);
-  const [form,        setForm]        = useState({ name: "", email: "", subject: "Order Issue", message: "" });
-  const [formSuccess, setFormSuccess] = useState(false);
+  const [q,       setQ]       = useState("");
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
 
-  const filtered = useMemo(() =>
-    FAQ_DATA.filter(f =>
-      (category === "all" || f.category === category) &&
-      (f.question.toLowerCase().includes(search.toLowerCase()) || f.answer.toLowerCase().includes(search.toLowerCase()))
-    ), [search, category]);
+  const filteredQA = useMemo(() => {
+    if (!q.trim()) return POPULAR;
+    const s = q.toLowerCase();
+    return POPULAR.filter(p => p.q.toLowerCase().includes(s) || p.a.toLowerCase().includes(s));
+  }, [q]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormSuccess(true);
-    setForm({ name: "", email: "", subject: "Order Issue", message: "" });
-    setTimeout(() => setFormSuccess(false), 6000);
-  };
+  const filteredTopics = useMemo(() => {
+    if (!q.trim()) return TOPICS;
+    const s = q.toLowerCase();
+    return TOPICS.filter(t => t.title.toLowerCase().includes(s) || t.desc.toLowerCase().includes(s));
+  }, [q]);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen bg-white text-black">
 
-      {/* Hero */}
-      <div className="bg-[#06402B] pt-28 pb-20 text-center px-6">
-        <Link href="/" className="inline-flex items-center text-[10px] font-black uppercase tracking-widest text-[#18A374] hover:text-[#18A374]/70 mb-8 group">
-          <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span> Back to store
-        </Link>
-        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] block mb-4">Customer Support</span>
-        <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white mb-4">Help Center</h1>
-        <p className="text-sm text-white/50 max-w-md mx-auto">Fast answers, multiple support channels, and a team ready to help.</p>
-      </div>
-
-      {/* Contact Channels */}
-      <div className="max-w-6xl mx-auto w-full px-6 -mt-8 relative z-10">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {CHANNELS.map(ch => (
-            <div key={ch.title} className="bg-[#0d1410] border border-[#1a2e23] p-5 flex flex-col justify-between group hover:border-[#18A374]/40 transition-colors">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#18A374] mb-2">{ch.title}</p>
-                <p className="text-xs text-white/50">{ch.sub}</p>
-              </div>
-              {ch.href ? (
-                <a href={ch.href} target={ch.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
-                  className="text-[10px] font-black uppercase tracking-widest text-white mt-4 hover:text-[#18A374] transition-colors">
-                  {ch.cta}
-                </a>
-              ) : (
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-4">{ch.cta}</span>
-              )}
-            </div>
-          ))}
+      {/* ── Sticky sub-nav ──────────────────────────────────────────────── */}
+      <nav className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-sm">
+        <div className="max-w-6xl mx-auto px-6 h-12 flex items-center justify-between">
+          <Link href="/"
+            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#06402B] transition-colors">
+            <span>←</span> Grab & Go
+          </Link>
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#06402B]">G&G Help</span>
+          <div className="flex items-center gap-6">
+            <a href="#topics"  className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#06402B] transition-colors hidden sm:block">Browse Topics</a>
+            <a href="#contact" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#06402B] transition-colors">Contact Us</a>
+          </div>
         </div>
-      </div>
+      </nav>
 
-      {/* FAQ Section */}
-      <div className="max-w-4xl mx-auto w-full px-6 py-16">
-        <div className="mb-10">
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] block mb-3">Knowledge Base</span>
-          <h2 className="text-3xl font-black uppercase tracking-tighter text-white mb-2">Frequently Asked</h2>
+      {/* ── Hero ────────────────────────────────────────────────────────── */}
+      <div className="bg-[#06402B] px-6 pt-16 pb-20 text-center">
+        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] block mb-4">
+          Customer Support
+        </span>
+        <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white mb-8">
+          Hi, how can we help?
+        </h1>
+        {/* Search bar */}
+        <div className="max-w-2xl mx-auto relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+          <input
+            type="text"
+            placeholder="Search for answers..."
+            value={q}
+            onChange={e => { setQ(e.target.value); setOpenIdx(null); }}
+            className="w-full bg-white pl-12 pr-4 py-4 text-sm text-black placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#18A374]/30 shadow-lg"
+          />
         </div>
-
-        {/* Search */}
-        <div className="relative mb-5">
-          <input type="text" placeholder="Search questions..."
-            value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full bg-[#0d1410] border border-[#1a2e23] px-5 py-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#18A374]/40 transition-colors" />
-        </div>
-
-        {/* Category Pills */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          {CATEGORIES.map(cat => (
-            <button key={cat.id} onClick={() => setCategory(cat.id)}
-              className={`px-5 py-2 text-[10px] font-black uppercase tracking-widest border transition-all ${
-                category === cat.id
-                  ? "bg-[#18A374] text-black border-[#18A374]"
-                  : "bg-transparent text-white/50 border-[#1a2e23] hover:border-[#18A374]/40 hover:text-white"
-              }`}>
-              {cat.label}
+        {/* Quick-search pills */}
+        <div className="flex flex-wrap justify-center gap-2 mt-5">
+          {["Track Order", "Return Policy", "Free Delivery", "Payments"].map(label => (
+            <button key={label} onClick={() => { setQ(label); setOpenIdx(null); }}
+              className="px-4 py-1.5 bg-white/10 border border-white/20 text-[9px] font-black uppercase tracking-widest text-white/80 hover:bg-white/20 transition-colors">
+              {label}
             </button>
           ))}
         </div>
-
-        {/* Accordion */}
-        <div className="space-y-2">
-          {filtered.length > 0 ? filtered.map(faq => (
-            <div key={faq.id} className="border border-[#1a2e23] bg-[#0d1410]">
-              <button onClick={() => setAccordion(accordion === faq.id ? null : faq.id)}
-                className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 hover:bg-[#111c14] transition-colors">
-                <span className="text-sm font-bold text-white">{faq.question}</span>
-                <span className="text-[#18A374] flex-shrink-0 text-xl font-light">{accordion === faq.id ? "−" : "+"}</span>
-              </button>
-              {accordion === faq.id && (
-                <div className="px-6 pb-5 pt-1 border-t border-[#1a2e23] text-sm text-white/60 leading-relaxed">{faq.answer}</div>
-              )}
-            </div>
-          )) : (
-            <div className="text-center py-12 border border-dashed border-[#1a2e23]">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">No results found</p>
-            </div>
-          )}
-        </div>
       </div>
 
-      {/* Contact Form */}
-      <div className="max-w-2xl mx-auto w-full px-6 pb-20">
-        <div className="mb-8">
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] block mb-3">Get In Touch</span>
-          <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Send a Message</h2>
-        </div>
-        {formSuccess ? (
-          <div className="bg-[#0d1410] border border-[#18A374]/30 p-8 text-center">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#18A374] mb-2">Message Sent</p>
-            <p className="text-sm text-white/60">We'll get back to you within 24 business hours.</p>
+      {/* ── Popular / Search results ─────────────────────────────────────── */}
+      <section className="py-16 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8 flex items-end justify-between">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] block mb-1.5">
+                {q.trim() ? `${filteredQA.length} result${filteredQA.length !== 1 ? "s" : ""}` : "Quick Answers"}
+              </span>
+              <h2 className="text-2xl font-black uppercase tracking-tighter text-black">
+                {q.trim() ? `Results for "${q}"` : "Most Popular Questions"}
+              </h2>
+            </div>
+            {q.trim() && (
+              <button onClick={() => setQ("")}
+                className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
+                Clear ×
+              </button>
+            )}
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              {(["name", "email"] as const).map(field => (
-                <div key={field}>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-1.5">{field} *</label>
-                  <input type={field === "email" ? "email" : "text"} required
-                    value={form[field]} onChange={e => setForm({ ...form, [field]: e.target.value })}
-                    className="w-full bg-[#0d1410] border border-[#1a2e23] px-4 py-3 text-sm text-white outline-none focus:border-[#18A374]/40 transition-colors" />
+
+          {filteredQA.length > 0 ? (
+            <div className="border border-gray-100 divide-y divide-gray-100">
+              {filteredQA.map((item, i) => (
+                <div key={i}>
+                  <button onClick={() => setOpenIdx(openIdx === i ? null : i)}
+                    className="w-full text-left px-6 py-5 flex items-start justify-between gap-4 hover:bg-gray-50/60 transition-colors">
+                    <span className="text-sm font-bold text-black leading-snug">{item.q}</span>
+                    <ChevronDown size={18}
+                      className={`text-gray-300 flex-shrink-0 mt-0.5 transition-transform duration-200 ${openIdx === i ? "rotate-180 text-[#06402B]" : ""}`} />
+                  </button>
+                  {openIdx === i && (
+                    <div className="px-6 pb-5 pt-2 bg-gray-50/60 border-t border-gray-100">
+                      <p className="text-sm text-gray-600 leading-relaxed mb-3">{item.a}</p>
+                      <Link href={item.href}
+                        className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#06402B] hover:text-[#18A374] transition-colors">
+                        Read full article <ArrowRight size={10} />
+                      </Link>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-1.5">Subject *</label>
-              <select value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}
-                className="w-full bg-[#0d1410] border border-[#1a2e23] px-4 py-3 text-sm text-white outline-none focus:border-[#18A374]/40 transition-colors">
-                {["Order Issue", "Payment Problem", "Shipping & Delivery", "Return / Exchange", "Other"].map(s => <option key={s}>{s}</option>)}
-              </select>
+          ) : (
+            <div className="text-center py-12 border border-dashed border-gray-200">
+              <p className="text-sm text-gray-400 mb-3">No results found for "{q}"</p>
+              <button onClick={() => setQ("")}
+                className="text-[10px] font-black uppercase tracking-widest text-[#06402B] hover:text-[#18A374] transition-colors">
+                Clear search
+              </button>
             </div>
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-1.5">Message *</label>
-              <textarea rows={5} required value={form.message} onChange={e => setForm({ ...form, message: e.target.value })}
-                className="w-full bg-[#0d1410] border border-[#1a2e23] px-4 py-3 text-sm text-white outline-none focus:border-[#18A374]/40 transition-colors resize-none" />
-            </div>
-            <button type="submit"
-              className="w-full py-4 bg-[#18A374] text-black text-[10px] font-black uppercase tracking-widest hover:bg-[#18A374]/90 transition-colors">
-              Send Message
-            </button>
-          </form>
-        )}
-      </div>
+          )}
+        </div>
+      </section>
 
-      {/* CTA Footer */}
+      {/* ── Browse Topics ────────────────────────────────────────────────── */}
+      <section id="topics" className="py-16 px-6 bg-gray-50/40 border-t border-gray-100">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-10">
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] block mb-1.5">Help Topics</span>
+            <h2 className="text-2xl font-black uppercase tracking-tighter text-black">Browse by Topic</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {(q.trim() ? filteredTopics : TOPICS).map((topic, i) => (
+              <Link key={i} href={topic.href}
+                className="bg-white border border-gray-100 p-5 hover:border-[#06402B]/30 hover:shadow-sm transition-all group">
+                <topic.icon size={20} className="text-[#06402B] mb-3" strokeWidth={1.5} />
+                <h3 className="text-[11px] font-black uppercase tracking-tight text-black mb-1.5 group-hover:text-[#06402B] transition-colors leading-tight">
+                  {topic.title}
+                </h3>
+                <p className="text-xs text-gray-500 leading-relaxed mb-3">{topic.desc}</p>
+                <span className="text-[9px] font-black uppercase tracking-widest text-[#18A374]">
+                  {topic.count}
+                </span>
+              </Link>
+            ))}
+          </div>
+          {q.trim() && filteredTopics.length === 0 && (
+            <p className="text-center text-sm text-gray-400 py-8">No matching topics found.</p>
+          )}
+        </div>
+      </section>
+
+      {/* ── Contact Channels ─────────────────────────────────────────────── */}
+      <section id="contact" className="py-16 px-6 border-t border-gray-100">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-10">
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] block mb-1.5">Get in Touch</span>
+            <h2 className="text-2xl font-black uppercase tracking-tighter text-black">Still Need Help?</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {CHANNELS.map((ch, i) => (
+              <div key={i} className="border border-gray-100 p-6 flex flex-col justify-between hover:border-[#06402B]/20 hover:shadow-sm transition-all">
+                <div>
+                  <div className="flex items-start justify-between mb-3">
+                    <ch.icon size={18} className="text-[#06402B]" strokeWidth={1.5} />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-[#18A374] bg-[#18A374]/8 px-2 py-0.5 border border-[#18A374]/20">
+                      {ch.tag}
+                    </span>
+                  </div>
+                  <h3 className="text-[11px] font-black uppercase tracking-widest text-black mb-2">{ch.title}</h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">{ch.desc}</p>
+                </div>
+                {ch.ext ? (
+                  <a href={ch.href} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-4 text-[10px] font-black uppercase tracking-widest text-[#06402B] hover:text-[#18A374] transition-colors">
+                    {ch.action} <ArrowRight size={9} />
+                  </a>
+                ) : (
+                  <button
+                    className="inline-flex items-center gap-1.5 mt-4 text-[10px] font-black uppercase tracking-widest text-[#06402B] hover:text-[#18A374] transition-colors text-left">
+                    {ch.action} <ArrowRight size={9} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Footer CTA ────────────────────────────────────────────────────── */}
       <div className="bg-[#06402B] py-12 text-center px-6">
-        <h2 className="text-2xl font-black uppercase tracking-tighter text-white mb-6">Ready to shop?</h2>
-        <Link href="/" className="px-8 py-3 bg-[#18A374] text-black text-[10px] font-black uppercase tracking-widest hover:bg-[#18A374]/90 transition-colors inline-block">
+        <h2 className="text-2xl font-black uppercase tracking-tighter text-white mb-6">Ready to Shop?</h2>
+        <Link href="/"
+          className="px-8 py-3 bg-[#18A374] text-black text-[10px] font-black uppercase tracking-widest hover:bg-[#18A374]/90 transition-colors inline-block">
           Back to Store
         </Link>
       </div>
+
     </div>
   );
 }
