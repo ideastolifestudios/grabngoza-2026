@@ -16,7 +16,6 @@ import { formatPrice } from "./utils/format";
 
 // import SupportChat from "./components/SupportChat";
 import ChatWidget from "./components/ChatWidget";
-import ChatWidget from "./components/ChatWidget";
 // import './sentryClient';
 // import AdminDashboard from './components/admin/AdminDashboard';
 // import ReturnRequestPage from './pages/ReturnRequestPage';
@@ -1833,8 +1832,12 @@ const ProductCard = ({
         {/* Auto-cycling product images */}
         {allImages.map((img, i) => (
           <img
-            key={i}<img src={banner || ''}
-        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}/>
+            key={i}
+            src={img}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+            referrerPolicy="no-referrer"
+          />
         ))}
         {allImages.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-20">
@@ -3086,8 +3089,13 @@ const OurStoryPage = () => {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           className="aspect-[16/9] md:aspect-square overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 bg-gray-100"
-         src={banner || ''}
-        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}/>
+        >
+          <img
+            src="https://res.cloudinary.com/dggitwduo/image/upload/v1774452514/WhatsApp_Image_2026-03-25_at_17.25.44_zsxof4.jpg"
+            alt="Grab & Go"
+            className="w-full h-full object-cover"
+            referrerPolicy="no-referrer"
+          />
         </motion.div>
       </div>
     </div>
@@ -3391,7 +3399,7 @@ const BrandBanner = ({ brand, banner, description, logo }: { brand: string, bann
       className="absolute inset-0 bg-gray-50 overflow-hidden shadow-2xl skew-y-1 md:skew-y-2"
     >
       <div className="absolute inset-0 bg-black/40 z-10 group-hover:bg-black/30 transition-all duration-700" />
-      <img<img src={banner || ''}
+      <img src={banner || ''}
         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
         alt={brand}
         className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000 -skew-y-1 md:-skew-y-2"
