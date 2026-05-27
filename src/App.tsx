@@ -3086,18 +3086,9 @@ const OurStoryPage = () => {
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
           className="aspect-[16/9] md:aspect-square overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 bg-gray-100"
-        >
-          <img
-            src={banner || ''}
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-            className="w-full h-full object-cover"
-            alt=""
-          />
+         src={banner || ''}
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}/>
         </motion.div>
       </div>
     </div>
