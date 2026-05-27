@@ -16,6 +16,7 @@ import { formatPrice } from "./utils/format";
 
 // import SupportChat from "./components/SupportChat";
 import ChatWidget from "./components/ChatWidget";
+import ChatWidget from "./components/ChatWidget";
 // import './sentryClient';
 // import AdminDashboard from './components/admin/AdminDashboard';
 // import ReturnRequestPage from './pages/ReturnRequestPage';
@@ -3088,15 +3089,7 @@ const OurStoryPage = () => {
           className="aspect-[16/9] md:aspect-square overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 bg-gray-100"
         >
           src={banner || ''}
-          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-        </motion.div>
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          className="aspect-[16/9] md:aspect-square overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 bg-gray-100"
-        >
-          <img src="https://picsum.photos/seed/street/1200/1200" alt="Street View" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}/>
         </motion.div>
       </div>
     </div>
@@ -3401,7 +3394,8 @@ const BrandBanner = ({ brand, banner, description, logo }: { brand: string, bann
     >
       <div className="absolute inset-0 bg-black/40 z-10 group-hover:bg-black/30 transition-all duration-700" />
       <img
-        src={banner || `https://picsum.photos/seed/${brand}/1920/1080?grayscale`}
+        src={banner || ''}
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
         alt={brand}
         className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000 -skew-y-1 md:-skew-y-2"
         referrerPolicy="no-referrer"
