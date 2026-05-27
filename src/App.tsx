@@ -1833,8 +1833,7 @@ const ProductCard = ({
         {/* Auto-cycling product images */}
         {allImages.map((img, i) => (
           <img
-            key={i}
-            src={banner || ''}
+            key={i}<img src={banner || ''}
         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}/>
         ))}
         {allImages.length > 1 && (
@@ -3082,26 +3081,19 @@ const OurStoryPage = () => {
 
       {/* Image Grid - Keeping the spirit of the previous design but matching the new aesthetic */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 md:px-8 max-w-7xl mx-auto mt-8">
-        <motion.div 
+<motion.div
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           className="aspect-[16/9] md:aspect-square overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 bg-gray-100"
-         src={banner || ''}
-        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}/>
-        </motion.div>
-      </div>
-    </div>
-  );
-};
-
-const TrackingTimeline = ({ trackingNumber, trackingUrl }: { trackingNumber: string, trackingUrl?: string }) => {
-  const [events, setEvents] = useState<any[]>([]);
-  const [status, setStatus] = useState<string>('');
-  const [loadingEvents, setLoadingEvents] = useState(false);
-
-  useEffect(() => {
-    const fetchTracking = async () => {
+        >
+          <img
+            src={banner || ''}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            className="w-full h-full object-cover"
+            alt=""
+          />
+        </motion.div>    const fetchTracking = async () => {
       setLoadingEvents(true);
       try {
         const res = await fetch(`/api/shipping?action=track&trackingNumber=${encodeURIComponent(trackingNumber)}`);
@@ -3392,8 +3384,7 @@ const BrandBanner = ({ brand, banner, description, logo }: { brand: string, bann
       className="absolute inset-0 bg-gray-50 overflow-hidden shadow-2xl skew-y-1 md:skew-y-2"
     >
       <div className="absolute inset-0 bg-black/40 z-10 group-hover:bg-black/30 transition-all duration-700" />
-      <img
-        src={banner || ''}
+      <img<img src={banner || ''}
         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
         alt={brand}
         className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000 -skew-y-1 md:-skew-y-2"
