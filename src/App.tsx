@@ -3087,8 +3087,7 @@ const OurStoryPage = () => {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           className="aspect-[16/9] md:aspect-square overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 bg-gray-100"
-        >
-          src={banner || ''}
+         src={banner || ''}
         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}/>
         </motion.div>
       </div>
