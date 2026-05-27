@@ -1833,8 +1833,7 @@ const ProductCard = ({
         {/* Auto-cycling product images */}
         {allImages.map((img, i) => (
           <img
-            key={i}
-            src={banner || ''}
+            key={i}<img src={banner || ''}
         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}/>
         ))}
         {allImages.length > 1 && (
@@ -3392,8 +3391,7 @@ const BrandBanner = ({ brand, banner, description, logo }: { brand: string, bann
       className="absolute inset-0 bg-gray-50 overflow-hidden shadow-2xl skew-y-1 md:skew-y-2"
     >
       <div className="absolute inset-0 bg-black/40 z-10 group-hover:bg-black/30 transition-all duration-700" />
-      <img
-        src={banner || ''}
+      <img<img src={banner || ''}
         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
         alt={brand}
         className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000 -skew-y-1 md:-skew-y-2"
