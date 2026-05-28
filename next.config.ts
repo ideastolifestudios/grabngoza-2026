@@ -45,7 +45,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.yoco.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://browser.sentry-cdn.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://firebasestorage.googleapis.com https://lh3.googleusercontent.com https://www.google-analytics.com",
+              "img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://firebasestorage.googleapis.com https://lh3.googleusercontent.com https://www.google-analytics.com https://upload.wikimedia.org",
               "font-src 'self' https://fonts.gstatic.com",
               "connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://online.yoco.com https://www.google-analytics.com https://vitals.vercel-insights.com https://*.sentry.io",
               "frame-src 'self' https://js.yoco.com",
