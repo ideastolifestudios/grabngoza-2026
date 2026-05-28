@@ -1,13 +1,13 @@
 "use client";
-// G&G Help Center — hub page inspired by help.bash.com/support/home
-// Uses home-page aesthetic: bg-white / bg-gray-50 sections / bg-[#06402B] hero
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import {
   Package, RotateCcw, Truck, HelpCircle, FileText,
   Shield, MessageCircle, Search, ChevronDown, ArrowRight,
-  Phone, Mail, Clock, Zap
+  Phone, Mail, Zap
 } from "lucide-react";
+import SupportLayout from "@/components/SupportLayout";
 
 const POPULAR = [
   { q: "Where is my order? Can I track it?",
@@ -31,25 +31,25 @@ const POPULAR = [
 ];
 
 const TOPICS = [
-  { icon: Package,     title: "How to Order",        desc: "Step-by-step guide to placing your first order.",           href: "/how-to-order",    count: "5 articles"  },
-  { icon: Search,      title: "Track My Order",       desc: "Get live status and courier tracking for your parcel.",     href: "/track-order",     count: "3 articles"  },
-  { icon: Truck,       title: "Shipping & Delivery",  desc: "Delivery rates, timeframes, and nationwide coverage.",      href: "/shipping-policy", count: "6 articles"  },
-  { icon: RotateCcw,   title: "Returns & Refunds",    desc: "Start a return, exchange, or claim store credit.",          href: "/returns",         count: "5 articles"  },
-  { icon: HelpCircle,  title: "FAQs",                 desc: "Quick answers to our most common questions.",               href: "/faq",             count: "15 articles" },
-  { icon: FileText,    title: "Our Story",            desc: "The vision and culture behind Grab & Go.",                  href: "/our-story",       count: "1 article"   },
-  { icon: Shield,      title: "Privacy & Legal",      desc: "Terms of service and how we protect your data.",            href: "/legal",           count: "2 articles"  },
-  { icon: MessageCircle, title: "Contact Support",    desc: "WhatsApp, email, or phone — we're always available.",       href: "#contact",         count: "Direct"      },
+  { icon: Package,       title: "How to Order",       desc: "Step-by-step guide to placing your first order.",           href: "/how-to-order",    count: "5 articles"  },
+  { icon: Search,        title: "Track My Order",      desc: "Get live status and courier tracking for your parcel.",     href: "/track-order",     count: "3 articles"  },
+  { icon: Truck,         title: "Shipping & Delivery", desc: "Delivery rates, timeframes, and nationwide coverage.",      href: "/shipping-policy", count: "6 articles"  },
+  { icon: RotateCcw,     title: "Returns & Refunds",   desc: "Start a return, exchange, or claim store credit.",          href: "/returns",         count: "5 articles"  },
+  { icon: HelpCircle,    title: "FAQs",                desc: "Quick answers to our most common questions.",               href: "/faq",             count: "15 articles" },
+  { icon: FileText,      title: "Our Story",           desc: "The vision and culture behind Grab & Go.",                  href: "/our-story",       count: "1 article"   },
+  { icon: Shield,        title: "Privacy & Legal",     desc: "Terms of service and how we protect your data.",            href: "/legal",           count: "2 articles"  },
+  { icon: MessageCircle, title: "Contact Support",     desc: "WhatsApp, email, or phone — we're always available.",       href: "#contact",         count: "Direct"      },
 ];
 
 const CHANNELS = [
-  { icon: MessageCircle, title: "WhatsApp",       tag: "Fastest",        desc: "Instant replies during business hours (Mon–Fri 08:00–18:00).",    action: "Chat Now",  href: "https://wa.me/27691630778", ext: true  },
-  { icon: Zap,           title: "AI Chat",        tag: "24/7",           desc: "Get instant answers on orders, returns, sizing, and more.",        action: "Open Chat", href: "#chat",                     ext: false },
-  { icon: Mail,          title: "Email",          tag: "Within 24h",     desc: "Detailed queries handled within one business day.",                action: "Email Us",  href: "mailto:support@shopgrabngo.co.za", ext: true },
-  { icon: Phone,         title: "Phone",          tag: "Business Hours", desc: "+27 69 163 0778 · Mon–Fri 08:00–18:00 SAST.",                      action: "Call Now",  href: "tel:+27691630778",          ext: true  },
+  { icon: MessageCircle, title: "WhatsApp", tag: "Fastest",        desc: "Instant replies during business hours (Mon–Fri 08:00–18:00).", action: "Chat Now",  href: "https://wa.me/27691630778",        ext: true  },
+  { icon: Zap,           title: "AI Chat",  tag: "24/7",           desc: "Get instant answers on orders, returns, sizing, and more.",    action: "Open Chat", href: "#chat",                             ext: false },
+  { icon: Mail,          title: "Email",    tag: "Within 24h",     desc: "Detailed queries handled within one business day.",            action: "Email Us",  href: "mailto:support@shopgrabngo.co.za",  ext: true  },
+  { icon: Phone,         title: "Phone",    tag: "Business Hours", desc: "+27 69 163 0778 · Mon–Fri 08:00–18:00 SAST.",                  action: "Call Now",  href: "tel:+27691630778",                  ext: true  },
 ];
 
 export default function HelpCenterPage() {
-  const [q,       setQ]       = useState("");
+  const [q, setQ]           = useState("");
   const [openIdx, setOpenIdx] = useState<number | null>(null);
 
   const filteredQA = useMemo(() => {
@@ -65,32 +65,19 @@ export default function HelpCenterPage() {
   }, [q]);
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <SupportLayout backLabel="Grab & Go" backHref="/">
 
-      {/* ── Sticky sub-nav ──────────────────────────────────────────────── */}
-      <nav className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 h-12 flex items-center justify-between">
-          <Link href="/"
-            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#06402B] transition-colors">
-            <span>←</span> Grab & Go
-          </Link>
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#06402B]">G&G Help</span>
-          <div className="flex items-center gap-6">
-            <a href="#topics"  className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#06402B] transition-colors hidden sm:block">Browse Topics</a>
-            <a href="#contact" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#06402B] transition-colors">Contact Us</a>
-          </div>
-        </div>
-      </nav>
-
-      {/* ── Hero ────────────────────────────────────────────────────────── */}
+      {/* ── Hero ─────────────────────────────────────────────────────── */}
       <div className="bg-[#06402B] px-6 pt-16 pb-20 text-center">
+        <Link href="/" className="inline-block mb-8">
+          <Logo className="h-10 w-auto mx-auto" light />
+        </Link>
         <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] block mb-4">
           Customer Support
         </span>
         <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white mb-8">
           Hi, how can we help?
         </h1>
-        {/* Search bar */}
         <div className="max-w-2xl mx-auto relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
           <input
@@ -101,7 +88,6 @@ export default function HelpCenterPage() {
             className="w-full bg-white pl-12 pr-4 py-4 text-sm text-black placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#18A374]/30 shadow-lg"
           />
         </div>
-        {/* Quick-search pills */}
         <div className="flex flex-wrap justify-center gap-2 mt-5">
           {["Track Order", "Return Policy", "Free Delivery", "Payments"].map(label => (
             <button key={label} onClick={() => { setQ(label); setOpenIdx(null); }}
@@ -112,7 +98,7 @@ export default function HelpCenterPage() {
         </div>
       </div>
 
-      {/* ── Popular / Search results ─────────────────────────────────────── */}
+      {/* ── Popular / Search results ──────────────────────────────────── */}
       <section className="py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8 flex items-end justify-between">
@@ -166,7 +152,7 @@ export default function HelpCenterPage() {
         </div>
       </section>
 
-      {/* ── Browse Topics ────────────────────────────────────────────────── */}
+      {/* ── Browse Topics ─────────────────────────────────────────────── */}
       <section id="topics" className="py-16 px-6 bg-gray-50/40 border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
           <div className="mb-10">
@@ -182,9 +168,7 @@ export default function HelpCenterPage() {
                   {topic.title}
                 </h3>
                 <p className="text-xs text-gray-500 leading-relaxed mb-3">{topic.desc}</p>
-                <span className="text-[9px] font-black uppercase tracking-widest text-[#18A374]">
-                  {topic.count}
-                </span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-[#18A374]">{topic.count}</span>
               </Link>
             ))}
           </div>
@@ -194,7 +178,7 @@ export default function HelpCenterPage() {
         </div>
       </section>
 
-      {/* ── Contact Channels ─────────────────────────────────────────────── */}
+      {/* ── Contact Channels ──────────────────────────────────────────── */}
       <section id="contact" className="py-16 px-6 border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
           <div className="mb-10">
@@ -207,7 +191,7 @@ export default function HelpCenterPage() {
                 <div>
                   <div className="flex items-start justify-between mb-3">
                     <ch.icon size={18} className="text-[#06402B]" strokeWidth={1.5} />
-                    <span className="text-[8px] font-black uppercase tracking-widest text-[#18A374] bg-[#18A374]/8 px-2 py-0.5 border border-[#18A374]/20">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-[#18A374] bg-[#18A374]/10 px-2 py-0.5 border border-[#18A374]/20">
                       {ch.tag}
                     </span>
                   </div>
@@ -220,8 +204,7 @@ export default function HelpCenterPage() {
                     {ch.action} <ArrowRight size={9} />
                   </a>
                 ) : (
-                  <button
-                    className="inline-flex items-center gap-1.5 mt-4 text-[10px] font-black uppercase tracking-widest text-[#06402B] hover:text-[#18A374] transition-colors text-left">
+                  <button className="inline-flex items-center gap-1.5 mt-4 text-[10px] font-black uppercase tracking-widest text-[#06402B] hover:text-[#18A374] transition-colors text-left">
                     {ch.action} <ArrowRight size={9} />
                   </button>
                 )}
@@ -231,7 +214,7 @@ export default function HelpCenterPage() {
         </div>
       </section>
 
-      {/* ── Footer CTA ────────────────────────────────────────────────────── */}
+      {/* ── Footer CTA ────────────────────────────────────────────────── */}
       <div className="bg-[#06402B] py-12 text-center px-6">
         <h2 className="text-2xl font-black uppercase tracking-tighter text-white mb-6">Ready to Shop?</h2>
         <Link href="/"
@@ -240,6 +223,6 @@ export default function HelpCenterPage() {
         </Link>
       </div>
 
-    </div>
+    </SupportLayout>
   );
 }

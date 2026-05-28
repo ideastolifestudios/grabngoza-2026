@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import SupportLayout from "@/components/SupportLayout";
 
 const FAQS = [
   { q: "How quickly will my order be processed?",    a: "Orders placed before 14:00 SAST Mon–Fri are processed same business day. Weekend orders ship the next business day." },
@@ -21,11 +22,9 @@ const FAQS = [
 export default function FaqPage() {
   const [open, setOpen] = useState<number | null>(null);
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col">
-      <div className="bg-[#06402B] pt-28 pb-16 text-center px-6">
-        <Link href="/help" className="text-[10px] font-black uppercase tracking-widest text-[#18A374] hover:text-[#18A374]/70 inline-flex items-center gap-1.5 mb-8 group">
-          <span className="group-hover:-translate-x-0.5 transition-transform">←</span> G&G Help
-        </Link>
+    <SupportLayout>
+      {/* Hero */}
+      <div className="bg-[#06402B] pt-16 pb-16 text-center px-6">
         <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] block mb-3">Knowledge Base</span>
         <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white mb-3">FAQs</h1>
         <p className="text-sm text-white/60 max-w-md mx-auto">Quick answers to the questions we get asked most.</p>
@@ -50,6 +49,7 @@ export default function FaqPage() {
         </div>
       </div>
 
+      {/* CTA */}
       <div className="bg-[#06402B] py-12 text-center px-6">
         <h2 className="text-xl font-black uppercase tracking-tighter text-white mb-5">Still have questions?</h2>
         <div className="flex flex-wrap justify-center gap-3">
@@ -58,6 +58,6 @@ export default function FaqPage() {
             className="px-8 py-3 border border-white/30 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-colors">WhatsApp Us</a>
         </div>
       </div>
-    </div>
+    </SupportLayout>
   );
 }

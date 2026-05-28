@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import SupportLayout from "@/components/SupportLayout";
+
 export const metadata: Metadata = { title: "How to Order | Grab & Go" };
+
 const STEPS = [
   { num: "01", title: "Browse & Pick",             body: "Explore our collections — Hoodies, Tees, Bottoms, Coats & Jackets, Accessories. Click any product to view sizes, colours, and details." },
   { num: "02", title: "Select Size & Add to Cart", body: "Choose your size using our size guide, then click Add to Cart. Your cart saves automatically — no account needed to order." },
@@ -8,17 +11,17 @@ const STEPS = [
   { num: "04", title: "We Pack & Ship",            body: "Your order is processed and dispatched within 1–3 business days. You'll receive a confirmation email with live tracking details." },
   { num: "05", title: "Receive Your Gear",         body: "Your package is on its way. Track it anytime via the link in your email or our Track Order page." },
 ];
+
 export default function HowToOrderPage() {
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col">
-      <div className="bg-[#06402B] pt-28 pb-16 text-center px-6">
-        <Link href="/help" className="text-[10px] font-black uppercase tracking-widest text-[#18A374] hover:text-[#18A374]/70 inline-flex items-center gap-1.5 mb-8 group">
-          <span className="group-hover:-translate-x-0.5 transition-transform">←</span> G&G Help
-        </Link>
+    <SupportLayout>
+      {/* Hero */}
+      <div className="bg-[#06402B] pt-16 pb-16 text-center px-6">
         <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#18A374] block mb-3">Simple & Fast</span>
         <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white mb-3">How to Order</h1>
         <p className="text-sm text-white/60 max-w-md mx-auto">From browse to doorstep in a few taps.</p>
       </div>
+
       <div className="max-w-3xl mx-auto w-full px-6 py-16 flex-1">
         <div className="space-y-3">
           {STEPS.map((step, i) => (
@@ -32,6 +35,8 @@ export default function HowToOrderPage() {
           ))}
         </div>
       </div>
+
+      {/* CTA */}
       <div className="bg-[#06402B] py-12 text-center px-6">
         <h2 className="text-xl font-black uppercase tracking-tighter text-white mb-5">Ready? Let's go.</h2>
         <div className="flex flex-wrap justify-center gap-3">
@@ -39,6 +44,6 @@ export default function HowToOrderPage() {
           <Link href="/help" className="px-8 py-3 border border-white/30 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-colors">Help Center</Link>
         </div>
       </div>
-    </div>
+    </SupportLayout>
   );
 }
