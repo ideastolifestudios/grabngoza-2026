@@ -1733,7 +1733,7 @@ const ProductCard = ({
   isLoading?: boolean
 }) => {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
-  const allImages = useMemo(() => [product.image, ...(product.images || [])], [product.image, product.images]);
+  const allImages = useMemo(() => { const imgs = (product.images && product.images.length) ? product.images : product.image ? [product.image] : []; return [...new Set(imgs.filter(Boolean))]; }, [product.image, product.images]);
   const [imgIdx, setImgIdx] = useState(0);
   useEffect(() => {
     if (allImages.length <= 1) return;
