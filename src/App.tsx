@@ -1776,6 +1776,7 @@ const ProductCard = ({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       className="group cursor-pointer relative bg-white"
+      onClick={() => router.push(`/product/${product.id}`)}
     >
       <div className="aspect-[4/5] overflow-hidden bg-white mb-2 relative group-hover:shadow-lg transition-all duration-700">
         {isLoading && (
@@ -1835,7 +1836,7 @@ const ProductCard = ({
             key={i}
             src={img}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${i === imgIdx ? 'opacity-100' : 'opacity-0'}`}
             referrerPolicy="no-referrer"
           />
         ))}
