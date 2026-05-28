@@ -43,7 +43,7 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.yoco.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://browser.sentry-cdn.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.yoco.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://browser.sentry-cdn.com https://vercel.live",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://firebasestorage.googleapis.com https://lh3.googleusercontent.com https://www.google-analytics.com https://upload.wikimedia.org",
               "font-src 'self' https://fonts.gstatic.com",
