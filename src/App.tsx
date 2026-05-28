@@ -3661,8 +3661,8 @@ const PromoGrid = ({ products = [], categories = [] }: { products: Product[]; ca
             >
               <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 mb-3">
                 {currentImg ? (
-                  <img key={currentImg} src={currentImg} alt={p.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  <img src={currentImg} alt={p.name}
+                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                     loading="lazy" referrerPolicy="no-referrer" />
                 ) : (
                   <div className="w-full h-full bg-gray-200 animate-pulse" />
