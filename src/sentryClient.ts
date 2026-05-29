@@ -11,14 +11,14 @@
 
 import * as Sentry from '@sentry/react';
 
-const dsn = import.meta.env.NEXT_PUBLIC_SENTRY_DSN as string | undefined;
+const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN as string | undefined;
 
 if (dsn) {
   Sentry.init({
     dsn,
-    environment: import.meta.env.MODE,
+    environment: process.env.MODE,
     // Capture 20% of transactions in production, 100% in dev
-    tracesSampleRate: import.meta.env.PROD ? 0.2 : 1.0,
+    tracesSampleRate: process.env.PROD ? 0.2 : 1.0,
     // Replay 10% of sessions, 100% on errors
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
