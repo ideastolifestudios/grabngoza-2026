@@ -3457,7 +3457,7 @@ const Breadcrumbs = ({
       const productCats = categories.filter(c => productCatNames.includes(c.name));
 
       // Prefer sub-categories (those with parentId)
-      let targetCat = productCats.find(c => c.parentId) || productCats[0];
+      const targetCat = productCats.find(c => c.parentId) || productCats[0];
 
       if (targetCat) {
         const buildPath = (cat: Category) => {
