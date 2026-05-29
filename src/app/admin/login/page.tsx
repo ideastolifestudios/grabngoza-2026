@@ -3,6 +3,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../../firebase';
+import Link from 'next/link';
 
 function LoginForm() {
   const [email, setEmail]       = useState('');
@@ -46,11 +47,10 @@ function LoginForm() {
   return (
     <div style={{ minHeight:'100vh', background:'#0a0a0a', display:'flex',
       alignItems:'center', justifyContent:'center', padding:24 }}>
+      <div style={{ width:'100%', maxWidth:340 }}>
         <div style={{ textAlign:'center', marginBottom:32 }}>
-
           <p style={{ fontSize:9, fontWeight:700, letterSpacing:3, textTransform:'uppercase',
             color:'#18A374', marginBottom:8, fontFamily:'monospace' }}>Grab &amp; Go ZA</p>
-
           <h1 style={{ fontSize:22, fontWeight:900, color:'#fff' }}>Admin Access</h1>
           <p style={{ color:'#444', fontSize:11, marginTop:4, fontFamily:'monospace' }}>
             Authorised personnel only
@@ -58,14 +58,11 @@ function LoginForm() {
         </div>
         {sp.get('error') === 'session-expired' && (
           <div style={{ background:'#78350f18', border:'1px solid #78350f', borderRadius:6,
-
             padding:'10px 14px', color:'#fcd34d', fontSize:11, marginBottom:16, fontFamily:'monospace' }}>
             Session expired - please sign in again
-
           </div>
         )}
         {sp.get('error') === 'unauthorized' && (
-
           <div style={{ background:'#7f1d1d18', border:'1px solid #7f1d1d', borderRadius:6,
             padding:'10px 14px', color:'#fca5a5', fontSize:11, marginBottom:16, fontFamily:'monospace' }}>
             This account does not have admin access
@@ -73,13 +70,11 @@ function LoginForm() {
         )}
         <form onSubmit={onSubmit}>
           <div style={{ marginBottom:16 }}>
-
             <label style={{ display:'block', fontSize:10, fontWeight:700, letterSpacing:2,
               textTransform:'uppercase', color:'#555', marginBottom:6, fontFamily:'monospace' }}>Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)}
               required autoComplete="email" style={inp}/>
           </div>
-
           <div style={{ marginBottom:24 }}>
             <label style={{ display:'block', fontSize:10, fontWeight:700, letterSpacing:2,
               textTransform:'uppercase', color:'#555', marginBottom:6, fontFamily:'monospace' }}>Password</label>
@@ -101,7 +96,7 @@ function LoginForm() {
         </form>
         <p style={{ textAlign:'center', marginTop:20, fontSize:10, color:'#333', fontFamily:'monospace' }}>
           Not an admin?{' '}
-          <a href="/" style={{ color:'#18A374', textDecoration:'none' }}>Back to store</a>
+          <Link href="/" style={{ color:'#18A374', textDecoration:'none' }}>Back to store</Link>
         </p>
       </div>
     </div>
