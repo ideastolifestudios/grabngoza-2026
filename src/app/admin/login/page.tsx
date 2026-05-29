@@ -60,7 +60,7 @@ function LoginForm() {
           <div style={{ background:'#78350f18', border:'1px solid #78350f', borderRadius:6,
 
             padding:'10px 14px', color:'#fcd34d', fontSize:11, marginBottom:16, fontFamily:'monospace' }}>
-            Session expired — please sign in again
+            Session expired - please sign in again
 
           </div>
         )}
@@ -97,7 +97,7 @@ function LoginForm() {
             borderRadius:6, padding:12, color:'#fff', fontSize:11, fontWeight:800,
             letterSpacing:2, textTransform:'uppercase', cursor: loading ? 'not-allowed' : 'pointer',
             fontFamily:'monospace'
-          }}>{loading ? 'Signing in…' : 'Sign In'}</button>
+          }}>{loading ? 'Signing in...' : 'Sign In'}</button>
         </form>
         <p style={{ textAlign:'center', marginTop:20, fontSize:10, color:'#333', fontFamily:'monospace' }}>
           Not an admin?{' '}
