@@ -1,6 +1,6 @@
 // src/services/automation/search-monitoring.ts
 import { GoogleSearchConsoleService } from "../google/business/search-console";
-import { db } from "@prisma/client";
+
 
 export class SearchConsoleMonitoring {
   private searchConsole = new GoogleSearchConsoleService();
