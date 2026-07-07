@@ -1,12 +1,19 @@
 {
   "name": "grabngoza-2026",
   "version": "1.0.0",
+  "description": "Premium fast clothing - Commerce OS",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint src --fix"
+    "lint": "eslint src --fix",
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:integrations": "ts-node scripts/test-integrations.ts",
+    "google:sync-products": "ts-node scripts/sync-products.ts",
+    "google:monitor-search": "ts-node scripts/monitor-search.ts",
+    "google:setup-team": "ts-node scripts/setup-team.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.21.0",
@@ -26,6 +33,7 @@
     "motion": "^12.40.0",
     "multer": "^2.1.1",
     "next": "^16.2.6",
+    "node-cron": "^3.0.3",
     "node-fetch": "^3.3.2",
     "nodemailer": "^8.0.7",
     "react": "^19.0.0",
@@ -36,6 +44,7 @@
   "devDependencies": {
     "@types/multer": "^2.1.0",
     "@types/node": "^20",
+    "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^8.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -45,6 +54,10 @@
     "eslint-config-next": "15.3.2",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=24.0.0"
   }
 }
