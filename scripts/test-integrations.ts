@@ -205,7 +205,7 @@ async function testSearchAnalytics() {
     endDateStr
   );
 
-  if (metricsResult.success) {
+  if (metricsResult.success && metricsResult.metrics) {
     console.log(`   Total Clicks: ${metricsResult.metrics.totalClicks}`);
     console.log(`   Total Impressions: ${metricsResult.metrics.totalImpressions}`);
     console.log(`   Average CTR: ${(metricsResult.metrics.averageCTR * 100).toFixed(2)}%`);
