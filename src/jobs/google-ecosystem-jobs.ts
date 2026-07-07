@@ -32,7 +32,7 @@ export function setupGoogleEcosystemJobs() {
     console.log("🔍 Running indexing check job...");
     try {
       // Get product URLs
-      const productUrls = []; // Implementation: fetch from Firebase
+      const productUrls: string[] = []; // Implementation: fetch from Firebase
       await searchMonitoring.checkIndexingStatus(productUrls);
     } catch (error) {
       console.error("Indexing check job failed:", error);
