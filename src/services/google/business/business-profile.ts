@@ -1,8 +1,9 @@
 // src/services/google/business/business-profile.ts
 import { google } from "googleapis";
+import { GoogleAuthService } from "../auth";
 
 export class GoogleBusinessProfileService {
-  private businessprofiles = google.businessprofiles({ version: "v1" });
+  private businessprofiles = google.mybusinessbusinessinformation({ version: "v1" });
   private profileId = process.env.GOOGLE_BUSINESS_PROFILE_ID || "";
 
   async getBusinessInfo(accountId: string, locationId: string) {
