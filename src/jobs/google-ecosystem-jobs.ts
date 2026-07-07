@@ -11,7 +11,7 @@ export function setupGoogleEcosystemJobs() {
   cron.schedule("*/30 * * * *", async () => {
     console.log("🔄 Running product sync job...");
     try {
-      await productSync.bulkSyncProducts();
+      await productSync.bulkSyncProducts([]);
     } catch (error) {
       console.error("Product sync job failed:", error);
     }
