@@ -22,7 +22,7 @@ export class SearchConsoleMonitoring {
       );
 
       console.log("Top Search Queries:");
-      topQueries.forEach((q: any, i: number) => {
+      topQueries.queries.forEach((q: any, i: number) => {
         console.log(
           `${i + 1}. "${q.query}" - ${q.clicks} clicks, ${q.impressions} impressions, ${(q.ctr * 100).toFixed(2)}% CTR`
         );
