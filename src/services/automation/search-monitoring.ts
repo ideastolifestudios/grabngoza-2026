@@ -51,8 +51,8 @@ export class SearchConsoleMonitoring {
 
       return {
         status: "monitored",
-        queries: topQueries.length,
-        pages: topPages.length,
+        queries: topQueries.queries.length,
+        pages: topPages.pages.length,
       };
     } catch (error) {
       console.error("✗ Search monitoring failed:", error);
