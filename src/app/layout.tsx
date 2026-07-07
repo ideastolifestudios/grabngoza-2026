@@ -9,7 +9,7 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
-export const 
+export const metadata = {
   verification: { google: "m7b6tDQ--Klb4QnpvJSRzpOUWzFDxQJVWuwZXJcigEs" },
   title: {
     default: "Grab & Go | Premium Streetwear — SA",
