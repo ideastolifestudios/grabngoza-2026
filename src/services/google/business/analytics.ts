@@ -1,5 +1,6 @@
 // src/services/google/business/analytics.ts
 import { google } from "googleapis";
+import { GoogleAuthService } from '../auth/google-auth.service'; // (Your actual path will vary)
 
 export class GoogleAnalyticsService {
   private analyticsadmin = google.analyticsadmin({ version: "v1alpha" });
