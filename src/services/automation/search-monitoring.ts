@@ -36,7 +36,7 @@ export class SearchConsoleMonitoring {
       );
 
       console.log("\nTop Pages:");
-      topPages.forEach((p: any, i: number) => {
+      topPages.pages.forEach((p: any, i: number) => {
         console.log(
           `${i + 1}. ${p.page} - ${p.clicks} clicks, ${p.impressions} impressions`
         );
