@@ -9,7 +9,7 @@ export class GoogleBusinessProfileService {
   async getBusinessInfo(accountId: string, locationId: string) {
     const auth = await this.getAuth();
 
-    const result = await this.businessprofiles.accounts.locations.get({
+    const result = await (this.businessprofiles.accounts.locations as any).get({
       auth,
       name: `accounts/${accountId}/locations/${locationId}`,
     } as any);
