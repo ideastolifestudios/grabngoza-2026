@@ -34,7 +34,7 @@ export class GoogleBusinessProfileService {
   ) {
     const auth = await this.getAuth();
 
-    const result = await this.businessprofiles.accounts.locations.patch({
+    const result = await (this.businessprofiles.accounts.locations as any).patch({
       auth,
       name: `accounts/${accountId}/locations/${locationId}`,
       updateMask: Object.keys(updates).join(","),
@@ -57,7 +57,7 @@ export class GoogleBusinessProfileService {
   ) {
     const auth = await this.getAuth();
 
-    const result = await this.businessprofiles.accounts.locations.updates.create({
+    const result = await (this.businessprofiles.accounts.locations as any).updates.create({
       auth,
       parent: `accounts/${accountId}/locations/${locationId}`,
       requestBody: {
@@ -85,7 +85,7 @@ export class GoogleBusinessProfileService {
   async getReviews(accountId: string, locationId: string, pageSize: number = 10) {
     const auth = await this.getAuth();
 
-    const result = await this.businessprofiles.accounts.locations.reviews.list({
+    const result = await (this.businessprofiles.accounts.locations as any).reviews.list({
       auth,
       parent: `accounts/${accountId}/locations/${locationId}`,
       pageSize,
