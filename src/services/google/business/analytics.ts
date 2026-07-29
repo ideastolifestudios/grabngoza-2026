@@ -1,6 +1,6 @@
 // src/services/google/business/analytics.ts
 import { google } from "googleapis";
-import { GoogleAuthService } from "../auth";
+import { GoogleAuthService } from '../auth.js';
 
 
 export class GoogleAnalyticsService {

@@ -4,13 +4,13 @@ import * as dotenv from "dotenv";
 import path from "path";
 
 // Load environment variables
-dotenv.config({ path: path.resolve(__dirname, "../.env.local") });
+dotenv.config({ path: path.resolve(import.meta.dirname, "../.env.local") });
 
-import { GoogleAuthService } from "../src/services/google/auth";
-import { GoogleMerchantCenterService } from "../src/services/google/business/merchant-center";
-import { GoogleSearchConsoleService } from "../src/services/google/business/search-console";
-import { GoogleWorkspaceEmailService } from "../src/services/google/workspace/email";
-import { ProductSyncAutomation } from "../src/services/automation/product-sync";
+import { GoogleAuthService } from '../src/services/google/auth.js';
+import { GoogleMerchantCenterService } from '../src/services/google/business/merchant-center.js';
+import { GoogleSearchConsoleService } from '../src/services/google/business/search-console.js';
+import { GoogleWorkspaceEmailService } from '../src/services/google/workspace/email.js';
+import { ProductSyncAutomation } from '../src/services/automation/product-sync.js';
 
 // ============================================================================
 // TEST 1: Verify Credentials & Authentication

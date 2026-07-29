@@ -10,7 +10,7 @@
     "lint": "eslint src --fix",
     "type-check": "tsc --noEmit",
     "test": "jest",
-    "test:integrations": "ts-node scripts/test-integrations.ts",
+    "test:integrations": "tsx scripts/test-integrations.ts",
     "google:sync-products": "ts-node scripts/sync-products.ts",
     "google:monitor-search": "ts-node scripts/monitor-search.ts",
     "google:setup-team": "ts-node scripts/setup-team.ts"
@@ -27,7 +27,7 @@
     "firebase": "^10.12.0",
     "firebase-admin": "^10.3.0",
     "framer-motion": "^11.11.17",
-    "google-auth-library": "^10.9.0",
+    "google-auth-library": "^10.9.1",
     "googleapis": "^173.0.0",
     "lucide-react": "^0.400.0",
     "motion": "^12.40.0",
@@ -55,9 +55,11 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "tsx": "^4.23.1",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=24.0.0"
-  }
+  },
+  "type": "module"
 }

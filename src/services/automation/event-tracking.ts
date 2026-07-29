@@ -1,5 +1,5 @@
 // src/services/automation/event-tracking.ts
-import { GoogleAnalyticsService } from "../google/business/analytics";
+import { GoogleAnalyticsService } from '../google/business/analytics.js';
 
 export class EventTrackingAutomation {
   private analytics = new GoogleAnalyticsService();

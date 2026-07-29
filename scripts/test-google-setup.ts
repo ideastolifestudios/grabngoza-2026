@@ -1,6 +1,6 @@
 // scripts/test-google-setup.ts
-import { GoogleAuthService } from "../src/services/google/auth";
-import { GoogleMerchantCenterService } from "../src/services/google/business/merchant-center";
+import { GoogleAuthService } from '../src/services/google/auth.js';
+import { GoogleMerchantCenterService } from '../src/services/google/business/merchant-center.js';
 
 async function testSetup() {
   console.log("Testing Google Ecosystem Setup...\n");

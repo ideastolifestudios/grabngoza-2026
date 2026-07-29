@@ -1,7 +1,7 @@
 // src/jobs/google-ecosystem-jobs.ts
 import cron from "node-cron";
-import { ProductSyncAutomation } from "../services/automation/product-sync";
-import { SearchConsoleMonitoring } from "../services/automation/search-monitoring";
+import { ProductSyncAutomation } from '../services/automation/product-sync.js';
+import { SearchConsoleMonitoring } from '../services/automation/search-monitoring.js';
 
 export function setupGoogleEcosystemJobs() {
   const productSync = new ProductSyncAutomation();

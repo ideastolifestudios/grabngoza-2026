@@ -1,5 +1,5 @@
 import { google } from "googleapis";
-import { GoogleAuthService } from "../auth";
+import { GoogleAuthService } from '../auth.js';
 
 export class GoogleMerchantCenterService {
   private content = google.content({ version: "v2.1" });

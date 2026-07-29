@@ -1,5 +1,5 @@
 import { google } from "googleapis";
-import { GoogleAuthService } from "../auth";
+import { GoogleAuthService } from '../auth.js';
 
 export class GoogleSearchConsoleService {
   private searchconsole = google.searchconsole({ version: "v1" });

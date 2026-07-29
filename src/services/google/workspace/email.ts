@@ -1,5 +1,5 @@
 import { google } from "googleapis";
-import { GoogleAuthService } from "../auth";
+import { GoogleAuthService } from '../auth.js';
 
 export class GoogleWorkspaceEmailService {
   private admin = google.admin({ version: "directory_v1" });

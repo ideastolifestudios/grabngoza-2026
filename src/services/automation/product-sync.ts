@@ -1,4 +1,4 @@
-import { GoogleMerchantCenterService } from "../google/business/merchant-center";
+import { GoogleMerchantCenterService } from '../google/business/merchant-center.js';
 
 export interface Product {
   id: string;
