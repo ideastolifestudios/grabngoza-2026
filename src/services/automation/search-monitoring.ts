@@ -1,5 +1,5 @@
 // src/services/automation/search-monitoring.ts
-import { GoogleSearchConsoleService } from '../google/business/search-console.js';
+import { GoogleSearchConsoleService } from '../google/business/search-console';
 
 
 export class SearchConsoleMonitoring {

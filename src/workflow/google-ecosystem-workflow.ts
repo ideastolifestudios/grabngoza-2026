@@ -1,6 +1,6 @@
 import cron from "node-cron";
-import { ProductSyncAutomation } from '../services/automation/product-sync.js';
-import { GoogleSearchConsoleService } from '../services/google/business/search-console.js';
+import { ProductSyncAutomation } from '../services/automation/product-sync';
+import { GoogleSearchConsoleService } from '../services/google/business/search-console';
 
 export class GoogleEcosystemWorkflow {
   private productSync = new ProductSyncAutomation();

@@ -9,7 +9,7 @@ import {
   doc,
   Timestamp,
 } from "firebase/firestore";
-import { db } from '../firebase.js';
+import { db } from '../firebase';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

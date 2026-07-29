@@ -1,4 +1,4 @@
-import { Product, Order } from '../types.js';
+import { Product, Order } from '../types';
 
 export const emailService = {
   sendEmail: async (to: string, subject: string, html: string, text: string) => {

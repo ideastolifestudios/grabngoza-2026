@@ -4,7 +4,7 @@
  * Failures never crash the order flow.
  */
 
-import { log } from './logger.js';
+import { log } from './logger';
 
 async function zohoSafe<T>(label: string, fn: () => Promise<T>): Promise<T | null> {
   try {

@@ -12,8 +12,8 @@ import {
   getDoc,
   getDocFromServer
 } from 'firebase/firestore';
-import { db, auth } from '../firebase.js';
-import { Product, Order, CartItem, User, Category, Brand } from '../types.js';
+import { db, auth } from '../firebase';
+import { Product, Order, CartItem, User, Category, Brand } from '../types';
 
 export const productService = {
   getProducts: async (): Promise<Product[]> => {

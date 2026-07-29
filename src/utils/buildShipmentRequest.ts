@@ -4,7 +4,7 @@
 // actual shipment in ShipLogic via /api/shipping/create-shipment.
 //
 // Usage:
-//   import { createShipment } from '../utils/buildShipmentRequest.js';
+//   import { createShipment } from '../utils/buildShipmentRequest';
 //   const result = await createShipment({ order, selectedShipping });
 // ─────────────────────────────────────────────────────────────────────────────
 

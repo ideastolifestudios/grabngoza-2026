@@ -1,6 +1,6 @@
 // src/services/google/business/business-profile.ts
 import { google } from "googleapis";
-import { GoogleAuthService } from '../auth.js';
+import { GoogleAuthService } from '../auth';
 
 export class GoogleBusinessProfileService {
   private businessprofiles = google.mybusinessbusinessinformation({ version: "v1" });

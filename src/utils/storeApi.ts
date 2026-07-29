@@ -5,7 +5,7 @@
  * Import and use in any React component.
  *
  * Usage:
- *   import { storeApi } from '../utils/storeApi.js';
+ *   import { storeApi } from '../utils/storeApi';
  *   const { shipping } = await storeApi.shipping.calculate('Sandton', 'Gauteng', 850);
  *   const { order, zoho, crm } = await storeApi.orders.create({ ... });
  */

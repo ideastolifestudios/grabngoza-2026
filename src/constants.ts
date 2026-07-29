@@ -1,4 +1,4 @@
-import { Product, Testimonial, Partner } from './types.js';
+import { Product, Testimonial, Partner } from './types';
 
 export const PRODUCTS: Product[] = [];
 
