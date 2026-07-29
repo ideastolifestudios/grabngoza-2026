@@ -39,3 +39,4 @@ service-account.json
 .env.local
 service-account.json
 grabngoza-business-service.json
+workspace-key.json
