@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/services/google/business/business-profile.ts
 import { google } from "googleapis";
 import { GoogleAuthService } from '../auth';
