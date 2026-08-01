@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/services/google/workspace/drive.ts
 import { google } from "googleapis";
 

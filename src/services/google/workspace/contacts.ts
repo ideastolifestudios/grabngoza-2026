@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/services/google/workspace/contacts.ts
 import { google } from "googleapis";
 

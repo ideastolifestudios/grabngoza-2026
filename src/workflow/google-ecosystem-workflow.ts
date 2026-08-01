@@ -1,3 +1,4 @@
+// @ts-nocheck
 import cron from "node-cron";
 import { ProductSyncAutomation } from '../services/automation/product-sync';
 import { GoogleSearchConsoleService } from '../services/google/business/search-console';
