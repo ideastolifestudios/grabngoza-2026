@@ -1,10 +1,32 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase/admin';
+import * as admin from 'firebase-admin';
+
+// Force standard Node.js runtime and max Vercel timeout (5 minutes)
+export const runtime = 'nodejs';
+export const maxDuration = 300;
+
+function getDb() {
+  if (!admin.apps.length) {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY
+      ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+      : undefined;
+
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey,
+      }),
+    });
+  }
+  return admin.firestore();
+}
 
 export async function GET() {
   console.log('[Commerce OS Migration] Scanning Firestore products collection...');
 
   try {
+    const db = getDb();
     const snapshot = await db.collection('products').get();
 
     if (snapshot.empty) {
