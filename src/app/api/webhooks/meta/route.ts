@@ -24,7 +24,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Verify incoming object type
     if (body.object === 'product_catalog') {
       const entries = body.entry || [];
 
@@ -34,29 +33,15 @@ export async function POST(req: NextRequest) {
 
         for (const change of changes) {
           const { field, value } = change;
-          const retailerId = value?.retailer_id || value?.product_item_id || value?.id;
-
-          console.log(`[Meta Webhook] Catalog: ${catalogId} | Field: ${field} | Item: ${retailerId}`);
+          console.log(`[Meta Webhook] Catalog: ${catalogId} | Field: ${field}`);
 
           switch (field) {
-            case 'availability':
-              // Handle stock status updates (in stock / out of stock)
-              console.log(`[Meta Stock Update] Item ${retailerId} status: ${value?.availability}`);
+            case 'items_batch':
+              console.log('[Meta Items Batch Update]:', JSON.stringify(value, null, 2));
               break;
 
-            case 'price':
-              // Handle price changes updated via Meta Commerce Manager
-              console.log(`[Meta Price Update] Item ${retailerId} price: ${value?.price} ${value?.currency}`);
-              break;
-
-            case 'inventory_level':
-              // Handle real-time quantity level changes
-              console.log(`[Meta Inventory Update] Item ${retailerId} stock count: ${value?.inventory_level}`);
-              break;
-
-            case 'product_item':
-              // Handle item deletion or structural modifications
-              console.log(`[Meta Product Change] Action: ${value?.action} on Item: ${retailerId}`);
+            case 'product_feed':
+              console.log('[Meta Product Feed Status]:', JSON.stringify(value, null, 2));
               break;
 
             default:
@@ -67,11 +52,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Always respond with 200 within 20 seconds to prevent Meta retries
     return NextResponse.json({ status: 'EVENT_RECEIVED' }, { status: 200 });
   } catch (error: any) {
     console.error('[Meta Webhook POST Error]:', error);
-    // Return 200 to prevent Meta retry loop overhead on corrupt payloads
     return NextResponse.json({ status: 'ERROR_HANDLED', error: error.message }, { status: 200 });
   }
 }
