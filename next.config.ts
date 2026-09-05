@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   // ── Redirect old slugs to new pages ───────────────────────
   async redirects() {
     return [
-      { source: "/story",           destination: "/our-story",       permanent: true },
+      { source: "/story",           destination: "/our-story",         permanent: true },
       { source: "/refunds",         destination: "/returns",         permanent: true },
       { source: "/helpdesk",        destination: "/help",            permanent: true },
       { source: "/shipping",        destination: "/shipping-policy", permanent: true },
@@ -47,8 +47,8 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://firebasestorage.googleapis.com https://lh3.googleusercontent.com https://www.google-analytics.com https://upload.wikimedia.org",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://online.yoco.com https://www.google-analytics.com https://vitals.vercel-insights.com https://*.sentry.io",
-              "frame-src 'self' https://js.yoco.com",
+              "connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://online.yoco.com https://www.google-analytics.com https://vitals.vercel-insights.com https://*.sentry.io",
+              "frame-src 'self' https://js.yoco.com https://vercel.live",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -67,5 +67,4 @@ export default withSentryConfig(nextConfig, {
   silent: !process.env.CI,
   widenClientFileUpload: true,
   tunnelRoute: "/monitoring",
-  
 });
