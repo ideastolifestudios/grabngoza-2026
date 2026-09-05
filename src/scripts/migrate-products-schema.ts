@@ -1,4 +1,4 @@
-import { db } from '../lib/firebase/admin.ts';
+import { db } from '../lib/firebase/admin';
 
 async function migrateProductsToOSSchema() {
   console.log('[Commerce OS Migration] Scanning Firestore products collection...');
