@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
   },
-  // ── Redirect old slugs to new pages ───────────────────────
   async redirects() {
     return [
       { source: "/story",           destination: "/our-story",         permanent: true },
@@ -46,8 +45,8 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.yoco.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://browser.sentry-cdn.com https://vercel.live",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://firebasestorage.googleapis.com https://lh3.googleusercontent.com https://www.google-analytics.com https://upload.wikimedia.org",
-              "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://online.yoco.com https://www.google-analytics.com https://vitals.vercel-insights.com https://*.sentry.io",
+              "font-src 'self' https://fonts.gstatic.com https://vercel.live",
+              "connect-src 'self' https://*.firebaseio.com https://*.firebaseapp.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://online.yoco.com https://www.google-analytics.com https://vitals.vercel-insights.com https://*.sentry.io",
               "frame-src 'self' https://js.yoco.com https://vercel.live",
               "object-src 'none'",
               "base-uri 'self'",
