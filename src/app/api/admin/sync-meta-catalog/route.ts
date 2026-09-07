@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase-admin"; // Adjust to your admin SDK import
+import { adminDb } from "@/lib/firebase-admin";
 
 function verifyAdminAuth(req: Request): boolean {
   const authHeader = req.headers.get("authorization");
@@ -25,12 +25,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Fetch authoritative products from Firestore
-    const snapshot = await db.collection("products").get();
+    // Fetch authoritative products from Firestore using adminDb
+    const snapshot = await adminDb.collection("products").get();
     const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     // TODO: Insert your Meta Graph API batch sync logic here
-    // e.g., pushing products to Facebook/Instagram Commerce Catalog
 
     return NextResponse.json({ 
       success: true, 
@@ -43,7 +42,6 @@ export async function POST(req: Request) {
   }
 }
 
-// Allow GET for Vercel Cron jobs if configured, protected by the same check
 export async function GET(req: Request) {
   return POST(req);
 }
