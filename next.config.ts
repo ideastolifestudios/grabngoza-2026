@@ -46,7 +46,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://firebasestorage.googleapis.com https://lh3.googleusercontent.com https://www.google-analytics.com https://upload.wikimedia.org",
               "font-src 'self' https://fonts.gstatic.com https://vercel.live",
-              "connect-src 'self' https://*.firebaseio.com https://*.firebaseapp.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://online.yoco.com https://www.google-analytics.com https://vitals.vercel-insights.com https://*.sentry.io",
+              "connect-src 'self' https://*.firebaseio.com https://*.firebaseapp.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://online.yoco.com https://www.google-analytics.com https://vitals.vercel-insights.com https://*.sentry.io https://api.cloudinary.com https://res.cloudinary.com",
               "frame-src 'self' https://js.yoco.com https://vercel.live https://accounts.google.com https://*.firebaseapp.com",
               "object-src 'none'",
               "base-uri 'self'",
