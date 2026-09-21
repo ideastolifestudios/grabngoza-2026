@@ -1096,6 +1096,15 @@ const Hero = () => {
       img: "https://res.cloudinary.com/dggitwduo/image/upload/f_auto,q_auto,w_1600/v1774451791/grab-go-za/ccvw1hia86fbxskoqvjc.png"
     },
   ];
+
+  // Preload adjacent hero slides
+  useEffect(() => {
+    heroSlides.slice(1).forEach(s => {
+      const img = new Image();
+      img.src = s.img;
+    });
+  }, []);
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const slide = heroSlides[currentSlide];
 
@@ -1721,7 +1730,8 @@ const ProductCard = ({
   searchQuery = '',
   isWishlisted,
   onToggleWishlist,
-  isLoading = false
+  isLoading = false,
+  priority = false
 }: {
   product: Product,
   onAddToCart: (p: Product, variants?: Record<string, string>) => void,
@@ -1731,12 +1741,23 @@ const ProductCard = ({
   isWishlisted: boolean,
   onToggleWishlist: (productId: string) => void,
   key?: string,
-  isLoading?: boolean
+  isLoading?: boolean,
+  priority?: boolean
 }) => {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const allImages = useMemo(() => { const imgs = (product.images && product.images.length) ? product.images : product.image ? [product.image] : []; return [...new Set(imgs.filter(Boolean))]; }, [product.image, product.images]);
   const [imgIdx, setImgIdx] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+
+  // Preload secondary images on card hover
+  useEffect(() => {
+    if (isHovered && allImages.length > 1) {
+      allImages.slice(1).forEach(img => {
+        const i = new Image();
+        i.src = optimizeCloudinaryUrl(img, 600);
+      });
+    }
+  }, [isHovered, allImages]);
 
   useEffect(() => {
     if (!isHovered || allImages.length <= 1) {
@@ -1786,7 +1807,7 @@ const ProductCard = ({
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => router.push(`/product/${product.id}`)}
     >
-      <div className="aspect-[4/5] overflow-hidden bg-white mb-2 relative group-hover:shadow-lg transition-all duration-700">
+      <div className="aspect-[4/5] overflow-hidden bg-gray-100 mb-2 relative group-hover:shadow-lg transition-all duration-700">
         {isLoading && (
           <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-40 flex items-center justify-center">
             <Loader2 className="animate-spin text-black" size={24} />
@@ -1846,7 +1867,8 @@ const ProductCard = ({
             alt=""
             width="600"
             height="750"
-            loading={i === 0 ? "eager" : "lazy"}
+            loading={priority || i === 0 ? "eager" : "lazy"}
+            fetchPriority={priority && i === 0 ? "high" : "auto"}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${i === imgIdx ? 'opacity-100' : 'opacity-0'}`}
             referrerPolicy="no-referrer"
           />
@@ -3661,7 +3683,8 @@ const PromoGrid = ({ products = [], categories = [] }: { products: Product[]; ca
             >
               <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 mb-3">
                 {currentImg ? (
-                  <img src={currentImg} alt={p.name}
+                  <img src={optimizeCloudinaryUrl(currentImg, 600)} alt={p.name}
+                    width="600" height="800"
                     className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                     loading="lazy" referrerPolicy="no-referrer" />
                 ) : (
@@ -4028,6 +4051,7 @@ const HomePage = ({
                             isWishlisted={wishlist.includes(product.id)}
                             onToggleWishlist={toggleWishlist}
                             isLoading={isCartLoading}
+                            priority={idx < 10}
                           />
                         ))}
     </div>
@@ -4386,6 +4410,7 @@ const CategoryPage = ({
                 isWishlisted={wishlist.includes(product.id)}
                 onToggleWishlist={toggleWishlist}
                 isLoading={isCartLoading}
+                priority={idx < 10}
               />
             ))}
     </div>
