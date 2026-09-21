@@ -13,6 +13,7 @@ const CategoryManagementDrawer = dynamic(() => import("./components/CategoryMana
 const BrandManagementDrawer = dynamic(() => import("./components/BrandManagementDrawer"), { ssr: false });
 import Logo from "./components/Logo";
 import { formatPrice } from "./utils/format";
+import { optimizeCloudinaryUrl } from "./utils/image";
 
 // import SupportChat from "./components/SupportChat";
 import ChatWidget from "./components/ChatWidget";
@@ -1082,19 +1083,19 @@ const Hero = () => {
       tagline: "New — 2026", 
       title: "Shop the Next Big Thing", 
       sub: "Premium streetwear, fresh drops & exclusive finds — curated for you.",
-      img: "https://res.cloudinary.com/dggitwduo/image/upload/v1774452514/WhatsApp_Image_2026-03-25_at_17.25.44_zsxof4.jpg" 
+      img: "https://res.cloudinary.com/dggitwduo/image/upload/f_auto,q_auto,w_1600/v1774452514/WhatsApp_Image_2026-03-25_at_17.25.44_zsxof4.jpg"
     },
     { 
       tagline: "Just Dropped", 
       title: "Fresh Kicks", 
       sub: "Latest sneakers from the brands you love",
-      img: "https://res.cloudinary.com/dggitwduo/image/upload/v1779107822/grab-go-za/mumxdlfw7ijmrc0plyfh.jpg"
+      img: "https://res.cloudinary.com/dggitwduo/image/upload/f_auto,q_auto,w_1600/v1779107822/grab-go-za/mumxdlfw7ijmrc0plyfh.jpg"
     },
     { 
       tagline: "Limited Edition", 
       title: "Stand Out", 
       sub: "Exclusive drops you won't find anywhere else",
-      img: "https://res.cloudinary.com/dggitwduo/image/upload/v1774451791/grab-go-za/ccvw1hia86fbxskoqvjc.png"
+      img: "https://res.cloudinary.com/dggitwduo/image/upload/f_auto,q_auto,w_1600/v1774451791/grab-go-za/ccvw1hia86fbxskoqvjc.png"
     },
   ];
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -1116,6 +1117,8 @@ const Hero = () => {
             <img
               src={slide.img}
               alt={slide.title}
+              fetchPriority={currentSlide === 0 ? "high" : "auto"}
+              loading={currentSlide === 0 ? "eager" : "lazy"}
               className={`w-full h-full object-cover transition-opacity duration-1000 ${heroImgLoaded ? 'opacity-70' : 'opacity-0'}`}
               onLoad={() => setHeroImgLoaded(true)}
               referrerPolicy="no-referrer"
@@ -1735,11 +1738,16 @@ const ProductCard = ({
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const allImages = useMemo(() => { const imgs = (product.images && product.images.length) ? product.images : product.image ? [product.image] : []; return [...new Set(imgs.filter(Boolean))]; }, [product.image, product.images]);
   const [imgIdx, setImgIdx] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+
   useEffect(() => {
-    if (allImages.length <= 1) return;
-    const interval = setInterval(() => setImgIdx(prev => (prev + 1) % allImages.length), 3000);
+    if (!isHovered || allImages.length <= 1) {
+      setImgIdx(0);
+      return;
+    }
+    const interval = setInterval(() => setImgIdx(prev => (prev + 1) % allImages.length), 2000);
     return () => clearInterval(interval);
-  }, [allImages.length]);
+  }, [isHovered, allImages.length]);
   const router = useRouter();
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
 
@@ -1776,6 +1784,8 @@ const ProductCard = ({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       className="group cursor-pointer relative bg-white"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onClick={() => router.push(`/product/${product.id}`)}
     >
       <div className="aspect-[4/5] overflow-hidden bg-white mb-2 relative group-hover:shadow-lg transition-all duration-700">
@@ -1834,7 +1844,7 @@ const ProductCard = ({
         {allImages.map((img, i) => (
           <img
             key={i}
-            src={img}
+            src={optimizeCloudinaryUrl(img, 600)}
             alt=""
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${i === imgIdx ? 'opacity-100' : 'opacity-0'}`}
             referrerPolicy="no-referrer"
@@ -3596,19 +3606,7 @@ const PromoGrid = ({ products = [], categories = [] }: { products: Product[]; ca
       .slice(0, 14);
   }, [products]);
 
-  // Cycle images within each card (staggered intervals)
-  React.useEffect(() => {
-    const timers: ReturnType<typeof setInterval>[] = [];
-    promoCards.forEach((p, i) => {
-      const imgs = (p.images && p.images.length > 1) ? p.images : null;
-      if (!imgs) return;
-      const t = setInterval(() => {
-        setImgIdx(prev => ({ ...prev, [p.id]: ((prev[p.id] ?? 0) + 1) % imgs.length }));
-      }, 4200 + i * 300);
-      timers.push(t);
-    });
-    return () => timers.forEach(clearInterval);
-  }, [promoCards]);
+  // Images statically displayed or switched on hover, avoiding global setInterval timers
 
   const scroll = (dir: 'left' | 'right') => {
     scrollRef.current?.scrollBy({ left: dir === 'right' ? 340 : -340, behavior: 'smooth' });
