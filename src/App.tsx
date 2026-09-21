@@ -1,7 +1,6 @@
 "use client";
 import { PAYMENT_LOGOS } from "./utils/shared";
 
-import InstagramFeed from './components/InstagramFeed';
 import dynamic from "next/dynamic";
 const CartDrawer = dynamic(() => import("./components/CartDrawer"), { ssr: false });
 const HybridCheckoutModal = dynamic(() => import("./components/HybridCheckoutModal"), { ssr: false });
@@ -11,12 +10,11 @@ const AuthModal = dynamic(() => import("./components/AuthModal"), { ssr: false }
 const EmailProductModal = dynamic(() => import("./components/EmailProductModal"), { ssr: false });
 const CategoryManagementDrawer = dynamic(() => import("./components/CategoryManagementDrawer"), { ssr: false });
 const BrandManagementDrawer = dynamic(() => import("./components/BrandManagementDrawer"), { ssr: false });
+const InstagramFeed = dynamic(() => import("./components/InstagramFeed"), { ssr: false });
+const ChatWidget = dynamic(() => import("./components/ChatWidget"), { ssr: false });
 import Logo from "./components/Logo";
 import { formatPrice } from "./utils/format";
 import { optimizeCloudinaryUrl } from "./utils/image";
-
-// import SupportChat from "./components/SupportChat";
-import ChatWidget from "./components/ChatWidget";
 // import './sentryClient';
 // import AdminDashboard from './components/admin/AdminDashboard';
 // import ReturnRequestPage from './pages/ReturnRequestPage';
@@ -1618,11 +1616,11 @@ const ProductDetailContent = ({
             <div className="mb-8 p-4 bg-gray-50/50 border border-gray-100 rounded-sm">
               <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Secure Checkout via Yoco</p>
               <div className="flex flex-wrap items-center gap-6">
-                <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-4 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
-                <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
-                <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
-                <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
-                <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-4 object-contain" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.visa} alt="Visa" width="60" height="16" className="h-4 w-auto object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" width="60" height="20" className="h-5 w-auto object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" width="60" height="20" className="h-5 w-auto object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" width="60" height="20" className="h-5 w-auto object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.yoco} alt="Yoco" width="60" height="16" className="h-4 w-auto object-contain" referrerPolicy="no-referrer" />
     </div>
     </div>
 
@@ -1846,6 +1844,9 @@ const ProductCard = ({
             key={i}
             src={optimizeCloudinaryUrl(img, 600)}
             alt=""
+            width="600"
+            height="750"
+            loading={i === 0 ? "eager" : "lazy"}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${i === imgIdx ? 'opacity-100' : 'opacity-0'}`}
             referrerPolicy="no-referrer"
           />
@@ -2280,11 +2281,11 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
         <div className="mt-10 md:mt-14 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-gray-100 pt-6">
           <p className="text-[10px] text-gray-300 uppercase tracking-widest">&copy; 2026 Grab & Go. All rights reserved.</p>
           <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6">
-            <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-4 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-            <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-5 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-            <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-5 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-            <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-5 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-            <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-4 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.visa} alt="Visa" width="60" height="16" className="h-4 w-auto object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" width="60" height="20" className="h-5 w-auto object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" width="60" height="20" className="h-5 w-auto object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" width="60" height="20" className="h-5 w-auto object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.yoco} alt="Yoco" width="60" height="16" className="h-4 w-auto object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
     </div>
     </div>
     </div>
@@ -5066,18 +5067,7 @@ function AppContent() {
       />
 
       <div className="">
-          {isDataLoading ? (
-            <div className="min-h-screen flex items-center justify-center bg-white">
-              <div className="flex flex-col items-center gap-6">
-                <Logo className="h-12 md:h-16" dark />
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-[#06402B] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-[#06402B] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-[#18A374] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-    </div>
-    </div>
-    </div>
-          ) : pathname === '/' ? (
+          {pathname === '/' ? (
             <HomePage
               filteredAndSortedProducts={filteredAndSortedProducts}
               filterBrand={filterBrand}
@@ -5097,7 +5087,7 @@ function AppContent() {
               searchQuery={searchQuery}
               wishlist={wishlist}
               toggleWishlist={toggleWishlist}
-              isCartLoading={isCartLoading}
+              isCartLoading={isCartLoading || isDataLoading}
               brands={brands}
               categories={categories}
               testimonials={testimonials}
