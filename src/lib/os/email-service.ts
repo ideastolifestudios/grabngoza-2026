@@ -45,11 +45,11 @@ export async function sendOrderConfirmationEmail(orderId: string) {
     return { success: false, error: "RESEND_API_KEY missing" };
   }
 
-  // 2. Send via Resend
+  // 2. Send via Resend with proper type handling
   try {
     const fromAddress = process.env.EMAIL_FROM_ADDRESS || "orders@shopgrabngo.online";
 
-    const data = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: `Grab & Go <${fromAddress}>`,
       to: [emailTriggered.customerEmail],
       subject: `Your Grab & Go Order Confirmation - #${orderId}`,
@@ -65,10 +65,15 @@ export async function sendOrderConfirmationEmail(orderId: string) {
       `,
     });
 
-    console.log(`[Email] Dispatched confirmation email for order ${orderId} via Resend. ID: ${data.id}`);
-    return { success: true, duplicate: false, emailId: data.id };
-  } catch (error: any) {
-    console.error(`[Email] Failed to send via Resend for order ${orderId}:`, error);
-    return { success: false, error: error.message };
+    if (error) {
+      console.error(`[Email] Failed to send via Resend for order ${orderId}:`, error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`[Email] Dispatched confirmation email for order ${orderId} via Resend. ID: ${data?.id}`);
+    return { success: true, duplicate: false, emailId: data?.id };
+  } catch (err: any) {
+    console.error(`[Email] Unexpected error sending order ${orderId}:`, err);
+    return { success: false, error: err.message };
   }
 }
