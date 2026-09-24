@@ -15,7 +15,7 @@ const Logo = ({ className = "h-8 w-auto", light = false, dark = false }: { class
 
   return (
     <img
-      src="https://res.cloudinary.com/dggitwduo/image/upload/v1776937297/GRAB_GO_WEB_LOGO_thq4su.png"
+      src="https://res.cloudinary.com/dggitwduo/image/upload/f_auto,q_auto,w_400/v1776937297/GRAB_GO_WEB_LOGO_thq4su.png"
       alt="Grab & Go"
       className={`${className} object-contain ${filterClass}`}
       onError={() => setError(true)}

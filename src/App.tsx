@@ -1,7 +1,6 @@
 "use client";
 import { PAYMENT_LOGOS } from "./utils/shared";
 
-import InstagramFeed from './components/InstagramFeed';
 import dynamic from "next/dynamic";
 const CartDrawer = dynamic(() => import("./components/CartDrawer"), { ssr: false });
 const HybridCheckoutModal = dynamic(() => import("./components/HybridCheckoutModal"), { ssr: false });
@@ -11,11 +10,11 @@ const AuthModal = dynamic(() => import("./components/AuthModal"), { ssr: false }
 const EmailProductModal = dynamic(() => import("./components/EmailProductModal"), { ssr: false });
 const CategoryManagementDrawer = dynamic(() => import("./components/CategoryManagementDrawer"), { ssr: false });
 const BrandManagementDrawer = dynamic(() => import("./components/BrandManagementDrawer"), { ssr: false });
+const InstagramFeed = dynamic(() => import("./components/InstagramFeed"), { ssr: false });
+const ChatWidget = dynamic(() => import("./components/ChatWidget"), { ssr: false });
 import Logo from "./components/Logo";
 import { formatPrice } from "./utils/format";
-
-// import SupportChat from "./components/SupportChat";
-import ChatWidget from "./components/ChatWidget";
+import { optimizeCloudinaryUrl } from "./utils/image";
 // import './sentryClient';
 // import AdminDashboard from './components/admin/AdminDashboard';
 // import ReturnRequestPage from './pages/ReturnRequestPage';
@@ -1082,21 +1081,30 @@ const Hero = () => {
       tagline: "New — 2026", 
       title: "Shop the Next Big Thing", 
       sub: "Premium streetwear, fresh drops & exclusive finds — curated for you.",
-      img: "https://res.cloudinary.com/dggitwduo/image/upload/v1774452514/WhatsApp_Image_2026-03-25_at_17.25.44_zsxof4.jpg" 
+      img: "https://res.cloudinary.com/dggitwduo/image/upload/f_auto,q_auto,w_1600/v1774452514/WhatsApp_Image_2026-03-25_at_17.25.44_zsxof4.jpg"
     },
     { 
       tagline: "Just Dropped", 
       title: "Fresh Kicks", 
       sub: "Latest sneakers from the brands you love",
-      img: "https://res.cloudinary.com/dggitwduo/image/upload/v1779107822/grab-go-za/mumxdlfw7ijmrc0plyfh.jpg"
+      img: "https://res.cloudinary.com/dggitwduo/image/upload/f_auto,q_auto,w_1600/v1779107822/grab-go-za/mumxdlfw7ijmrc0plyfh.jpg"
     },
     { 
       tagline: "Limited Edition", 
       title: "Stand Out", 
       sub: "Exclusive drops you won't find anywhere else",
-      img: "https://res.cloudinary.com/dggitwduo/image/upload/v1774451791/grab-go-za/ccvw1hia86fbxskoqvjc.png"
+      img: "https://res.cloudinary.com/dggitwduo/image/upload/f_auto,q_auto,w_1600/v1774451791/grab-go-za/ccvw1hia86fbxskoqvjc.png"
     },
   ];
+
+  // Preload adjacent hero slides
+  useEffect(() => {
+    heroSlides.slice(1).forEach(s => {
+      const img = new Image();
+      img.src = s.img;
+    });
+  }, []);
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const slide = heroSlides[currentSlide];
 
@@ -1116,6 +1124,8 @@ const Hero = () => {
             <img
               src={slide.img}
               alt={slide.title}
+              fetchPriority={currentSlide === 0 ? "high" : "auto"}
+              loading={currentSlide === 0 ? "eager" : "lazy"}
               className={`w-full h-full object-cover transition-opacity duration-1000 ${heroImgLoaded ? 'opacity-70' : 'opacity-0'}`}
               onLoad={() => setHeroImgLoaded(true)}
               referrerPolicy="no-referrer"
@@ -1615,11 +1625,11 @@ const ProductDetailContent = ({
             <div className="mb-8 p-4 bg-gray-50/50 border border-gray-100 rounded-sm">
               <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Secure Checkout via Yoco</p>
               <div className="flex flex-wrap items-center gap-6">
-                <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-4 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
-                <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
-                <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
-                <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-5 object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
-                <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-4 object-contain" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.visa} alt="Visa" width="60" height="16" className="h-4 w-auto object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" width="60" height="20" className="h-5 w-auto object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" width="60" height="20" className="h-5 w-auto object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" width="60" height="20" className="h-5 w-auto object-contain grayscale hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                <img src={PAYMENT_LOGOS.yoco} alt="Yoco" width="60" height="16" className="h-4 w-auto object-contain" referrerPolicy="no-referrer" />
     </div>
     </div>
 
@@ -1720,7 +1730,8 @@ const ProductCard = ({
   searchQuery = '',
   isWishlisted,
   onToggleWishlist,
-  isLoading = false
+  isLoading = false,
+  priority = false
 }: {
   product: Product,
   onAddToCart: (p: Product, variants?: Record<string, string>) => void,
@@ -1730,16 +1741,32 @@ const ProductCard = ({
   isWishlisted: boolean,
   onToggleWishlist: (productId: string) => void,
   key?: string,
-  isLoading?: boolean
+  isLoading?: boolean,
+  priority?: boolean
 }) => {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const allImages = useMemo(() => { const imgs = (product.images && product.images.length) ? product.images : product.image ? [product.image] : []; return [...new Set(imgs.filter(Boolean))]; }, [product.image, product.images]);
   const [imgIdx, setImgIdx] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Preload secondary images on card hover
   useEffect(() => {
-    if (allImages.length <= 1) return;
-    const interval = setInterval(() => setImgIdx(prev => (prev + 1) % allImages.length), 3000);
+    if (isHovered && allImages.length > 1) {
+      allImages.slice(1).forEach(img => {
+        const i = new Image();
+        i.src = optimizeCloudinaryUrl(img, 600);
+      });
+    }
+  }, [isHovered, allImages]);
+
+  useEffect(() => {
+    if (!isHovered || allImages.length <= 1) {
+      setImgIdx(0);
+      return;
+    }
+    const interval = setInterval(() => setImgIdx(prev => (prev + 1) % allImages.length), 2000);
     return () => clearInterval(interval);
-  }, [allImages.length]);
+  }, [isHovered, allImages.length]);
   const router = useRouter();
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
 
@@ -1776,9 +1803,11 @@ const ProductCard = ({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       className="group cursor-pointer relative bg-white"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onClick={() => router.push(`/product/${product.id}`)}
     >
-      <div className="aspect-[4/5] overflow-hidden bg-white mb-2 relative group-hover:shadow-lg transition-all duration-700">
+      <div className="aspect-[4/5] overflow-hidden bg-gray-100 mb-2 relative group-hover:shadow-lg transition-all duration-700">
         {isLoading && (
           <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-40 flex items-center justify-center">
             <Loader2 className="animate-spin text-black" size={24} />
@@ -1834,8 +1863,12 @@ const ProductCard = ({
         {allImages.map((img, i) => (
           <img
             key={i}
-            src={img}
+            src={optimizeCloudinaryUrl(img, 600)}
             alt=""
+            width="600"
+            height="750"
+            loading={priority || i === 0 ? "eager" : "lazy"}
+            fetchPriority={priority && i === 0 ? "high" : "auto"}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${i === imgIdx ? 'opacity-100' : 'opacity-0'}`}
             referrerPolicy="no-referrer"
           />
@@ -2270,11 +2303,11 @@ const Footer = ({ categories = [] }: { categories?: Category[] }) => {
         <div className="mt-10 md:mt-14 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-gray-100 pt-6">
           <p className="text-[10px] text-gray-300 uppercase tracking-widest">&copy; 2026 Grab & Go. All rights reserved.</p>
           <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6">
-            <img src={PAYMENT_LOGOS.visa} alt="Visa" className="h-4 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-            <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" className="h-5 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-            <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" className="h-5 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-            <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" className="h-5 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
-            <img src={PAYMENT_LOGOS.yoco} alt="Yoco" className="h-4 object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.visa} alt="Visa" width="60" height="16" className="h-4 w-auto object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.mastercard} alt="Mastercard" width="60" height="20" className="h-5 w-auto object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.applepay} alt="Apple Pay" width="60" height="20" className="h-5 w-auto object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.googlepay} alt="Google Pay" width="60" height="20" className="h-5 w-auto object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
+            <img src={PAYMENT_LOGOS.yoco} alt="Yoco" width="60" height="16" className="h-4 w-auto object-contain opacity-30 hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
     </div>
     </div>
     </div>
@@ -3596,19 +3629,7 @@ const PromoGrid = ({ products = [], categories = [] }: { products: Product[]; ca
       .slice(0, 14);
   }, [products]);
 
-  // Cycle images within each card (staggered intervals)
-  React.useEffect(() => {
-    const timers: ReturnType<typeof setInterval>[] = [];
-    promoCards.forEach((p, i) => {
-      const imgs = (p.images && p.images.length > 1) ? p.images : null;
-      if (!imgs) return;
-      const t = setInterval(() => {
-        setImgIdx(prev => ({ ...prev, [p.id]: ((prev[p.id] ?? 0) + 1) % imgs.length }));
-      }, 4200 + i * 300);
-      timers.push(t);
-    });
-    return () => timers.forEach(clearInterval);
-  }, [promoCards]);
+  // Images statically displayed or switched on hover, avoiding global setInterval timers
 
   const scroll = (dir: 'left' | 'right') => {
     scrollRef.current?.scrollBy({ left: dir === 'right' ? 340 : -340, behavior: 'smooth' });
@@ -3662,7 +3683,8 @@ const PromoGrid = ({ products = [], categories = [] }: { products: Product[]; ca
             >
               <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 mb-3">
                 {currentImg ? (
-                  <img src={currentImg} alt={p.name}
+                  <img src={optimizeCloudinaryUrl(currentImg, 600)} alt={p.name}
+                    width="600" height="800"
                     className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                     loading="lazy" referrerPolicy="no-referrer" />
                 ) : (
@@ -4029,6 +4051,7 @@ const HomePage = ({
                             isWishlisted={wishlist.includes(product.id)}
                             onToggleWishlist={toggleWishlist}
                             isLoading={isCartLoading}
+                            priority={idx < 10}
                           />
                         ))}
     </div>
@@ -4387,6 +4410,7 @@ const CategoryPage = ({
                 isWishlisted={wishlist.includes(product.id)}
                 onToggleWishlist={toggleWishlist}
                 isLoading={isCartLoading}
+                priority={idx < 10}
               />
             ))}
     </div>
@@ -5068,18 +5092,7 @@ function AppContent() {
       />
 
       <div className="">
-          {isDataLoading ? (
-            <div className="min-h-screen flex items-center justify-center bg-white">
-              <div className="flex flex-col items-center gap-6">
-                <Logo className="h-12 md:h-16" dark />
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-[#06402B] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-[#06402B] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-[#18A374] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-    </div>
-    </div>
-    </div>
-          ) : pathname === '/' ? (
+          {pathname === '/' ? (
             <HomePage
               filteredAndSortedProducts={filteredAndSortedProducts}
               filterBrand={filterBrand}
@@ -5099,7 +5112,7 @@ function AppContent() {
               searchQuery={searchQuery}
               wishlist={wishlist}
               toggleWishlist={toggleWishlist}
-              isCartLoading={isCartLoading}
+              isCartLoading={isCartLoading || isDataLoading}
               brands={brands}
               categories={categories}
               testimonials={testimonials}

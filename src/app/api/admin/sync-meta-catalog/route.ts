@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 
+export const dynamic = 'force-dynamic';
+
 function verifyAdminAuth(req: Request): boolean {
   const authHeader = req.headers.get("authorization");
   const cronSecret = req.headers.get("x-cron-secret");
