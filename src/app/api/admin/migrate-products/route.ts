@@ -1,100 +1,55 @@
-import { NextResponse } from 'next/server';
-import * as admin from 'firebase-admin';
+import { NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase-admin";
 
-export const runtime = 'nodejs';
-export const maxDuration = 300;
+function verifyAdminAuth(req: Request): boolean {
+  const authHeader = req.headers.get("authorization");
+  const cronSecret = req.headers.get("x-cron-secret");
+  const expectedToken = process.env.ADMIN_API_SECRET || process.env.CRON_SECRET;
 
-function getDb() {
-  if (!admin.apps.length) {
-    const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL || process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL;
-    const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY;
-
-    if (!projectId || !clientEmail || !rawKey) {
-      throw new Error(
-        `Missing Firebase Admin Env Vars! ProjectID present: ${!!projectId} | Email present: ${!!clientEmail} | Key present: ${!!rawKey}.`
-      );
-    }
-
-    const privateKey = rawKey.replace(/\\n/g, '\n');
-
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
-    });
+  if (!expectedToken) {
+    console.warn("ADMIN_API_SECRET / CRON_SECRET is not configured.");
+    return false;
   }
-  return admin.firestore();
+
+  return authHeader === `Bearer ${expectedToken}` || cronSecret === expectedToken;
 }
 
-export async function GET() {
+export async function POST(req: Request) {
+  if (!verifyAdminAuth(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const db = getDb();
-    const snapshot = await db.collection('products').get();
+    const body = await req.json().catch(() => ({}));
+    const products = body.products || [];
 
-    if (snapshot.empty) {
-      return NextResponse.json({ message: 'No product records found to migrate.' });
+    if (!Array.isArray(products) || products.length === 0) {
+      return NextResponse.json({ error: "No products provided for migration" }, { status: 400 });
     }
 
-    let batch = db.batch();
-    let batchCount = 0;
-    let totalMigrated = 0;
+    const batch = adminDb.batch();
+    let migratedCount = 0;
 
-    for (const doc of snapshot.docs) {
-      const data = doc.data();
-
-      const price = typeof data.price === 'number' ? data.price : parseFloat(data.price || '0');
-      const stockQuantity = typeof data.stockQuantity === 'number' ? data.stockQuantity : Number(data.stock ?? 0);
-
-      const standardizedProduct = {
-        id: doc.id,
-        sku: data.sku || `GNG-${doc.id.substring(0, 6).toUpperCase()}`,
-        title: data.title || data.name || 'Untitled Product',
-        description: data.description || '',
-        price,
-        compareAtPrice: data.compareAtPrice ? Number(data.compareAtPrice) : null,
-        stockQuantity: isNaN(stockQuantity) ? 0 : stockQuantity,
-        category: data.category || 'Apparel',
-        images: Array.isArray(data.images) ? data.images : (data.imageUrl ? [data.imageUrl] : []),
-        channels: {
-          meta: {
-            synced: data.channels?.meta?.synced ?? (data.syncedToMeta || false),
-            metaItemId: data.channels?.meta?.metaItemId || data.metaCatalogItemId || null,
-            lastSyncedAt: data.channels?.meta?.lastSyncedAt || data.lastMetaSync || null,
-          },
-          google: {
-            synced: data.channels?.google?.synced ?? (data.syncedToGoogle || false),
-            googleItemId: data.channels?.google?.googleItemId || null,
-            lastSyncedAt: data.channels?.google?.lastSyncedAt || null,
-          },
-        },
-        createdAt: data.createdAt || new Date().toISOString(),
+    for (const product of products) {
+      const productId = product.id || product.sku || adminDb.collection("products").doc().id;
+      const productRef = adminDb.collection("products").doc(productId);
+      
+      batch.set(productRef, {
+        ...product,
         updatedAt: new Date().toISOString(),
-      };
-
-      batch.set(doc.ref, standardizedProduct, { merge: true });
-      batchCount++;
-      totalMigrated++;
-
-      if (batchCount === 400) {
-        await batch.commit();
-        batch = db.batch();
-        batchCount = 0;
-      }
+      }, { merge: true });
+      migratedCount++;
     }
 
-    if (batchCount > 0) {
-      await batch.commit();
-    }
+    await batch.commit();
 
     return NextResponse.json({
       success: true,
-      message: `Successfully migrated ${totalMigrated} products to OSProduct schema.`,
-    });
+      message: `Successfully migrated ${migratedCount} products into Firestore source of truth.`,
+    }, { status: 200 });
+
   } catch (error: any) {
-    console.error('[Commerce OS Migration Failed]:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error("Migration Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
