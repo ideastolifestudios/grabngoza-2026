@@ -24,7 +24,7 @@ function makeTransport() {
   });
 }
 
-export default async function handler(req: any, res: any) {
+module.exports = async function handler(req: any, res: any) {
   setcors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
 

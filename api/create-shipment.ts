@@ -195,7 +195,7 @@ async function deductStock(items: any[]) {
 }
 
 // ─── Main handler ───────────────────────────────────────────────────────────
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return err(res, 405, 'Method not allowed');

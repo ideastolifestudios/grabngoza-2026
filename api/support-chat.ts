@@ -46,7 +46,7 @@ Yoco gateway. Visa, Mastercard, Apple Pay, Google Pay, SnapScan. PCI-DSS Level 1
 
 function err(res: VercelResponse, s: number, m: string) { return res.status(s).json({ error: m }); }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');

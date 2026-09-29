@@ -62,7 +62,7 @@ function emailWrap(emoji: string, title: string, body: string) {
 </td></tr></table></td></tr></table></body></html>`;
 }
 
-export default async function handler(req: any, res: any) {
+module.exports = async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');

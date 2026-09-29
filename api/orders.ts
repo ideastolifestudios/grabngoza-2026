@@ -24,7 +24,7 @@ function authOk(req: VercelRequest, res: VercelResponse): boolean {
   return true;
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Cache-Control", "no-store");
 

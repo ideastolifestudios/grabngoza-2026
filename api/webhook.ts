@@ -133,7 +133,7 @@ async function saveOrder(redis: Redis, order: StoredOrder): Promise<void> {
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }

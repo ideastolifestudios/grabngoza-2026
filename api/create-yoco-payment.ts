@@ -18,7 +18,7 @@ function sanitize(val: unknown, max = 200): string | null {
   return s.length > 0 ? s : null;
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Cache-Control", "no-store");
 
