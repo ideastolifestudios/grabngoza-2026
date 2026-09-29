@@ -120,17 +120,20 @@ export const orderService = {
       return [];
     }
   },
-  createOrder: async (orderData: any): Promise<Order> => {
-    const path = 'orders';
+    createOrder: async (orderData: any): Promise<Order> => {
     try {
-      const docRef = await addDoc(collection(db, path), {
-        ...orderData,
-        date: Timestamp.now(),
-        status: 'pending'
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
       });
-      return { ...orderData, id: docRef.id, status: 'pending' } as Order;
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to create order");
+      }
+      return { ...orderData, id: data.orderId, status: "pending" } as Order;
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, path);
+      console.error("[orderService.createOrder] Error:", error);
       throw error;
     }
   },
