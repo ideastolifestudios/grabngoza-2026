@@ -5,36 +5,40 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const action = searchParams.get("action");
 
-    if (action === "yoco") {
-      const publicKey = process.env.NEXT_PUBLIC_YOCO_PUBLIC_KEY;
-      if (!publicKey) {
-        console.warn("[API/Payments] NEXT_PUBLIC_YOCO_PUBLIC_KEY is not defined in Vercel env.");
-      }
+    const publicKey = 
+      process.env.NEXT_PUBLIC_YOCO_PUBLIC_KEY || 
+      process.env.YOCO_PUBLIC_KEY || 
+      "";
 
+    if (action === "yoco" || !action) {
       return NextResponse.json({
         status: "active",
         provider: "yoco",
-        publicKey: publicKey || "",
-      });
+        publicKey: publicKey,
+        configured: Boolean(publicKey),
+      }, { status: 200 });
     }
 
-    return NextResponse.json({ error: "Invalid payment action" }, { status: 400 });
+    return NextResponse.json({ status: "active", action }, { status: 200 });
   } catch (error: any) {
     console.error("[API/Payments] GET Error:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || "Internal server error", status: "error" },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { amountInCents, currency = "ZAR", metadata } = body;
+    const body = await req.json().catch(() => ({}));
+    const { amountInCents, currency = "ZAR", metadata, token } = body;
     const secretKey = process.env.YOCO_SECRET_KEY;
 
     if (!secretKey) {
       return NextResponse.json(
-        { error: "Payment gateway misconfigured: Missing YOCO_SECRET_KEY" },
-        { status: 500 }
+        { error: "Payment gateway misconfigured: Missing YOCO_SECRET_KEY in Vercel environment variables." },
+        { status: 400 }
       );
     }
 
@@ -45,7 +49,7 @@ export async function POST(req: Request) {
         Authorization: `Bearer ${secretKey}`,
       },
       body: JSON.stringify({
-        token: body.token,
+        token,
         amountInCents,
         currency,
         metadata,
@@ -56,6 +60,9 @@ export async function POST(req: Request) {
     return NextResponse.json(data, { status: response.status });
   } catch (error: any) {
     console.error("[API/Payments] POST Error:", error);
-    return NextResponse.json({ error: error.message || "Payment processing failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || "Payment processing failed" },
+      { status: 500 }
+    );
   }
 }
