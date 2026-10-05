@@ -8,12 +8,12 @@ export async function POST(request) {
     if (action === 'yoco') {
       const body = await request.json();
       const { amount, currency, metadata } = body;
-
-      // Convert Rands to Cents for Yoco
       const amountInCents = Math.round(amount * 100);
 
-      // Create a Checkout Session using Yoco's Redirect API
-      const yocoResponse = await fetch('https://online.yoco.com/v1/checkout/', {
+      // Automatically get current origin (e.g., http://localhost:3000 or https://shopgrabngo.co.za)
+      const origin = request.headers.get('origin') || 'http://localhost:3000';
+
+      const yocoResponse = await fetch('https://payments.yoco.com/api/checkouts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -22,8 +22,8 @@ export async function POST(request) {
         body: JSON.stringify({
           amount: amountInCents,
           currency: currency || 'ZAR',
-          successUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://shopgrabngo.co.za'}/order-success`,
-          cancelUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://shopgrabngo.co.za'}/checkout`,
+          successUrl: `${origin}/order-success`,
+          cancelUrl: `${origin}/checkout`,
           metadata: metadata
         }),
       });
@@ -34,7 +34,6 @@ export async function POST(request) {
         return NextResponse.json(yocoData, { status: yocoResponse.status });
       }
 
-      // Return the redirectUrl exactly as HybridCheckoutModal.tsx expects
       return NextResponse.json({ redirectUrl: yocoData.redirectUrl }, { status: 200 });
     }
 

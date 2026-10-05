@@ -36,7 +36,7 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
 , "src/app/api/payments/route.js"  ],
-  "exclude": [
+  "exclude": ["functions", "**/functions/**", "grabngoza-2026/functions", 
     "node_modules",
     "functions"
   ]

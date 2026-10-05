@@ -1,5 +1,7 @@
 "use client";
-import { PAYMENT_LOGOS } from "./utils/shared";
+import {
+  PAYMENT_LOGOS
+} from './utils/shared';
 
 import dynamic from "next/dynamic";
 const CartDrawer = dynamic(() => import("./components/CartDrawer"), { ssr: false });
@@ -13,17 +15,30 @@ const BrandManagementDrawer = dynamic(() => import("./components/BrandManagement
 const InstagramFeed = dynamic(() => import("./components/InstagramFeed"), { ssr: false });
 const ChatWidget = dynamic(() => import("./components/ChatWidget"), { ssr: false });
 import Logo from "./components/Logo";
-import { formatPrice } from "./utils/format";
-import { optimizeCloudinaryUrl } from "./utils/image";
+import {
+  formatPrice
+} from './utils/format';
+import {
+  optimizeCloudinaryUrl
+} from './utils/image';
 // import './sentryClient';
 // import AdminDashboard from './components/admin/AdminDashboard';
 // import ReturnRequestPage from './pages/ReturnRequestPage';
 // import HowToOrderPage from './pages/HowToOrderPage';
-// import { isOrderReturnable } from './services/returnService';
+import {
+  isOrderReturnable
+} from './services/returnService';
 import React, { useState, useEffect, useRef, useMemo, Component } from 'react';
 import Link from 'next/link';
-import { useRouter, useParams, usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'motion/react';
+import {
+  useRouter,
+  useParams,
+  usePathname
+} from 'next/navigation';
+import {
+  motion,
+  AnimatePresence
+} from 'motion/react';
 import {
   ShoppingBag,
   ShoppingCart,
@@ -80,7 +95,19 @@ import {
   Sparkles,
   Tag
 } from 'lucide-react';
-import { Product, CartItem, User, Order, OrderStatus, ProductVariant, ShippingMethod, Category, Brand, Testimonial, Partner } from './types';
+import {
+  Product,
+  CartItem,
+  User,
+  Order,
+  OrderStatus,
+  ProductVariant,
+  ShippingMethod,
+  Category,
+  Brand,
+  Testimonial,
+  Partner
+} from './types';
 
 // Bob Go pickup point type — used in checkout state
 interface BobGoPickupPoint {
@@ -117,9 +144,15 @@ import {
   testimonialService,
   partnerService
 } from './services/api';
-import { emailService } from './services/emailService';
+import {
+  emailService
+} from './services/emailService';
 import SEO from './components/SEO';
-import { auth, googleProvider, facebookProvider } from './firebase';
+import {
+  auth,
+  googleProvider,
+  facebookProvider
+} from './firebase';
 import {
   onAuthStateChanged,
   signInWithPopup,
@@ -3433,7 +3466,7 @@ const BrandBanner = ({ brand, banner, description, logo }: { brand: string, bann
       className="absolute inset-0 bg-gray-50 overflow-hidden shadow-2xl skew-y-1 md:skew-y-2"
     >
       <div className="absolute inset-0 bg-black/40 z-10 group-hover:bg-black/30 transition-all duration-700" />
-      <img src={banner || ''}
+      <img src={banner || undefined}
         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
         alt={brand}
         className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000 -skew-y-1 md:-skew-y-2"
