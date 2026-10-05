@@ -1,55 +1,50 @@
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {
-  try {
-    // Check the ?action= query parameter
-    const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action');
+  try {
+    const { searchParams } = new URL(request.url);
+    const action = searchParams.get('action');
 
-    if (action === 'yoco') {
-      const body = await request.json();
-      const { token, amountInCents, currency } = body;
+    if (action === 'yoco') {
+      const body = await request.json();
+      const { amount, currency, metadata } = body;
 
-      // 1. Validate token presence
-      if (!token) {
-        return NextResponse.json(
-          { error: 'Missing charge token in request payload' }, 
-          { status: 400 }
-        );
-      }
+      // Convert Rands to Cents for Yoco
+      const amountInCents = Math.round(amount * 100);
 
-      // 2. Send the charge request to Yoco
-      const yocoResponse = await fetch('https://online.yoco.com/v1/charges/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.YOCO_SECRET_KEY}`, 
-        },
-        body: JSON.stringify({
-          token: token,
-          amountInCents: amountInCents,
-          currency: currency || 'ZAR',
-        }),
-      });
+      // Create a Checkout Session using Yoco's Redirect API
+      const yocoResponse = await fetch('https://online.yoco.com/v1/checkout/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.YOCO_SECRET_KEY}`, 
+        },
+        body: JSON.stringify({
+          amount: amountInCents,
+          currency: currency || 'ZAR',
+          successUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://shopgrabngo.co.za'}/order-success`,
+          cancelUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://shopgrabngo.co.za'}/checkout`,
+          metadata: metadata
+        }),
+      });
 
-      const chargeResult = await yocoResponse.json();
+      const yocoData = await yocoResponse.json();
 
-      // 3. Return errors directly from Yoco if it fails
-      if (!yocoResponse.ok) {
-        return NextResponse.json(chargeResult, { status: yocoResponse.status });
-      }
+      if (!yocoResponse.ok) {
+        return NextResponse.json(yocoData, { status: yocoResponse.status });
+      }
 
-      // 4. Success!
-      return NextResponse.json(chargeResult, { status: 200 });
-    }
+      // Return the redirectUrl exactly as HybridCheckoutModal.tsx expects
+      return NextResponse.json({ redirectUrl: yocoData.redirectUrl }, { status: 200 });
+    }
 
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 
-  } catch (error) {
-    console.error('Backend Payment Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to contact Yoco Gateway' }, 
-      { status: 500 }
-    );
-  }
+  } catch (error) {
+    console.error('Backend Payment Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to create Yoco Checkout session' }, 
+      { status: 500 }
+    );
+  }
 }
