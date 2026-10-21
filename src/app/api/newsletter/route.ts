@@ -1,17 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await req.json().catch(() => ({}));
     const { email } = body;
-
-    if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
     }
-
-    console.log('Subscribed email:', email);
-    return NextResponse.json({ success: true, message: 'Subscribed successfully' }, { status: 200 });
+    return NextResponse.json({ success: true, message: 'Subscribed successfully' });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
