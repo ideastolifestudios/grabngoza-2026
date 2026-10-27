@@ -12,8 +12,8 @@ export async function GET() {
       const data = doc.data();
       products.push({
         id: doc.id,
-        title: data.name || data.title,
-        description: data.description || 'Grab & Go product',
+        title: data.name || data.title || 'Untitled Product',
+        description: data.description || 'Grab & Go ZA product',
         link: `${storeUrl}/product/${doc.id}`,
         image_link: data.image || data.imageUrl || 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
         price: `${data.price || 0}.00 ZAR`,
@@ -65,9 +65,23 @@ export async function GET() {
 </rss>`;
 
   return new NextResponse(xml, {
+    status: 200,
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 's-maxage=60, stale-while-revalidate',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+    },
+  });
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, User-Agent',
     },
   });
 }
