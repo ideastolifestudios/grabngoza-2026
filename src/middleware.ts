@@ -35,7 +35,7 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const launchMode = (process.env.STORE_LAUNCH_MODE || 'PRIVATE').toUpperCase();
 
-  // 1. Always allow webhooks, feeds, payment callbacks, guest auth API, and static assets
+  // 1. Bypass all protection for public feed endpoints & crawlers
   if (
     pathname.startsWith('/api/feeds') ||
     pathname.startsWith('/api/webhooks') ||
@@ -94,8 +94,8 @@ export async function middleware(req: NextRequest) {
     requestHeaders.set('x-store-access', 'granted');
   }
 
-  // 5. API Rate limiting
-  if (pathname.startsWith('/api') && ratelimit) {
+  // 5. API Rate limiting (Excluding feeds from rate limiting)
+  if (pathname.startsWith('/api') && !pathname.startsWith('/api/feeds') && ratelimit) {
     const ip = req.headers.get('x-real-ip') ?? req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
     const { success } = await ratelimit.limit(ip);
     if (!success) {
