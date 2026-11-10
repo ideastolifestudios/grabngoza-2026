@@ -1,117 +1,141 @@
-import { NextResponse } from "next/server";
-import crypto from "crypto";
-import * as admin from 'firebase-admin';
-import { fulfillOrderInventory } from "@/lib/os/order-fulfillment";
-import { sendOrderConfirmationEmail } from "@/lib/os/email-service";
+import { NextRequest, NextResponse } from 'next/server';
+import { initializeApp, getApps } from 'firebase/app';
+import { getFirestore, doc, runTransaction, serverTimestamp, collection, addDoc } from 'firebase/firestore';
+import crypto from 'crypto';
 
-function getDb() {
-  if (!admin.apps.length) {
-    admin.initializeApp();
-  }
-  return admin.firestore();
-}
+export const runtime = 'nodejs';
 
-export async function POST(req: Request) {
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+const db = getFirestore(app);
+
+export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
-    const signatureHeader = req.headers.get("webhook-signature") || "";
+    const signatureHeader = req.headers.get('webhook-signature') || req.headers.get('yoco-signature');
+
     const webhookSecret = process.env.YOCO_WEBHOOK_SECRET;
+    if (webhookSecret && signatureHeader) {
+      try {
+        const parts = signatureHeader.split(',');
+        const timestampPart = parts.find(p => p.startsWith('t='));
+        const signaturePart = parts.find(p => p.startsWith('v1='));
 
-    if (!webhookSecret) {
-      console.error("YOCO_WEBHOOK_SECRET is not configured");
-      return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
-    }
+        if (timestampPart && signaturePart) {
+          const timestamp = timestampPart.split('=')[1];
+          const receivedSig = signaturePart.split('=')[1];
+          const signedPayload = `${timestamp}.${rawBody}`;
 
-    // 1. Verify Yoco signature format: t=timestamp,v1=signature
-    const elements = signatureHeader.split(",");
-    const timestampElem = elements.find(el => el.startsWith("t="));
-    const signatureElem = elements.find(el => el.startsWith("v1="));
+          const expectedSig = crypto
+            .createHmac('sha256', webhookSecret)
+            .update(signedPayload)
+            .digest('base64');
 
-    if (!timestampElem || !signatureElem) {
-      return NextResponse.json({ error: "Invalid signature headers" }, { status: 400 });
-    }
-
-    const timestamp = timestampElem.split("=")[1];
-    const receivedSignature = signatureElem.split("=")[1];
-
-    // Prevent replay attacks (tolerance: 5 minutes)
-    const toleranceSeconds = 300;
-    const now = Math.floor(Date.now() / 1000);
-    if (Math.abs(now - parseInt(timestamp, 10)) > toleranceSeconds) {
-      return NextResponse.json({ error: "Webhook timestamp out of tolerance" }, { status: 400 });
-    }
-
-    // Compute expected signature
-    const signedPayload = `${timestamp}.${rawBody}`;
-    const expectedSignature = crypto
-      .createHmac("sha256", webhookSecret)
-      .update(signedPayload)
-      .digest("hex");
-
-    if (!crypto.timingSafeEqual(Buffer.from(receivedSignature), Buffer.from(expectedSignature))) {
-      return NextResponse.json({ error: "Invalid webhook signature" }, { status: 401 });
+          const sigBuffer = Buffer.from(receivedSig);
+          const expectedBuffer = Buffer.from(expectedSig);
+          
+          if (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
+            return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 401 });
+          }
+        }
+      } catch (sigError) {
+        console.error('Signature verification failed:', sigError);
+        return NextResponse.json({ error: 'Signature verification error' }, { status: 400 });
+      }
     }
 
     const event = JSON.parse(rawBody);
+    if (event.type !== 'payment.succeeded' && event.type !== 'checkout.completed') {
+      return NextResponse.json({ received: true, message: 'Event ignored' });
+    }
 
-    // 2. Make Payment Webhook Idempotent
-    const db = getDb();
-    const eventId = event.id || `${event.type}_${event.payload?.id || Date.now()}`;
-    const idempotencyRef = db.collection("webhook_events").doc(eventId);
+    const paymentData = event.payload || event.data || {};
+    const orderId = paymentData.metadata?.orderId;
+    const amountPaidCents = Number(paymentData.amount);
+    const currencyPaid = paymentData.currency || 'ZAR';
 
-    let alreadyProcessed = false;
-    await db.runTransaction(async (transaction) => {
-      const eventDoc = await transaction.get(idempotencyRef);
-      if (eventDoc.exists) {
-        alreadyProcessed = true;
-        return;
+    if (!orderId) {
+      return NextResponse.json({ error: 'Missing orderId metadata' }, { status: 400 });
+    }
+
+    // Atomic Transaction for Order, Variant Inventory, and Notification Outbox
+    await runTransaction(db, async (transaction) => {
+      const orderRef = doc(db, 'orders', orderId);
+      const orderSnap = await transaction.get(orderRef);
+
+      if (!orderSnap.exists()) {
+        throw new Error(`Order not found: ${orderId}`);
       }
-      transaction.set(idempotencyRef, {
-        type: event.type,
-        createdAt: new Date().toISOString(),
-        status: "processing",
+
+      const orderData = orderSnap.data();
+
+      if (orderData.status === 'paid' || orderData.status === 'completed') {
+        return; // Idempotency check
+      }
+
+      if (orderData.totalCents !== amountPaidCents || orderData.currency !== currencyPaid) {
+        throw new Error(`Payment mismatch: Expected ${orderData.totalCents}, got ${amountPaidCents}`);
+      }
+
+      // Decrement Inventory for each canonical item & variant
+      for (const item of orderData.items || []) {
+        const productRef = doc(db, 'products', item.productId);
+        const productSnap = await transaction.get(productRef);
+
+        if (productSnap.exists()) {
+          const productData = productSnap.data();
+
+          if (item.variantId && productData.variants && Array.isArray(productData.variants)) {
+            // Update specific variant stock
+            const updatedVariants = productData.variants.map((v: any) => {
+              if (v.id === item.variantId || v.sku === item.variantId) {
+                const currentVariantStock = Number(v.stock ?? 0);
+                return { ...v, stock: Math.max(0, currentVariantStock - item.quantity) };
+              }
+              return v;
+            });
+            transaction.update(productRef, { variants: updatedVariants });
+          } else {
+            // Update main product stock
+            const currentStock = Number(productData.stock ?? productData.quantity ?? 0);
+            const newStock = Math.max(0, currentStock - item.quantity);
+            transaction.update(productRef, { stock: newStock, quantity: newStock });
+          }
+        }
+      }
+
+      // Update order status to paid
+      transaction.update(orderRef, {
+        status: 'paid',
+        paidAt: serverTimestamp(),
+        paymentId: paymentData.id || paymentData.checkoutId || 'yoco_paid',
       });
     });
 
-    if (alreadyProcessed) {
-      return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
+    // Queue email notification outbox post-transaction
+    try {
+      await addDoc(collection(db, 'notifications_outbox'), {
+        orderId,
+        type: 'ORDER_CONFIRMATION',
+        status: 'queued',
+        createdAt: serverTimestamp(),
+      });
+    } catch (outboxError) {
+      console.error('Failed to queue notification outbox:', outboxError);
     }
 
-    // 3. Handle Successful Payment & Trigger Fulfillment + Email
-    if (event.type === "payment.succeeded" || event.type === "charge.succeeded") {
-      const paymentData = event.payload || event.data;
-      const orderId = paymentData?.metadata?.orderId || paymentData?.reference;
+    return NextResponse.json({ success: true });
 
-      if (orderId) {
-        const orderRef = db.collection("orders").doc(orderId);
-        const orderDoc = await orderRef.get();
-
-        if (orderDoc.exists) {
-          const orderData = orderDoc.data();
-          const items = orderData?.items || [];
-
-          // Atomically deduct inventory & update order status
-          await fulfillOrderInventory(orderId, items);
-
-          // Mark order as paid
-          await orderRef.update({
-            paymentStatus: "paid",
-            paymentDetails: paymentData,
-            updatedAt: new Date().toISOString(),
-          });
-
-          // Trigger duplicate-safe confirmation email
-          await sendOrderConfirmationEmail(orderId);
-        }
-      }
-    }
-
-    // Finalize idempotency status
-    await idempotencyRef.update({ status: "completed" });
-
-    return NextResponse.json({ received: true }, { status: 200 });
   } catch (error: any) {
-    console.error("Yoco Webhook Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Webhook processing error:', error.message || error);
+    return NextResponse.json({ error: error.message || 'Internal webhook error' }, { status: 500 });
   }
 }
