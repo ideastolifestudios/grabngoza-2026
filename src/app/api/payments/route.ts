@@ -1,137 +1,140 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+export const runtime = 'nodejs';
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
-const db = getFirestore(app);
+function initAdminDb() {
+  if (getApps().length > 0) {
+    return getFirestore();
+  }
+
+  const rawKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (rawKey) {
+    try {
+      const serviceAccount = JSON.parse(rawKey);
+      initializeApp({ credential: cert(serviceAccount) });
+      return getFirestore();
+    } catch (e) {
+      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', e);
+    }
+  }
+
+  // Fallback: Initialize with project ID
+  initializeApp({
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'grab-go-za',
+  });
+  return getFirestore();
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const db = initAdminDb();
     const body = await req.json();
     const { items, customer, shippingAddress } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: 'Cart is empty or invalid' }, { status: 400 });
+      return NextResponse.json({ error: 'Cart items are required' }, { status: 400 });
     }
 
-    let calculatedTotalCents = 0;
-    const verifiedLineItems = [];
+    const secretKey = process.env.YOCO_SECRET_KEY;
+    if (!secretKey) {
+      console.error('CRITICAL: YOCO_SECRET_KEY is missing on server.');
+      return NextResponse.json({ error: 'Payment gateway configuration error' }, { status: 500 });
+    }
 
+    let subtotalCents = 0;
+    const validatedItems = [];
+
+    // Authoritative Server-Side Pricing Calculation
     for (const item of items) {
-      if (!item.id || typeof item.quantity !== 'number' || item.quantity <= 0) {
-        return NextResponse.json({ error: 'Invalid item structure in cart' }, { status: 400 });
-      }
+      const productRef = db.collection('products').doc(item.id);
+      const productSnap = await productRef.get();
 
-      const productRef = doc(db, 'products', item.id);
-      const productSnap = await getDoc(productRef);
-
-      if (!productSnap.exists()) {
+      if (!productSnap.exists) {
         return NextResponse.json({ error: `Product not found: ${item.id}` }, { status: 404 });
       }
 
-      const productData = productSnap.data();
-      let unitPriceZAR = Number(productData.price || 0);
-      let stockAvailable = Number(productData.stock ?? productData.quantity ?? 0);
-      let variantTitle = null;
+      const productData = productSnap.data() || {};
+      let itemPriceRands = Number(productData.price ?? productData.originalPrice ?? 0);
 
-      // Handle variant pricing/stock if variantId is provided
-      if (item.variantId && productData.variants && Array.isArray(productData.variants)) {
-        const variant = productData.variants.find((v: any) => v.id === item.variantId || v.sku === item.variantId);
-        if (variant) {
-          if (variant.price !== undefined) unitPriceZAR = Number(variant.price);
-          if (variant.stock !== undefined) stockAvailable = Number(variant.stock);
-          variantTitle = variant.name || variant.title || item.variantId;
+      if (item.variantId && Array.isArray(productData.variants)) {
+        const matchedVariant = productData.variants.find((v: any) => v.id === item.variantId || v.sku === item.variantId);
+        if (matchedVariant && matchedVariant.price) {
+          itemPriceRands = Number(matchedVariant.price);
         }
       }
 
-      if (stockAvailable < item.quantity) {
-        return NextResponse.json({ error: `Insufficient stock for ${productData.name || item.id} ${variantTitle ? `(${variantTitle})` : ''}` }, { status: 400 });
-      }
+      const unitPriceCents = Math.round(itemPriceRands * 100);
+      const quantity = Math.max(1, Number(item.quantity || 1));
+      const lineTotalCents = unitPriceCents * quantity;
 
-      const unitPriceCents = Math.round(unitPriceZAR * 100);
-      const lineTotalCents = unitPriceCents * item.quantity;
-      calculatedTotalCents += lineTotalCents;
+      subtotalCents += lineTotalCents;
 
-      verifiedLineItems.push({
+      validatedItems.push({
         productId: item.id,
         variantId: item.variantId || null,
         title: productData.name || productData.title || 'Product',
-        variantTitle,
+        variantTitle: item.variantTitle || null,
         unitPriceCents,
-        quantity: item.quantity,
+        quantity,
         lineTotalCents,
       });
     }
 
-    const shippingCents = calculatedTotalCents > 100000 ? 0 : 6000; // Free over R1000, else R60
-    const finalTotalCents = calculatedTotalCents + shippingCents;
+    const shippingCents = subtotalCents >= 100000 ? 0 : 6000;
+    const totalCents = subtotalCents + shippingCents;
 
-    const orderRef = await addDoc(collection(db, 'orders'), {
-      items: verifiedLineItems,
-      subtotalCents: calculatedTotalCents,
+    // Create Pending Order Document
+    const orderRef = await db.collection('orders').add({
+      items: validatedItems,
+      subtotalCents,
       shippingCents,
-      totalCents: finalTotalCents,
+      totalCents,
       currency: 'ZAR',
       status: 'pending',
       customer: customer || {},
       shippingAddress: shippingAddress || {},
-      createdAt: serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
     });
 
-    const orderId = orderRef.id;
-    const yocoSecretKey = process.env.YOCO_SECRET_KEY;
-    if (!yocoSecretKey) {
-      throw new Error('YOCO_SECRET_KEY is not configured on the server.');
-    }
-
-    const successUrl = `${req.nextUrl.origin}/order-success?orderId=${orderId}`;
-    const cancelUrl = `${req.nextUrl.origin}/cart`;
-
-    const yocoResponse = await fetch('https://payments.yoco.com/api/checkouts', {
+    // Create Yoco Hosted Checkout Session
+    const response = await fetch('https://payments.yoco.com/api/checkouts', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${yocoSecretKey}`,
+        'Authorization': `Bearer ${secretKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: finalTotalCents,
+        amount: totalCents,
         currency: 'ZAR',
-        successUrl,
-        cancelUrl,
-        metadata: { orderId },
-        lineItems: verifiedLineItems.map((item) => ({
-          displayName: `${item.title}${item.variantTitle ? ` - ${item.variantTitle}` : ''}`,
-          quantity: item.quantity,
-          pricingDetails: { price: item.unitPriceCents },
-        })),
+        successUrl: `https://shopgrabngo.co.za/checkout/success?orderId=${orderRef.id}`,
+        cancelUrl: `https://shopgrabngo.co.za/checkout/cancel?orderId=${orderRef.id}`,
+        failureUrl: `https://shopgrabngo.co.za/checkout/failure?orderId=${orderRef.id}`,
+        metadata: {
+          orderId: orderRef.id,
+          customerEmail: customer?.email || '',
+        },
       }),
     });
 
-    if (!yocoResponse.ok) {
-      const errorBody = await yocoResponse.text();
-      console.error('Yoco Checkout API Error:', errorBody);
-      return NextResponse.json({ error: 'Failed to initialize payment gateway session' }, { status: 502 });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Yoco API Session Creation Error:', errorText);
+      return NextResponse.json({ error: 'Failed to initiate Yoco payment session' }, { status: 502 });
     }
 
-    const yocoData = await yocoResponse.json();
+    const yocoData = await response.json();
 
     return NextResponse.json({
+      success: true,
       redirectUrl: yocoData.redirectUrl,
       checkoutId: yocoData.id,
-      orderId,
+      orderId: orderRef.id,
     });
 
-  } catch (error) {
-    console.error('Payment initialization error:', error);
-    return NextResponse.json({ error: 'Internal server error during payment initialization' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Payment initialization failure:', error.message || error);
+    return NextResponse.json({ error: error.message || 'Internal server error during payment initialization' }, { status: 500 });
   }
 }
