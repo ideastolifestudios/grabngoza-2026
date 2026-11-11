@@ -1,8 +1,6 @@
 // ===============================================================
-// Grab & Go ZA — Firestore Security Rules
-// Fixed: brands collection write now requires admin
-// Fixed: hardcoded admin email moved to env-driven claim check
-// Last Updated: 2026-04-23
+// Grab & Go ZA — Firestore Security Rules (Black Friday Hardened)
+// Last Updated: 2026-11-11
 // ===============================================================
 
 rules_version = '2';
@@ -32,67 +30,6 @@ service cloud.firestore {
       return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     }
 
-    function isValidTimestamp(ts) {
-      return ts is timestamp;
-    }
-
-    // ===============================================================
-    // Domain Validators
-    // ===============================================================
-
-    function isValidProduct(data) {
-      return data.keys().hasAll(['id', 'name', 'price', 'image', 'category', 'description']) &&
-        data.id is string &&
-        data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
-        data.price is number && data.price >= 0 &&
-        data.image is string &&
-        data.category is string &&
-        data.description is string && data.description.size() < 5000 &&
-        (!('brandId' in data) || (data.brandId is string)) &&
-        (!('brand' in data) || (data.brand is string)) &&
-        (!('brandBanner' in data) || (data.brandBanner is string)) &&
-        (!('brandDescription' in data) || (data.brandDescription is string)) &&
-        (!('soldBy' in data) || (data.soldBy is string)) &&
-        (!('soldByLogo' in data) || (data.soldByLogo is string));
-    }
-
-    function isValidUser(data) {
-      return data.keys().hasAll(['id', 'email', 'firstName', 'lastName', 'role']) &&
-        data.id == request.auth.uid &&
-        isValidEmail(data.email) &&
-        data.firstName is string && data.firstName.size() > 0 && data.firstName.size() < 100 &&
-        data.lastName is string && data.lastName.size() < 100 &&
-        data.role in ['user', 'admin'] &&
-        (!('wishlist' in data) || (data.wishlist is list && data.wishlist.size() <= 100));
-    }
-
-    function isValidOrder(data) {
-      return data.keys().hasAll(['id', 'email', 'firstName', 'lastName', 'items', 'total', 'status', 'date', 'deliveryMethod']) &&
-        isValidEmail(data.email) &&
-        data.items is list && data.items.size() > 0 &&
-        data.total is number && data.total >= 0 &&
-        data.status in ['payment_pending', 'pending', 'preparing', 'ready', 'completed', 'cancelled', 'returned'] &&
-        isValidTimestamp(data.date);
-    }
-
-    function isValidCategory(data) {
-      return data.keys().hasAll(['id', 'name']) &&
-        data.id is string &&
-        data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-        (!('description' in data) || (data.description is string && data.description.size() < 1000)) &&
-        (!('image' in data) || (data.image is string));
-    }
-
-    function isValidBrand(data) {
-      return data.keys().hasAll(['id', 'name']) &&
-        data.id is string &&
-        data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-        (!('description' in data) || (data.description is string && data.description.size() < 2000)) &&
-        (!('banner' in data) || (data.banner is string)) &&
-        (!('logo' in data) || (data.logo is string)) &&
-        (!('soldBy' in data) || (data.soldBy is string && data.soldBy.size() < 100));
-    }
-
     // ===============================================================
     // Rules
     // ===============================================================
@@ -102,41 +39,34 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // FIXED: was "allow read, write: if true" — anyone could mutate brand records
     match /brands/{document=**} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
+    // PRODUCTS: Public storefront reading. Zero client writes 
+    // (stock decrements and updates happen securely via Server Admin SDK).
     match /products/{document=**} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false;
     }
 
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) &&
+      allow create: if isAuthenticated() && isOwner(userId) &&
         (request.resource.data.role == 'user' || (request.resource.data.role == 'admin' && isAdmin()));
-      allow update: if (isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == resource.data.role) || isAdmin();
+      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin();
     }
 
+    // ORDERS: Zero client writes. All order creation (/api/payments) 
+    // and payment/fulfillment webhooks happen server-side via Admin SDK.
     match /orders/{orderId} {
-      // Authenticated users can read their own orders; admins can read all
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || resource.data.email == request.auth.token.email || isAdmin());
+      allow write: if false;
+    }
 
-      // Order creation: allow both authenticated AND guest checkout
-      // Guest: must pass validation, must NOT claim a userId
-      // Authenticated: must pass validation, userId must match their auth
-      allow create: if isValidOrder(request.resource.data) && (
-        // Guest checkout (no auth required, but no userId allowed)
-        (request.auth == null && !('userId' in request.resource.data))
-        ||
-        // Authenticated checkout
-        (isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin()))
-      );
-
-      // Only admins can update orders (status changes, shipment info, etc.)
-      allow update: if isAdmin();
+    match /notifications_outbox/{docId} {
+      allow read, write: if false;
     }
 
     match /testimonials/{document=**} {

@@ -9,18 +9,40 @@ function initAdminDb() {
     return getFirestore();
   }
 
+  // 1. Check individual FIREBASE_ADMIN_* variables first
+  const adminProjectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
+  const adminClientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+  const adminPrivateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+
+  if (adminProjectId && adminClientEmail && adminPrivateKey) {
+    const formattedKey = adminPrivateKey.replace(/\\n/g, '\n');
+    initializeApp({
+      credential: cert({
+        projectId: adminProjectId,
+        clientEmail: adminClientEmail,
+        privateKey: formattedKey,
+      }),
+    });
+    return getFirestore();
+  }
+
+  // 2. Fall back to FIREBASE_SERVICE_ACCOUNT_KEY JSON string
   const rawKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
   if (rawKey) {
     try {
-      const serviceAccount = JSON.parse(rawKey);
+      const cleanedKey = rawKey.trim().replace(/^['"]|['"]$/g, '');
+      const serviceAccount = JSON.parse(cleanedKey);
+      if (serviceAccount.private_key) {
+        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+      }
       initializeApp({ credential: cert(serviceAccount) });
       return getFirestore();
-    } catch (e) {
-      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', e);
+    } catch (e: any) {
+      console.error('CRITICAL: Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', e.message);
     }
   }
 
-  // Fallback: Initialize with project ID
+  // 3. Fallback to Project ID
   initializeApp({
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'grab-go-za',
   });
