@@ -183,7 +183,7 @@ export async function POST(req: NextRequest) {
               updatedAt: FieldValue.serverTimestamp(),
             });
 
-            const customerEmail = orderData.customer?.email || metadata.customerEmail;
+            const customerEmail = orderData?.customer?.email || metadata.customerEmail;
             if (customerEmail) {
               // Send instant email receipt via Resend
               try {
