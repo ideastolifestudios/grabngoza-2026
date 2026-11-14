@@ -15,6 +15,7 @@ const BrandManagementDrawer = dynamic(() => import("./components/BrandManagement
 const InstagramFeed = dynamic(() => import("./components/InstagramFeed"), { ssr: false });
 const ChatWidget = dynamic(() => import("./components/ChatWidget"), { ssr: false });
 import Logo from "./components/Logo";
+import FilterBar from "./components/FilterBar";
 import {
   formatPrice
 } from './utils/format';
